@@ -23,7 +23,7 @@
 
 Spring Redis 与 Redisson 复用同一组主机、端口、密码、数据库和 TLS 配置，避免缓存与锁连接到不同实例。本项目使用单节点 Redis 配置；未配置 Sentinel 或 Cluster。
 
-上传接口返回 `/blogs/...` 相对名称。仓库暂未提供图片静态访问服务；若接入已有前端，可在本机 Nginx 中把图片 URL 映射到上传目录。
+上传接口返回 `/blogs/...` 相对名称。仓库的 Nginx 配置将前端 `/imgs/...` 请求映射到静态图片或 `uploads/` 中的上传文件；具体配置见 [前端启动说明](frontend.md)。
 
 ## IDEA 运行
 

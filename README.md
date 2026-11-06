@@ -1,12 +1,12 @@
 <div align="center">
 
-# SmartLife
+# Smart Life
 
-**本地生活服务平台 · Java 后端实践**
+**本地生活服务平台 · Java 后端 + Vue 前端**
 
 商户发现 / 优惠券抢购 / 探店分享 / 关注动态
 
-[![Build](https://github.com/beemines/smartlife/actions/workflows/ci.yml/badge.svg)](https://github.com/beemines/smartlife/actions/workflows/ci.yml)
+[![Build](https://github.com/beemines/smart-life/actions/workflows/ci.yml/badge.svg)](https://github.com/beemines/smart-life/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-8%20%7C%2011-ED8B00?style=flat-square)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.3.12-6DB33F?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -19,7 +19,7 @@
 
 SmartLife 面向本地生活消费场景，提供商户与分类查询、优惠券抢购、探店笔记、关注动态和用户签到等后端接口。项目重点放在缓存访问路径、Redis 数据结构和异步订单处理上。
 
-当前仓库包含 **Spring Boot 后端、MySQL 初始化脚本和测试代码**。前端页面暂未收录，可使用 curl、Postman 或 Apifox 调用接口。
+当前仓库包含 **Spring Boot 后端、Vue 2 前端、Nginx 配置、MySQL 初始化脚本和测试代码**。前端直接通过 HTML 引入 Vue、Element UI 与 Axios，无需 npm 打包。
 
 ## 功能概览
 
@@ -71,6 +71,8 @@ Lua 将库存判断、重复领取判断和预扣库存放在同一次 Redis 脚
 
 | 技术 | 版本 / 用途 |
 | --- | --- |
+| Vue / Element UI / Axios | 2.5.16 / 2.15.3 / 0.18.0，页面与接口请求 |
+| Nginx | 静态资源托管与 API 反向代理 |
 | Java | 8 / 11 |
 | Spring Boot | 2.3.12.RELEASE，Web 与配置管理 |
 | MyBatis-Plus | 3.4.3，数据访问与分页 |
@@ -87,8 +89,11 @@ Lua 将库存判断、重复领取判断和预扣库存放在同一次 Redis 脚
 ## 目录结构
 
 ```text
-smartlife
-├── .github/workflows/ci.yml    # 构建与单元测试
+smart-life
+├── .github/workflows/ci.yml    # 后端构建与前端检查
+├── frontend/                  # HTML、CSS、JavaScript 与静态图片
+├── deploy/nginx/nginx.conf    # 静态页面与 API 反向代理
+├── scripts/                   # 静态资源与脚本语法检查
 ├── docs/                      # 配置说明与后续改进
 ├── src/main/java/com/bee/smartlife
 │   ├── config/                # Redis、MQ、MVC 与 MyBatis 配置
@@ -100,8 +105,8 @@ smartlife
 │   ├── service/               # 业务逻辑
 │   └── utils/                 # 缓存、会话与锁工具
 ├── src/main/resources
-│   ├── db/smartlife.sql        # 仅表结构，无用户数据
-│   ├── db/smartlife-demo.sql   # 可选的虚构商户演示数据
+│   ├── db/smart-life.sql        # 仅表结构，无用户数据
+│   ├── db/smart-life-demo.sql   # 可选的虚构商户演示数据
 │   ├── mapper/                # SQL 映射
 │   ├── application.yaml        # 环境变量配置
 │   └── *.lua                  # 库存与锁脚本
@@ -119,8 +124,8 @@ smartlife
 RocketMQ 的 NameServer 和 Broker 需要同时可用；可参考 [RocketMQ 官方部署文档](https://rocketmq.apache.org/docs/quickStart/01quickstart/)。
 
 ```bash
-git clone https://github.com/beemines/smartlife.git
-cd smartlife
+git clone https://github.com/beemines/smart-life.git
+cd smart-life
 ```
 
 ### 2. 初始化数据库
@@ -128,9 +133,9 @@ cd smartlife
 在 MySQL 客户端执行：
 
 ```sql
-SOURCE /absolute/path/to/smartlife/src/main/resources/db/smartlife.sql;
+SOURCE /absolute/path/to/smart-life/src/main/resources/db/smart-life.sql;
 -- 可选：导入少量虚构商户数据，便于调用查询接口。
-SOURCE /absolute/path/to/smartlife/src/main/resources/db/smartlife-demo.sql;
+SOURCE /absolute/path/to/smart-life/src/main/resources/db/smart-life-demo.sql;
 ```
 
 首次执行创建 `smartlife` 数据库及 11 张表。结构脚本用于新建环境，重复执行会提示表已存在；不要在已有业务库上直接重建表。
@@ -159,10 +164,16 @@ mvn spring-boot:run
 
 ```bash
 mvn clean verify
-java -jar target/smartlife-0.0.1-SNAPSHOT.jar
+java -jar target/smart-life-0.0.1-SNAPSHOT.jar
 ```
 
-### 4. 验证查询接口
+### 4. 启动前端
+
+前端位于 `frontend/`，无需执行 `npm install` 或 `npm run build`。启动 Nginx 后访问 **http://127.0.0.1:8080/**；接口由 `/api/` 转发到后端 `127.0.0.1:8081`。
+
+仓库提供可复用配置，具体命令见 [前端与 Nginx 启动说明](docs/frontend.md)。
+
+### 5. 验证查询接口
 
 ```bash
 curl http://127.0.0.1:8081/shop-type/list
@@ -200,6 +211,8 @@ curl "http://127.0.0.1:8081/shop/of/type?typeId=1&current=1"
 
 ## 开发与测试
 
+前端静态资源与 JavaScript 语法检查：`node scripts/check-frontend.mjs`（需要 Node.js 22+，仅用于检查，运行页面无需 Node.js）。
+
 ```bash
 # 无需连接外部服务：编译、单元测试、打包。
 mvn clean verify
@@ -208,7 +221,7 @@ mvn clean verify
 mvn -Dtest=SmartLifeApplicationIT,RedissonLockIT test
 ```
 
-CI 在 JDK 8、11 上执行 `mvn clean verify`。`*IT` 是需要基础设施的手动集成实验，不纳入默认单元测试阶段；其中包含批量写 Redis 的实验，请使用独立测试库。
+CI 在 JDK 8、11 上执行 `mvn clean verify`，另检查前端资源、脚本语法、Nginx 配置和静态页面访问。`*IT` 是需要基础设施的手动集成实验，不纳入默认单元测试阶段；其中包含批量写 Redis 的实验，请使用独立测试库。
 
 ## 当前边界与后续方向
 
@@ -222,4 +235,4 @@ CI 在 JDK 8、11 上执行 `mvn clean verify`。`*IT` 是需要基础设施的�
 
 ## 许可证
 
-[MIT License](LICENSE)
+[MIT License](LICENSE)。随前端分发的第三方库见 [第三方声明](frontend/THIRD_PARTY_NOTICES.md)。

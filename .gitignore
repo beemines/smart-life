@@ -40,8 +40,12 @@ application-local.yaml
 application-local.yml
 application-local.properties
 uploads/
-logs/
+/logs/*
+!/logs/.gitkeep
 *.log
 *.pem
 *.key
 .DS_Store
+deploy/nginx/*.log
+deploy/nginx/*.pid
+deploy/nginx/*_temp/

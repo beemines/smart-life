@@ -26,3 +26,27 @@ jobs:
           cache: maven
       - name: Compile, test and package
         run: mvn --batch-mode --no-transfer-progress clean verify
+
+  frontend:
+    name: Frontend and Nginx
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check scripts and local assets
+        run: node scripts/check-frontend.mjs
+      - name: Validate Nginx configuration
+        run: |
+          docker run --rm --volume "$PWD:/app" --workdir /app nginx:1.28-alpine nginx -p /app/ -c deploy/nginx/nginx.conf -t
+      - name: Serve static pages
+        run: |
+          docker run --detach --name smart-life-web --network host --volume "$PWD:/app" --workdir /app nginx:1.28-alpine nginx -p /app/ -c deploy/nginx/nginx.conf -g 'daemon off;'
+          curl --fail --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8080/login.html --output /dev/null
+          curl --fail http://127.0.0.1:8080/ --output /dev/null
+          curl --fail http://127.0.0.1:8080/js/vue.js --output /dev/null
+          curl --fail http://127.0.0.1:8080/css/main.css --output /dev/null
+      - name: Stop Nginx
+        if: always()
+        run: docker rm --force smart-life-web || true

@@ -9,11 +9,11 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.bee.smartlife</groupId>
-    <artifactId>smartlife</artifactId>
+    <artifactId>smart-life</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>SmartLife</name>
+    <name>smart-life</name>
     <description>Local lifestyle services backend with multi-level caching and asynchronous voucher ordering</description>
-    <url>https://github.com/beemines/smartlife</url>
+    <url>https://github.com/beemines/smart-life</url>
     <properties>
         <java.version>1.8</java.version>
     </properties>
