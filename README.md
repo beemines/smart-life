@@ -1,0 +1,225 @@
+<div align="center">
+
+# SmartLife
+
+**本地生活服务平台 · Java 后端实践**
+
+商户发现 / 优惠券抢购 / 探店分享 / 关注动态
+
+[![Build](https://github.com/beemines/smartlife/actions/workflows/ci.yml/badge.svg)](https://github.com/beemines/smartlife/actions/workflows/ci.yml)
+![Java](https://img.shields.io/badge/Java-8%20%7C%2011-ED8B00?style=flat-square)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.3.12-6DB33F?style=flat-square)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+[功能概览](#功能概览) · [实现要点](#实现要点) · [快速开始](#快速开始) · [接口示例](#接口示例) · [开发与测试](#开发与测试)
+
+</div>
+
+## 项目介绍
+
+SmartLife 面向本地生活消费场景，提供商户与分类查询、优惠券抢购、探店笔记、关注动态和用户签到等后端接口。项目重点放在缓存访问路径、Redis 数据结构和异步订单处理上。
+
+当前仓库包含 **Spring Boot 后端、MySQL 初始化脚本和测试代码**。前端页面暂未收录，可使用 curl、Postman 或 Apifox 调用接口。
+
+## 功能概览
+
+| 模块 | 当前功能 |
+| --- | --- |
+| 用户与会话 | 模拟短信验证码登录、Redis Token 存储、请求续期、当前用户信息 |
+| 商户与分类 | 商户详情、分类列表、按分类分页、名称搜索、商户信息更新 |
+| 优惠券 | 普通券与秒杀券创建、商户券列表、库存校验、一人一单、异步创建订单 |
+| 探店笔记 | 发布笔记、热门笔记、个人笔记、点赞与取消点赞、最近点赞用户 |
+| 关注动态 | 关注与取消关注、共同关注、基于收件箱的滚动动态查询 |
+| 用户签到 | Redis Bitmap 签到、连续签到天数统计 |
+| 图片上传 | 本地文件存储，可配置上传目录 |
+
+## 实现要点
+
+### 1. 商户详情的多级缓存
+
+商户详情先读取 Caffeine 本地缓存，再读取 Redis；未命中时结合布隆过滤器判断，最后查询 MySQL。数据库未查到的结果使用短期空值缓存；普通缓存写入时增加随机过期时间。商户更新后删除当前实例的本地缓存和 Redis 缓存。
+
+- 商户详情本地缓存：最多 10,000 项，写入后 3 分钟过期。
+- 商户 ID 布隆过滤器：启动时从数据库初始化。
+- 商户分类列表：独立使用 Caffeine + Redis 缓存。
+
+入口：[ShopServiceImpl](src/main/java/com/bee/smartlife/service/impl/ShopServiceImpl.java)、[CacheClient](src/main/java/com/bee/smartlife/utils/CacheClient.java)。
+
+### 2. Redis Lua + RocketMQ 异步抢购
+
+```text
+抢购请求
+  └─ Redis Lua：检查库存 → 检查重复领取 → 预扣库存
+       └─ RocketMQ：发送订单消息 → 消费者创建订单
+            └─ Redisson 用户锁 → 重复订单检查 → MySQL 条件扣库存 → 保存订单
+```
+
+Lua 将库存判断、重复领取判断和预扣库存放在同一次 Redis 脚本执行中。订单持久化由 RocketMQ 消费者异步处理，数据库使用 `stock > 0` 条件扣减库存；消费抛出异常时请求消息重试。
+
+**抢购接口返回订单 ID 代表请求已进入异步处理，不代表订单已完成落库或支付。** 当前没有订单处理进度查询接口。
+
+入口：[VoucherOrderServiceImpl](src/main/java/com/bee/smartlife/service/impl/VoucherOrderServiceImpl.java)、[seckill.lua](src/main/resources/seckill.lua)、[mq](src/main/java/com/bee/smartlife/mq)。
+
+### 3. 会话、互动与动态
+
+- **Redis Hash**：保存登录用户信息，拦截器读取 Token 并续期，请求结束清理 ThreadLocal。
+- **Sorted Set**：保存点赞时间和关注动态，支持最近点赞用户与滚动分页。
+- **Set**：保存关注关系，用交集查询共同关注。
+- **Bitmap**：按月保存签到记录，统计连续签到天数。
+
+## 技术栈
+
+| 技术 | 版本 / 用途 |
+| --- | --- |
+| Java | 8 / 11 |
+| Spring Boot | 2.3.12.RELEASE，Web 与配置管理 |
+| MyBatis-Plus | 3.4.3，数据访问与分页 |
+| MySQL | 8.0，业务数据持久化 |
+| Redis | 会话、缓存、库存、点赞、关注动态、签到 |
+| Caffeine | 2.9.3，本地缓存 |
+| Redisson | 3.13.6，分布式锁与布隆过滤器 |
+| RocketMQ Client | 5.3.3，使用经典 Producer / PushConsumer API |
+| Hutool / Lombok | 工具与实体简化 |
+| Maven / JUnit 5 | 构建与测试 |
+
+依赖版本以 [pom.xml](pom.xml) 为准。
+
+## 目录结构
+
+```text
+smartlife
+├── .github/workflows/ci.yml    # 构建与单元测试
+├── docs/                      # 配置说明与后续改进
+├── src/main/java/com/bee/smartlife
+│   ├── config/                # Redis、MQ、MVC 与 MyBatis 配置
+│   ├── controller/            # HTTP 接口
+│   ├── dto/                   # 请求与响应对象
+│   ├── entity/                # 数据库实体
+│   ├── mapper/                # 数据访问
+│   ├── mq/                    # 订单消息生产与消费
+│   ├── service/               # 业务逻辑
+│   └── utils/                 # 缓存、会话与锁工具
+├── src/main/resources
+│   ├── db/smartlife.sql        # 仅表结构，无用户数据
+│   ├── db/smartlife-demo.sql   # 可选的虚构商户演示数据
+│   ├── mapper/                # SQL 映射
+│   ├── application.yaml        # 环境变量配置
+│   └── *.lua                  # 库存与锁脚本
+└── src/test/java/             # 单元测试与手动集成实验
+```
+
+## 快速开始
+
+### 1. 准备环境
+
+- JDK 8 或 11、Maven 3.6+。
+- MySQL 8.0、Redis、RocketMQ NameServer 与 Broker。
+- 默认端口：应用 `8081`、MySQL `3306`、Redis `6379`、NameServer `9876`。
+
+RocketMQ 的 NameServer 和 Broker 需要同时可用；可参考 [RocketMQ 官方部署文档](https://rocketmq.apache.org/docs/quickStart/01quickstart/)。
+
+```bash
+git clone https://github.com/beemines/smartlife.git
+cd smartlife
+```
+
+### 2. 初始化数据库
+
+在 MySQL 客户端执行：
+
+```sql
+SOURCE /absolute/path/to/smartlife/src/main/resources/db/smartlife.sql;
+-- 可选：导入少量虚构商户数据，便于调用查询接口。
+SOURCE /absolute/path/to/smartlife/src/main/resources/db/smartlife-demo.sql;
+```
+
+首次执行创建 `smartlife` 数据库及 11 张表。结构脚本用于新建环境，重复执行会提示表已存在；不要在已有业务库上直接重建表。
+
+### 3. 设置连接信息并启动
+
+PowerShell：
+
+```powershell
+$env:SMARTLIFE_DB_PASSWORD = "你的本机数据库密码"
+# Redis 有密码时设置；无密码时无需配置。
+# $env:SMARTLIFE_REDIS_PASSWORD = "你的 Redis 密码"
+mvn spring-boot:run
+```
+
+Linux / macOS：
+
+```bash
+export SMARTLIFE_DB_PASSWORD='你的本机数据库密码'
+mvn spring-boot:run
+```
+
+默认只监听 `127.0.0.1:8081`。连接端口、Redis 数据库、MQ 地址、上传目录等选项见 [配置说明](docs/configuration.md)。应用不会自动加载 `.env` 文件，请在终端或 IDEA 的运行配置中设置环境变量。
+
+也可先打包，再启动：
+
+```bash
+mvn clean verify
+java -jar target/smartlife-0.0.1-SNAPSHOT.jar
+```
+
+### 4. 验证查询接口
+
+```bash
+curl http://127.0.0.1:8081/shop-type/list
+curl http://127.0.0.1:8081/shop/1
+curl "http://127.0.0.1:8081/shop/of/type?typeId=1&current=1"
+```
+
+导入演示数据后，`/shop/1` 应返回虚构商户 **SmartLife Cafe**。如果没有导入演示数据，需要自行创建商户；分类列表为空时接口会返回业务失败结果。
+
+## 接口示例
+
+| 方法 | 路径 | 功能 |
+| --- | --- | --- |
+| POST | `/user/code?phone=...` | 生成模拟验证码，开发日志中查看 |
+| POST | `/user/login` | 手机号与验证码登录 |
+| GET | `/user/me` | 当前登录用户 |
+| GET | `/shop-type/list` | 商户分类 |
+| GET | `/shop/{id}` | 商户详情 |
+| GET | `/shop/of/type?typeId=1&current=1` | 分类分页 |
+| GET | `/voucher/list/{shopId}` | 商户优惠券 |
+| POST | `/voucher/seckill` | 创建秒杀券并写入 Redis 库存 |
+| POST | `/voucher-order/seckill/{id}` | 抢购优惠券，异步创建订单 |
+| GET | `/blog/hot?current=1` | 热门探店笔记 |
+| PUT | `/blog/like/{id}` | 点赞 / 取消点赞 |
+| GET | `/blog/of/follow?lastId=...&offset=0` | 关注动态滚动查询 |
+| POST | `/user/sign` | 签到 |
+
+登录返回的 Token 直接放入 `authorization` 请求头，当前实现无需添加 `Bearer ` 前缀。业务响应使用统一结构：
+
+```json
+{"success": true, "data": {"id": 1}}
+```
+
+失败时返回 `success: false` 与 `errorMsg`。受保护接口在未登录时返回 HTTP 401。
+
+## 开发与测试
+
+```bash
+# 无需连接外部服务：编译、单元测试、打包。
+mvn clean verify
+
+# 手动集成实验：需要独立的 MySQL、Redis 与 RocketMQ 测试环境。
+mvn -Dtest=SmartLifeApplicationIT,RedissonLockIT test
+```
+
+CI 在 JDK 8、11 上执行 `mvn clean verify`。`*IT` 是需要基础设施的手动集成实验，不纳入默认单元测试阶段；其中包含批量写 Redis 的实验，请使用独立测试库。
+
+## 当前边界与后续方向
+
+当前版本适合本地学习、功能演示与后端工程实践。短信发送为模拟实现；支付、核销、退款、订单超时关闭和登出尚未完成。商户与上传相关接口也尚未建立完整的商家权限体系。
+
+后续重点是补齐订单状态闭环、异常补偿、消息幂等与可复现的压测验证，详见 [Roadmap](docs/roadmap.md)。README 不将这些计划描述为已实现功能。
+
+## 参与贡献
+
+欢迎提交 Issue 讨论问题与改进建议。较大改动请先说明具体场景；实现时优先复用现有页面、接口与服务逻辑，保持改动范围清晰，并提供相应验证结果。
+
+## 许可证
+
+[MIT License](LICENSE)
