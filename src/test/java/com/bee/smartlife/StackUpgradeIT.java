@@ -43,6 +43,9 @@ class StackUpgradeIT {
     @Test
     void protectedEndpointStillRequiresLogin() {
         assertThat(http.getForEntity("/user/me", String.class).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(http.getForEntity("/user/me/", String.class).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        // The original exact interceptor exclusions do not include a slash suffix.
+        assertThat(http.postForEntity("/user/login/", Map.of(), String.class).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
@@ -50,9 +53,13 @@ class StackUpgradeIT {
         JsonNode first = get("/shop/1");
         assertThat(first.path("data").path("name").asText()).isEqualTo("SmartLife Cafe");
         assertThat(get("/shop/1")).isEqualTo(first);
+        assertThat(get("/shop/1/")).isEqualTo(first);
         assertThat(get("/shop/of/type?typeId=1&current=1").path("data").size()).isEqualTo(1);
+        assertThat(get("/shop/of/type?typeId=1&current=2").path("data").isEmpty()).isTrue();
         assertThat(get("/shop/of/name?name=SmartLife&current=1").path("data").size()).isEqualTo(2);
+        assertThat(get("/shop/of/name?name=SmartLife&current=2").path("data").isEmpty()).isTrue();
         assertThat(get("/shop-type/list").path("data").size()).isEqualTo(2);
+        assertThat(get("/shop-type/list/").path("data").size()).isEqualTo(2);
         assertThat(get("/blog/hot?current=1").path("data").isArray()).isTrue();
     }
 
@@ -95,6 +102,9 @@ class StackUpgradeIT {
             assertSuccess(me);
             userId = me.path("data").path("id").asLong();
             assertThat(userId).isPositive();
+            JsonNode slashMe = http.exchange("/user/me/", HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class).getBody();
+            assertSuccess(slashMe);
+            assertThat(slashMe.path("data").path("id").asLong()).isEqualTo(userId);
 
             JsonNode created = http.postForObject("/voucher/seckill", Map.of(
                     "shopId", 1, "title", "Stack upgrade fixture", "payValue", 100,

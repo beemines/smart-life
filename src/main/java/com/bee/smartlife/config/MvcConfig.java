@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import jakarta.annotation.Resource;
@@ -15,6 +16,14 @@ public class MvcConfig implements WebMvcConfigurer {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public void configurePathMatch(PathMatchConfigurer configurer) {
+        // Keep the existing Spring MVC 5 route contract during this Boot 3 upgrade.
+        // Interceptor exclusions remain unchanged, including exact login paths.
+        configurer.setUseTrailingSlashMatch(true);
+    }
 
     /**
      * 添加拦截器

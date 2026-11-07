@@ -27,7 +27,7 @@ $env:SMARTLIFE_DB_PASSWORD = 'local-test-only'
 $env:SMARTLIFE_REDIS_PORT = '16379'
 $env:SMARTLIFE_MQ_NAME_SERVER = '127.0.0.1:19876'
 mvn clean verify
-java -jar target/smart-life-0.0.1-SNAPSHOT.jar
+& "$env:JAVA_HOME\bin\java.exe" -jar target/smart-life-0.0.1-SNAPSHOT.jar
 ```
 
 Linux / macOS：

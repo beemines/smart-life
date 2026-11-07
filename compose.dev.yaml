@@ -10,7 +10,7 @@ services:
       - ./src/main/resources/db/smart-life.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./src/main/resources/db/smart-life-demo.sql:/docker-entrypoint-initdb.d/02-demo.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD --silent"]
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysql --protocol=TCP -h 127.0.0.1 -uroot -Nse 'SELECT COUNT(*) FROM smartlife.tb_shop'"]
       interval: 5s
       timeout: 5s
       retries: 40

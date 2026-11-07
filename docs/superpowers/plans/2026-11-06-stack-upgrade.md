@@ -45,6 +45,6 @@
 ## Task 3: Delivery
 
 - [x] Update README, configuration/runtime instructions, third-party notices and CI for JDK 21, frontend checks and integration smoke verification.
-- [ ] Obtain one independent review of the complete diff and address material migration findings.
+- [x] Obtain one independent review of the complete diff and address material migration findings.
 - [ ] Run final checks, verify business-rule diff boundaries, merge the verified upgrade branch and push to GitHub.
 - [ ] Verify all checks for the exact published commit are green. Deliver versions, running/demo commands, test results and documented limitations.
