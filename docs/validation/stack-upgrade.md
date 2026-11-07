@@ -46,3 +46,10 @@ The design and implementation plan are in `docs/superpowers/`. The user's explic
 - Ruling: retain Boot 3's deprecated-but-supported trailing-slash compatibility setting for this migration, rather than changing existing URL contracts or adding redirect flows. Cost: this setting will need revisiting for a future major Spring upgrade.
 - Ruling: existing order-ID arithmetic, write authorization policy, MQ lock/acknowledgement/compensation behavior, and unfinished logout/payment are outside this stack-only upgrade. They remain documented limitations; this work does not claim to solve their existing reliability/security gaps.
 - Deferred minor: the blog-detail merchant-rating control retains its existing interactive appearance; this review's suggestion to disable it is left for a separate UI change. Its displayed score remains a single-way server value.
+
+## Publication
+
+- Upgrade merged and pushed to `main` at `31647caa950f8328b56e9fd552f564a1166b1cce`.
+- All three GitHub checks passed for that exact commit: Java 21; Frontend and Nginx; API and MQ integration (Java 21). [Verified run](https://github.com/beemines/smart-life/actions/runs/42370330300).
+- The final packaged JAR also passed live requests through Nginx for `/api/shop/1`, `/api/shop/1/`, `/api/shop-type/list/` and `/login.html`. Demo address: `http://127.0.0.1:8080/`.
+- Three temporary browser-test coupons were removed from the isolated environment after screenshots. Original databases and application services were not migrated or modified.
