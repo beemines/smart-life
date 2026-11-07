@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <title>Smart Life</title>
   <!-- 引入样式 -->
-  <link rel="stylesheet" href="./css/element.css">
+  <link rel="stylesheet" href="./css/element.css?v=2.14.8">
+  <link rel="stylesheet" href="./css/element-icons.css?v=20261107">
 
-  <link href="./css/shop-list.css" rel="stylesheet">
-  <link href="./css/main.css" rel="stylesheet">
+  <link href="./css/shop-list.css?v=20261107" rel="stylesheet">
+  <link href="./css/main.css?v=20261107" rel="stylesheet">
 
   <style type="text/css">
 
@@ -29,11 +30,11 @@
       <span class="el-dropdown-link">
         {{typeName}}<i class="el-icon-arrow-down el-icon--right"></i>
       </span>
-        <el-dropdown-menu slot="dropdown">
+        <template #dropdown><el-dropdown-menu>
           <el-dropdown-item v-for="t in types" :key="t.id" :command="t">
             {{t.name}}
           </el-dropdown-item>
-        </el-dropdown-menu>
+        </el-dropdown-menu></template>
       </el-dropdown>
     </div>
     <div class="sort-item" @click="sortAndQuery('')">
@@ -53,7 +54,7 @@
         <div class="shop-title shop-item">{{s.name}}</div>
         <div class="shop-rate shop-item" >
           <el-rate
-              disabled v-model="s.score/10"
+              disabled :model-value="s.score/10"
               text-color="#F63"
               show-score
           ></el-rate>
@@ -72,14 +73,16 @@
     </div>
   </div>
 </div>
-<script src="./js/vue.js"></script>
-<script src="./js/axios.min.js"></script>
+<script src="./js/vue.js?v=3.5.45"></script>
+<script src="./js/axios.min.js?v=1.21.0"></script>
 <!-- 引入组件库 -->
-<script src="./js/element.js"></script>
-<script src="./js/common.js"></script>
+<script src="./js/element.js?v=2.14.8"></script>
+<script src="./js/element-locale-zh-cn.js?v=2.14.8"></script>
+<script src="./js/common.js?v=20261107"></script>
+<script src="./js/bootstrap.js?v=20261107"></script>
 <script>
 
-  const app = new Vue({
+  const app = mountSmartLife({
     el: "#app",
     data: {
       util,

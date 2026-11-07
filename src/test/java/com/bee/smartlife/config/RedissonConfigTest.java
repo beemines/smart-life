@@ -19,13 +19,13 @@ class RedissonConfigTest {
         SingleServerConfig server = config.useSingleServer();
         assertEquals("redis://redis.example.test:6388", server.getAddress());
         assertEquals(3, server.getDatabase());
-        assertEquals("test-only-password", server.getPassword());
+        assertEquals("test-only-password", config.getPassword());
     }
 
     @Test
     void supportsTlsWithoutRequiringAPassword() {
         RedisProperties properties = new RedisProperties();
-        properties.setSsl(true);
+        properties.getSsl().setEnabled(true);
         SingleServerConfig server = new RedissonConfig().redissonSettings(properties).useSingleServer();
         assertEquals("rediss://localhost:6379", server.getAddress());
         assertNull(server.getPassword());

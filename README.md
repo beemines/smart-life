@@ -7,8 +7,8 @@
 商户发现 / 优惠券抢购 / 探店分享 / 关注动态
 
 [![Build](https://github.com/beemines/smart-life/actions/workflows/ci.yml/badge.svg)](https://github.com/beemines/smart-life/actions/workflows/ci.yml)
-![Java](https://img.shields.io/badge/Java-8%20%7C%2011-ED8B00?style=flat-square)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.3.12-6DB33F?style=flat-square)
+![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-6DB33F?style=flat-square)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 [功能概览](#功能概览) · [实现要点](#实现要点) · [快速开始](#快速开始) · [接口示例](#接口示例) · [开发与测试](#开发与测试)
@@ -19,7 +19,7 @@
 
 SmartLife 面向本地生活消费场景，提供商户与分类查询、优惠券抢购、探店笔记、关注动态和用户签到等后端接口。项目重点放在缓存访问路径、Redis 数据结构和异步订单处理上。
 
-当前仓库包含 **Spring Boot 后端、Vue 2 前端、Nginx 配置、MySQL 初始化脚本和测试代码**。前端直接通过 HTML 引入 Vue、Element UI 与 Axios，无需 npm 打包。
+当前仓库包含 **Spring Boot 后端、Vue 3 前端、Nginx 配置、MySQL 初始化脚本和测试代码**。前端直接通过 HTML 引入 Vue、Element Plus 与 Axios，无需 npm 打包。
 
 ## 功能概览
 
@@ -71,17 +71,17 @@ Lua 将库存判断、重复领取判断和预扣库存放在同一次 Redis 脚
 
 | 技术 | 版本 / 用途 |
 | --- | --- |
-| Vue / Element UI / Axios | 2.5.16 / 2.15.3 / 0.18.0，页面与接口请求 |
-| Nginx | 静态资源托管与 API 反向代理 |
-| Java | 8 / 11 |
-| Spring Boot | 2.3.12.RELEASE，Web 与配置管理 |
-| MyBatis-Plus | 3.4.3，数据访问与分页 |
-| MySQL | 8.0，业务数据持久化 |
-| Redis | 会话、缓存、库存、点赞、关注动态、签到 |
-| Caffeine | 2.9.3，本地缓存 |
-| Redisson | 3.13.6，分布式锁与布隆过滤器 |
-| RocketMQ Client | 5.3.3，使用经典 Producer / PushConsumer API |
-| Hutool / Lombok | 工具与实体简化 |
+| Vue / Element Plus / Axios | 3.5.45 / 2.14.8 / 1.21.0，页面与接口请求 |
+| Nginx | 1.30.x，静态资源托管与 API 反向代理 |
+| Java | 21 |
+| Spring Boot | 3.5.16，Web 与配置管理 |
+| MyBatis-Plus | 3.5.18.1，Boot 3 数据访问与分页 |
+| MySQL | 8.4，业务数据持久化 |
+| Redis | 8.4，会话、缓存、库存、点赞、关注动态、签到 |
+| Caffeine | Spring Boot BOM 管理，本地缓存 |
+| Redisson | 4.8.0，分布式锁与布隆过滤器 |
+| RocketMQ Client | 5.5.1，使用经典 Producer / PushConsumer API |
+| Hutool / Lombok | 5.8.48 / Boot BOM 管理，工具与实体简化 |
 | Maven / JUnit 5 | 构建与测试 |
 
 依赖版本以 [pom.xml](pom.xml) 为准。
@@ -117,7 +117,7 @@ smart-life
 
 ### 1. 准备环境
 
-- JDK 8 或 11、Maven 3.6+。
+- JDK 21、Maven 3.6.3+。
 - MySQL 8.0、Redis、RocketMQ NameServer 与 Broker。
 - 默认端口：应用 `8081`、MySQL `3306`、Redis `6379`、NameServer `9876`。
 
@@ -127,6 +127,8 @@ RocketMQ 的 NameServer 和 Broker 需要同时可用；可参考 [RocketMQ 官�
 git clone https://github.com/beemines/smart-life.git
 cd smart-life
 ```
+
+也可用仓库自带的 Docker Compose 启动隔离演示环境并自动导入测试数据，见 [本地开发](docs/local-development.md)。
 
 ### 2. 初始化数据库
 
@@ -211,7 +213,7 @@ curl "http://127.0.0.1:8081/shop/of/type?typeId=1&current=1"
 
 ## 开发与测试
 
-前端静态资源与 JavaScript 语法检查：`node scripts/check-frontend.mjs`（需要 Node.js 22+，仅用于检查，运行页面无需 Node.js）。
+前端资源、JavaScript 语法与 Vue 3 模板编译检查：`npm ci --ignore-scripts && npm run check:frontend`（需要 Node.js 22+，仅用于检查，运行页面无需 Node.js）。
 
 ```bash
 # 无需连接外部服务：编译、单元测试、打包。
@@ -221,7 +223,7 @@ mvn clean verify
 mvn -Dtest=SmartLifeApplicationIT,RedissonLockIT test
 ```
 
-CI 在 JDK 8、11 上执行 `mvn clean verify`，另检查前端资源、脚本语法、Nginx 配置和静态页面访问。`*IT` 是需要基础设施的手动集成实验，不纳入默认单元测试阶段；其中包含批量写 Redis 的实验，请使用独立测试库。
+CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，运行 `StackUpgradeIT` 验证登录、查询、上传与异步订单落库。运行命令见 [本地开发与集成验证](docs/local-development.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
 
 ## 当前边界与后续方向
 

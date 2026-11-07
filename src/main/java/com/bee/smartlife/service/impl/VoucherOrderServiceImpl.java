@@ -8,7 +8,7 @@ import com.bee.smartlife.mapper.VoucherOrderMapper;
 import com.bee.smartlife.mq.VoucherOrderMQProducer;
 import com.bee.smartlife.service.ISeckillVoucherService;
 import com.bee.smartlife.service.IVoucherOrderService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.bee.smartlife.utils.RedisIdWorker;
 import com.bee.smartlife.utils.UserHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +22,9 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.annotation.Resource;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
@@ -143,7 +143,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         }
 
         try {
-            int count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
+            long count = query().eq("user_id", userId).eq("voucher_id", voucherId).count();
             if (count > 0) {
                 log.error("用户已经购买过一次！");
                 return;

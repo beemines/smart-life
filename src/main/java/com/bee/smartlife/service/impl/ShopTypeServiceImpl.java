@@ -3,7 +3,7 @@ package com.bee.smartlife.service.impl;
 import com.bee.smartlife.entity.ShopType;
 import com.bee.smartlife.mapper.ShopTypeMapper;
 import com.bee.smartlife.service.IShopTypeService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

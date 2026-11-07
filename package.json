@@ -1,0 +1,10 @@
+{
+  "name": "smart-life-checks",
+  "private": true,
+  "scripts": {
+    "check:frontend": "node scripts/check-frontend.mjs"
+  },
+  "devDependencies": {
+    "@vue/compiler-dom": "3.5.45"
+  }
+}

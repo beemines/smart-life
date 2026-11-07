@@ -1,4 +1,4 @@
-Vue.component("footBar", {
+const SmartLifeFooter = {
   template: `
     <div class="foot">
     <div class="foot-box" :class="{active: activeBtn === 1}" @click="toPage(1)">
@@ -38,4 +38,4 @@ Vue.component("footBar", {
       }
     }
   }
-})
+};

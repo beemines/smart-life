@@ -3,7 +3,7 @@ package com.bee.smartlife.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.RandomUtil;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.bee.smartlife.dto.LoginFormDTO;
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.dto.UserDTO;
@@ -18,8 +18,8 @@ import org.springframework.data.redis.connection.BitFieldSubCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpSession;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpSession;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;

@@ -7,7 +7,7 @@ import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.entity.Shop;
 import com.bee.smartlife.mapper.ShopMapper;
 import com.bee.smartlife.service.IShopService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.bee.smartlife.utils.CacheClient;
 import com.bee.smartlife.utils.SystemConstants;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -24,8 +24,8 @@ import org.springframework.data.redis.domain.geo.GeoReference;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 

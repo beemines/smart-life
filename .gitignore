@@ -46,6 +46,8 @@ uploads/
 *.pem
 *.key
 .DS_Store
+node_modules/
+.superpowers/
 deploy/nginx/*.log
 deploy/nginx/*.pid
 deploy/nginx/*_temp/

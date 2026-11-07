@@ -6,21 +6,23 @@ spring:
     name: smart-life
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${SMARTLIFE_DB_HOST:127.0.0.1}:${SMARTLIFE_DB_PORT:3306}/${SMARTLIFE_DB_NAME:smartlife}?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    url: jdbc:mysql://${SMARTLIFE_DB_HOST:127.0.0.1}:${SMARTLIFE_DB_PORT:3306}/${SMARTLIFE_DB_NAME:smartlife}?sslMode=${SMARTLIFE_DB_SSL_MODE:PREFERRED}&serverTimezone=UTC&characterEncoding=utf8
     username: ${SMARTLIFE_DB_USER:root}
     password: ${SMARTLIFE_DB_PASSWORD:}
-  redis:
-    host: ${SMARTLIFE_REDIS_HOST:127.0.0.1}
-    port: ${SMARTLIFE_REDIS_PORT:6379}
-    password: ${SMARTLIFE_REDIS_PASSWORD:}
-    database: ${SMARTLIFE_REDIS_DATABASE:0}
-    ssl: ${SMARTLIFE_REDIS_SSL:false}
-    lettuce:
-      pool:
-        max-active: 10
-        max-idle: 10
-        min-idle: 1
-        time-between-eviction-runs: 10s
+  data:
+    redis:
+      host: ${SMARTLIFE_REDIS_HOST:127.0.0.1}
+      port: ${SMARTLIFE_REDIS_PORT:6379}
+      password: ${SMARTLIFE_REDIS_PASSWORD:}
+      database: ${SMARTLIFE_REDIS_DATABASE:0}
+      ssl:
+        enabled: ${SMARTLIFE_REDIS_SSL:false}
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 10
+          min-idle: 1
+          time-between-eviction-runs: 10s
   jackson:
     default-property-inclusion: non_null
 mybatis-plus:

@@ -7,14 +7,14 @@ import com.bee.smartlife.dto.UserDTO;
 import com.bee.smartlife.entity.Follow;
 import com.bee.smartlife.mapper.FollowMapper;
 import com.bee.smartlife.service.IFollowService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.bee.smartlife.service.IUserService;
 import com.bee.smartlife.utils.UserHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -69,7 +69,7 @@ public class FollowServiceImpl extends ServiceImpl<FollowMapper, Follow> impleme
         // 1.获取登录用户
         Long userId = UserHolder.getUser().getId();
         // 2.查询是否关注 select count(*) from tb_follow where user_id = ? and follow_user_id = ?
-        Integer count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
+        Long count = query().eq("user_id", userId).eq("follow_user_id", followUserId).count();
         // 3.判断
         return Result.ok(count>0);
     }

@@ -2,7 +2,7 @@ package com.bee.smartlife.service;
 
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.entity.Shop;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 
 /**
  * <p>

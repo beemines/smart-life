@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <title>Smart Life</title>
   <!-- 引入样式 -->
-  <link rel="stylesheet" href="./css/element.css">
+  <link rel="stylesheet" href="./css/element.css?v=2.14.8">
+  <link rel="stylesheet" href="./css/element-icons.css?v=20261107">
 
-  <link href="./css/shop-detail.css" rel="stylesheet">
-  <link href="./css/main.css" rel="stylesheet">
+  <link href="./css/shop-detail.css?v=20261107" rel="stylesheet">
+  <link href="./css/main.css?v=20261107" rel="stylesheet">
 
   <style type="text/css">
 
@@ -26,7 +27,7 @@
     <div class="shop-title">{{shop.name}}</div>
     <div class="shop-rate">
       <el-rate
-          disabled v-model="shop.score/10"
+          disabled :model-value="shop.score/10"
           text-color="#F63"
           show-score
       ></el-rate>
@@ -64,7 +65,8 @@
       <span class="voucher-icon">券</span>
       <span style="font-weight: bold;">代金券</span>
     </div>
-    <div class="voucher-box" v-for="v in vouchers" :key="v.id" v-if="!isEnd(v)">
+    <template v-for="v in vouchers" :key="v.id">
+    <div class="voucher-box" v-if="!isEnd(v)">
       <div class="voucher-circle">
         <div class="voucher-b"></div>
         <div class="voucher-b"></div>
@@ -84,6 +86,7 @@
         <div class="voucher-btn" v-else>抢购</div>
       </div>
     </div>
+    </template>
   </div>
   <div class="shop-divider"></div>
   <div class="shop-comments">
@@ -111,7 +114,7 @@
           <div class="comment-user">叶小乙 <span>Lv5</span></div>
           <div style="display: flex;">
             打分
-            <el-rate disabled v-model="4.5" ></el-rate>
+            <el-rate disabled :model-value="4.5" ></el-rate>
           </div>
           <div style="padding: 5px 0; font-size: 14px">
             某平台上买的券，价格可以当工作餐吃，虽然价格便宜，但是这家店一点都没有...
@@ -138,14 +141,16 @@
     Smart Life · 本地生活
   </div>
 </div>
-<script src="./js/vue.js"></script>
-<script src="./js/axios.min.js"></script>
+<script src="./js/vue.js?v=3.5.45"></script>
+<script src="./js/axios.min.js?v=1.21.0"></script>
 <!-- 引入组件库 -->
-<script src="./js/element.js"></script>
-<script src="./js/common.js"></script>
+<script src="./js/element.js?v=2.14.8"></script>
+<script src="./js/element-locale-zh-cn.js?v=2.14.8"></script>
+<script src="./js/common.js?v=20261107"></script>
+<script src="./js/bootstrap.js?v=20261107"></script>
 <script>
 
-  const app = new Vue({
+  const app = mountSmartLife({
     el: "#app",
     data: {
       util,

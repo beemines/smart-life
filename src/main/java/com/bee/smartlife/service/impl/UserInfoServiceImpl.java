@@ -3,7 +3,7 @@ package com.bee.smartlife.service.impl;
 import com.bee.smartlife.entity.UserInfo;
 import com.bee.smartlife.mapper.UserInfoMapper;
 import com.bee.smartlife.service.IUserInfoService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 /**

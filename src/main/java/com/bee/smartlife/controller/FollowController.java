@@ -6,7 +6,7 @@ import com.bee.smartlife.service.IFollowService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * <p>

@@ -2,8 +2,8 @@ package com.bee.smartlife.utils;
 
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 public class LoginInterceptor implements HandlerInterceptor {
 

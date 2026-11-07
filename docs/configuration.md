@@ -10,6 +10,7 @@
 | `SMARTLIFE_DB_PORT` | `3306` | MySQL 端口 |
 | `SMARTLIFE_DB_NAME` | `smartlife` | 数据库名称 |
 | `SMARTLIFE_DB_USER` | `root` | MySQL 用户，建议独立创建应用账户 |
+| `SMARTLIFE_DB_SSL_MODE` | `PREFERRED` | MySQL JDBC TLS 模式；生产环境可配置 `VERIFY_IDENTITY` 与证书 |
 | `SMARTLIFE_DB_PASSWORD` | 空 | MySQL 密码，按本机配置设置 |
 | `SMARTLIFE_REDIS_HOST` | `127.0.0.1` | Redis 主机 |
 | `SMARTLIFE_REDIS_PORT` | `6379` | Redis 端口 |
@@ -28,7 +29,7 @@ Spring Redis 与 Redisson 复用同一组主机、端口、密码、数据库和
 ## IDEA 运行
 
 1. 打开项目根目录的 `pom.xml`，等待 Maven 导入。
-2. Project SDK 与 Maven Runner JRE 选择 JDK 8 或 11。
+2. Project SDK 与 Maven Runner JRE 选择 JDK 21。
 3. 运行 `com.bee.smartlife.SmartLifeApplication`。
 4. 在运行配置的 Environment variables 中设置数据库密码及其他连接参数。
 

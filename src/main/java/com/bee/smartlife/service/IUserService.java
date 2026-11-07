@@ -1,11 +1,11 @@
 package com.bee.smartlife.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 import com.bee.smartlife.dto.LoginFormDTO;
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.entity.User;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * <p>

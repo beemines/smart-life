@@ -4,9 +4,10 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
   <title>Smart Life</title>
-  <link href="./css/login.css" rel="stylesheet">
+  <link href="./css/login.css?v=20261107" rel="stylesheet">
   <!-- 引入样式 -->
-  <link rel="stylesheet" href="./css/element.css">
+  <link rel="stylesheet" href="./css/element.css?v=2.14.8">
+  <link rel="stylesheet" href="./css/element-icons.css?v=20261107">
 
   <style type="text/css">
       .el-radio__input.is-checked .el-radio__inner {
@@ -51,14 +52,16 @@
     </div>
   </div>
 </div>
-<script src="./js/vue.js"></script>
-<script src="./js/axios.min.js"></script>
+<script src="./js/vue.js?v=3.5.45"></script>
+<script src="./js/axios.min.js?v=1.21.0"></script>
 <!-- 引入组件库 -->
-<script src="./js/element.js"></script>
-<script src="./js/common.js"></script>
+<script src="./js/element.js?v=2.14.8"></script>
+<script src="./js/element-locale-zh-cn.js?v=2.14.8"></script>
+<script src="./js/common.js?v=20261107"></script>
+<script src="./js/bootstrap.js?v=20261107"></script>
 <script>
 
-  const app = new Vue({
+  const app = mountSmartLife({
     el: "#app",
     data: {
       radio: "",

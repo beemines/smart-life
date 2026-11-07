@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: ['8', '11']
+        java: ['21']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -36,13 +36,15 @@ jobs:
         with:
           node-version: '22'
       - name: Check scripts and local assets
-        run: node scripts/check-frontend.mjs
+        run: |
+          npm ci --ignore-scripts
+          npm run check:frontend
       - name: Validate Nginx configuration
         run: |
-          docker run --rm --volume "$PWD:/app" --workdir /app nginx:1.28-alpine nginx -p /app/ -c deploy/nginx/nginx.conf -t
+          docker run --rm --volume "$PWD:/app" --workdir /app nginx:1.30-alpine nginx -p /app/ -c deploy/nginx/nginx.conf -t
       - name: Serve static pages
         run: |
-          docker run --detach --name smart-life-web --network host --volume "$PWD:/app" --workdir /app nginx:1.28-alpine nginx -p /app/ -c deploy/nginx/nginx.conf -g 'daemon off;'
+          docker run --detach --name smart-life-web --network host --volume "$PWD:/app" --workdir /app nginx:1.30-alpine nginx -p /app/ -c deploy/nginx/nginx.conf -g 'daemon off;'
           curl --fail --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8080/login.html --output /dev/null
           curl --fail http://127.0.0.1:8080/ --output /dev/null
           curl --fail http://127.0.0.1:8080/js/vue.js --output /dev/null
@@ -50,3 +52,48 @@ jobs:
       - name: Stop Nginx
         if: always()
         run: docker rm --force smart-life-web || true
+
+  integration:
+    name: API and MQ integration (Java 21)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SMARTLIFE_DB_PORT: '13306'
+      SMARTLIFE_DB_PASSWORD: local-test-only
+      SMARTLIFE_REDIS_PORT: '16379'
+      SMARTLIFE_MQ_NAME_SERVER: 127.0.0.1:19876
+      SMARTLIFE_INTEGRATION_TESTS: 'true'
+      SMARTLIFE_LOG_LEVEL: info
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Start isolated test services
+        run: |
+          docker compose -p smart-life-ci -f compose.dev.yaml up -d --wait --wait-timeout 240
+          for attempt in $(seq 1 30); do
+            if docker compose -p smart-life-ci -f compose.dev.yaml exec -T broker sh mqadmin clusterList -n nameserver:9876 | grep -q smart-life-dev; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo 'RocketMQ broker did not register' >&2
+          exit 1
+      - name: Test real login, queries, multipart upload and asynchronous ordering
+        run: mvn --batch-mode --no-transfer-progress -Dtest=StackUpgradeIT test
+      - name: Save test reports and service logs
+        if: always()
+        run: docker compose -p smart-life-ci -f compose.dev.yaml logs --no-color > service-logs.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-results
+          path: |
+            target/surefire-reports/
+            service-logs.txt
+      - name: Stop isolated test services
+        if: always()
+        run: docker compose -p smart-life-ci -f compose.dev.yaml down --volumes

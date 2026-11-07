@@ -1,6 +1,6 @@
 # Smart Life 前端与 Nginx
 
-前端源码在 `frontend/`，包含 10 个 HTML 页面、CSS、图片、字体与 JavaScript。Vue 2.5.16、Element UI 2.15.3 和 Axios 0.18.0 通过本地脚本加载，运行页面不需要 Node.js，也不需要打包。
+前端源码在 `frontend/`，包含 10 个 HTML 页面、CSS、图片、字体与 JavaScript。Vue 3.5.45、Element Plus 2.14.8 和 Axios 1.21.0 通过本地脚本加载，运行页面不需要 Node.js，也不需要打包。
 
 ## 本机启动
 
@@ -51,11 +51,16 @@ nginx -p "$PWD/" -c deploy/nginx/nginx.conf
 ## 前端检查
 
 ```bash
-node scripts/check-frontend.mjs
+npm ci --ignore-scripts
+npm run check:frontend
 ```
 
-该命令检查 JavaScript 语法，以及 HTML、CSS 中引用的本地静态资源。需要 Node.js 22+；这是开发检查工具，不是前端构建步骤。
+该命令检查 JavaScript 语法、HTML/CSS 资源引用，并用同版本官方编译器编译全部 Vue 页面模板。npm 依赖仅用于开发检查，不参与页面运行。需要 Node.js 22+；这是开发检查工具，不是前端构建步骤。
 
 CI 另外使用 Nginx 容器检查配置与页面访问。静态页面检查通过不代表数据库、登录、抢购等业务链路已完成集成验证。
 
-前端沿用面向手机页面的布局，可在浏览器设备预览中查看。已保存一次实际页面检查的 [登录页截图](screenshots/login.png)。
+前端沿用面向手机页面的布局，可在浏览器设备预览中查看。已保存一次实际页面检查的 [Vue 3 登录页截图](screenshots/login-vue3.png)。
+
+## Vue 3 兼容适配
+
+`js/bootstrap.js` 统一创建 Vue 应用、注册 Element Plus 中文语言包与底部导航；保留原有页面 Options API。只读评分使用单向绑定，命名插槽使用 `template`，标签页读取组件的新事件结构。图标继续使用原 Element UI 图标字体，并保留其许可证。JS/CSS URL 携带版本，避免旧浏览器缓存混用 Vue 2 与 Vue 3。

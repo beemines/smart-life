@@ -15,11 +15,11 @@ public class RedissonConfig {
     public Config redissonSettings(RedisProperties properties) {
         Config config = new Config();
         SingleServerConfig server = config.useSingleServer()
-                .setAddress((properties.isSsl() ? "rediss://" : "redis://")
+                .setAddress((properties.getSsl().isEnabled() ? "rediss://" : "redis://")
                         + properties.getHost() + ":" + properties.getPort())
                 .setDatabase(properties.getDatabase());
         if (properties.getPassword() != null && !properties.getPassword().isEmpty()) {
-            server.setPassword(properties.getPassword());
+            config.setPassword(properties.getPassword());
         }
         return config;
     }

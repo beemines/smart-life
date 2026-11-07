@@ -10,7 +10,7 @@ import com.bee.smartlife.utils.SystemConstants;
 import com.bee.smartlife.utils.UserHolder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 /**

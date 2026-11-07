@@ -1,6 +1,6 @@
 package com.bee.smartlife.service.impl;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.entity.Voucher;
 import com.bee.smartlife.entity.VoucherOrder;
@@ -13,7 +13,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 import static com.bee.smartlife.utils.RedisConstants.SECKILL_STOCK_KEY;

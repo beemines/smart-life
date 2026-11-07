@@ -1,0 +1,47 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SMARTLIFE_DEV_MYSQL_PASSWORD:-local-test-only}
+    ports:
+      - "127.0.0.1:13306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./src/main/resources/db/smart-life.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./src/main/resources/db/smart-life-demo.sql:/docker-entrypoint-initdb.d/02-demo.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+  redis:
+    image: redis:8.4-alpine
+    ports:
+      - "127.0.0.1:16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  nameserver:
+    image: apache/rocketmq:5.5.0
+    command: sh mqnamesrv
+    environment:
+      JAVA_OPT_EXT: -Xms64m -Xmx128m -Xmn32m
+    ports:
+      - "127.0.0.1:19876:9876"
+  broker:
+    image: apache/rocketmq:5.5.0
+    command: sh mqbroker -n nameserver:9876 -c /home/rocketmq/broker.conf
+    environment:
+      JAVA_OPT_EXT: -Xms128m -Xmx256m -Xmn64m -XX:MaxDirectMemorySize=128m
+    ports:
+      - "127.0.0.1:11011:11011"
+    volumes:
+      - ./deploy/dev/broker.conf:/home/rocketmq/broker.conf:ro
+    depends_on:
+      - nameserver
+
+volumes:
+  mysql-data:

@@ -11,7 +11,7 @@ import com.bee.smartlife.entity.Follow;
 import com.bee.smartlife.entity.User;
 import com.bee.smartlife.mapper.BlogMapper;
 import com.bee.smartlife.service.IBlogService;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.bee.smartlife.service.IFollowService;
 import com.bee.smartlife.service.IUserService;
 import com.bee.smartlife.utils.SystemConstants;
@@ -21,7 +21,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.bee.smartlife.service;
 
 import com.bee.smartlife.entity.BlogComments;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.spring.service.IService;
 
 /**
  * <p>
