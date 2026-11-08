@@ -159,7 +159,10 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 return;
             }
 
-            save(voucherOrder);
+            // 唯一键冲突等插入异常必须穿出事务方法，让本次数据库扣库存回滚。
+            if (!save(voucherOrder)) {
+                throw new IllegalStateException("订单保存失败");
+            }
         } finally {
             redisLock.unlock();
         }

@@ -12,6 +12,7 @@ import org.springframework.http.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.util.LinkedMultiValueMap;
 
 import java.io.IOException;
@@ -28,6 +29,7 @@ import static org.awaitility.Awaitility.await;
 /** Run only against the dedicated compose.dev.yaml services and synthetic seed data. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnabledIfEnvironmentVariable(named = "SMARTLIFE_INTEGRATION_TESTS", matches = "true")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class StackUpgradeIT {
     private static final Path UPLOADS = Path.of("target", "integration-uploads").toAbsolutePath();
 

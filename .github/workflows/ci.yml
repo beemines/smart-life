@@ -83,7 +83,7 @@ jobs:
           echo 'RocketMQ broker did not register' >&2
           exit 1
       - name: Test real login, queries, multipart upload and asynchronous ordering
-        run: mvn --batch-mode --no-transfer-progress -Dtest=StackUpgradeIT test
+        run: mvn --batch-mode --no-transfer-progress -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT test
       - name: Save test reports and service logs
         if: always()
         run: docker compose -p smart-life-ci -f compose.dev.yaml logs --no-color > service-logs.txt
