@@ -49,5 +49,5 @@ Files: `db/smart-life.sql`, `db/migrations/2026-11-08-order-user-voucher-unique.
 ## Task 3: Review and publish
 
 - [x] Request one independent read-only whole-branch review; fix material findings with reproductions and a green suite.
-- [ ] Merge the verified branch and publish using the user's existing authorization.
-- [ ] Confirm remote SHA equals the local publication and every check for that SHA succeeds. Record results outside the repo when no source change is needed.
+- [x] Merge the verified branch and publish using the user's existing authorization.
+- [x] Confirm remote SHA equals the local publication and every check for that SHA succeeds. Record results outside the repo when no source change is needed.
