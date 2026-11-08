@@ -58,6 +58,8 @@ Lua 将库存判断、重复领取判断和预扣库存放在同一次 Redis 脚
 
 **抢购接口返回订单 ID 代表请求已进入异步处理，不代表订单已完成落库或支付。** 当前没有订单处理进度查询接口。
 
+订单 ID 使用 UTC 秒差与 Redis 日序列，订单表以用户／优惠券组合唯一约束兜底。已有数据库需要执行一次增量迁移；序列保留、恢复约束及迁移步骤见 [订单安全说明](docs/order-safety.md)。
+
 入口：[VoucherOrderServiceImpl](src/main/java/com/bee/smartlife/service/impl/VoucherOrderServiceImpl.java)、[seckill.lua](src/main/resources/seckill.lua)、[mq](src/main/java/com/bee/smartlife/mq)。
 
 ### 3. 会话、互动与动态
@@ -219,17 +221,22 @@ curl "http://127.0.0.1:8081/shop/of/type?typeId=1&current=1"
 # 无需连接外部服务：编译、单元测试、打包。
 mvn clean verify
 
+# 自动集成回归：先配置隔离服务及 SMARTLIFE_INTEGRATION_TESTS=true。
+mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT test
+
 # 手动集成实验：需要独立的 MySQL、Redis 与 RocketMQ 测试环境。
 mvn -Dtest=SmartLifeApplicationIT,RedissonLockIT test
 ```
 
-CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，运行 `StackUpgradeIT` 验证登录、查询、上传与异步订单落库。运行命令见 [本地开发与集成验证](docs/local-development.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
+CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，运行 `StackUpgradeIT`、`OrderSafetyIT` 和 `RedisIdWorkerIT`，验证原有业务链路、数据库并发唯一约束／回滚／迁移和真实 Redis 发号。运行命令见 [本地开发与集成验证](docs/local-development.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
 
 ## 当前边界与后续方向
 
 当前版本适合本地学习、功能演示与后端工程实践。短信发送为模拟实现；支付、核销、退款、订单超时关闭和登出尚未完成。商户与上传相关接口也尚未建立完整的商家权限体系。
 
 后续重点是补齐订单状态闭环、异常补偿、消息幂等与可复现的压测验证，详见 [Roadmap](docs/roadmap.md)。README 不将这些计划描述为已实现功能。
+
+逐项改造前后、验收场景及完成状态见 [todolist.md](todolist.md)。
 
 ## 参与贡献
 

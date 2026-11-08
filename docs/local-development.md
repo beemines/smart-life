@@ -49,12 +49,14 @@ java -jar target/smart-life-0.0.1-SNAPSHOT.jar
 
 ```powershell
 $env:SMARTLIFE_INTEGRATION_TESTS = 'true'
-mvn '-Dtest=StackUpgradeIT' test
+mvn '-Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT' test
 ```
 
-Linux / macOS：`SMARTLIFE_INTEGRATION_TESTS=true mvn -Dtest=StackUpgradeIT test`。
+Linux / macOS：`SMARTLIFE_INTEGRATION_TESTS=true mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT test`。
 
-`StackUpgradeIT` 启动随机端口的应用，验证未登录 401、查询与分页、上传删除、验证码登录、Lua 预扣库存、真实 MQ 消费与数据库落单、重复领取拦截。测试只在该隔离环境运行，使用合成账号和优惠券，并清理自己的数据。不要针对现有业务库运行。历史的批量 Redis 实验不在该测试范围。
+`StackUpgradeIT` 启动随机端口的应用，验证未登录 401、查询与分页、上传删除、验证码登录、Lua 预扣库存、真实 MQ 消费与数据库落单、重复领取拦截。`OrderSafetyIT` 验证数据库并发唯一约束、事务回滚与安全迁移；`RedisIdWorkerIT` 验证真实 Redis 共享序列、跨日和独立 JVM 重启。测试只在该隔离环境运行，使用合成账号和优惠券，并清理自己的数据。不要针对现有业务库运行。历史的批量 Redis 实验不在该测试范围。
+
+已存在的开发数据库／Compose 卷不会重复执行初始化 DDL，使用本次唯一约束前需按 [订单安全说明](order-safety.md) 执行一次旧库迁移。
 
 前端开发检查：
 
