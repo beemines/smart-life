@@ -67,7 +67,7 @@ SOURCE /absolute/path/to/smart-life/src/main/resources/db/migrations/2026-11-08-
 mvn clean verify
 
 # 专用测试服务：原链路、数据库唯一约束／迁移、真实 Redis／独立 JVM 发号。
-mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT test
+mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionIT test
 
 # 前端检查，保留原有脚本与模板验证。
 npm run check:frontend
@@ -75,4 +75,4 @@ npm run check:frontend
 
 迁移集成测试使用连接局部的 `TEMPORARY` 旧结构订单表，显式 `DROP TEMPORARY` 清理，不删除真实订单表。其他案例仅清理自己创建的虚构券、订单和测试前缀计数。
 
-数据库事务回滚只恢复 MySQL 修改，不会自动恢复 Redis 预占。锁失败的 MQ 确认语义、消息发送超时、库存补偿幂等、支付／取消／退款仍是各自的待办，不将本次两个修复描述为完整订单可靠性闭环。
+数据库事务回滚只恢复 MySQL 修改，不会自动恢复 Redis 预占。本文记录上一轮 ID／唯一约束改动；后续已完成的锁竞争重试、订单重投识别、拒绝记录和归属校验补偿见 [订单消费与补偿](order-consumption.md)，其中保留四个原问题、触发例子与修改说明。完整生产者恢复、状态查询、对账及支付／取消／退款仍是各自的待办。

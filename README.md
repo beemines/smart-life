@@ -222,19 +222,21 @@ curl "http://127.0.0.1:8081/shop/of/type?typeId=1&current=1"
 mvn clean verify
 
 # 自动集成回归：先配置隔离服务及 SMARTLIFE_INTEGRATION_TESTS=true。
-mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT test
+mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionIT test
 
 # 手动集成实验：需要独立的 MySQL、Redis 与 RocketMQ 测试环境。
 mvn -Dtest=SmartLifeApplicationIT,RedissonLockIT test
 ```
 
-CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，运行 `StackUpgradeIT`、`OrderSafetyIT` 和 `RedisIdWorkerIT`，验证原有业务链路、数据库并发唯一约束／回滚／迁移和真实 Redis 发号。运行命令见 [本地开发与集成验证](docs/local-development.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
+CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，运行 `StackUpgradeIT`、`OrderSafetyIT`、`RedisIdWorkerIT` 和 `OrderConsumptionIT`，验证原有业务链路、数据库唯一约束／回滚／迁移、真实 Redis 发号，以及订单重投、锁竞争、事务提交边界与幂等补偿。运行命令见 [本地开发与集成验证](docs/local-development.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
+
+旧开发库先执行新增的 [失败记录迁移](src/main/resources/db/migrations/2026-11-09-order-consumption-failure.sql)。消费安全改动需要停止旧版生产者／消费者后协调切换，不支持新旧消费者混跑；说明及核对步骤见 [订单消费与补偿](docs/order-consumption.md)。
 
 ## 当前边界与后续方向
 
 当前版本适合本地学习、功能演示与后端工程实践。短信发送为模拟实现；支付、核销、退款、订单超时关闭和登出尚未完成。商户与上传相关接口也尚未建立完整的商家权限体系。
 
-后续重点是补齐订单状态闭环、异常补偿、消息幂等与可复现的压测验证，详见 [Roadmap](docs/roadmap.md)。README 不将这些计划描述为已实现功能。
+已实现订单 ID 重投识别、锁竞争重试、持锁至事务完成、确定业务拒绝记录及订单归属校验的 Redis 补偿。历史预占归属无法验证或库存损坏时保留人工核对记录。后续仍需完整的受理状态查询、生产者中断恢复、库存对账、支付闭环与可复现压测，详见 [Roadmap](docs/roadmap.md)。
 
 逐项改造前后、验收场景及完成状态见 [todolist.md](todolist.md)。
 
