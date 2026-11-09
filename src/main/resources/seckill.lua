@@ -1,34 +1,22 @@
+-- KEYS: stock, eligible users, reservation owners. ARGV: voucher, user, order.
+local stockKey, orderKey, ownerKey = KEYS[1], KEYS[2], KEYS[3]
+local userId, orderId = ARGV[2], ARGV[3]
 
--- 1.参数列表
--- 1.1 优惠券id
-local voucherId = ARGV[1]
--- 1.2 用户id
-local userId = ARGV[2]
--- 1.3订单id
-local orderId = ARGV[3];
-
--- 2.数据key
--- 2.1 库存key
-local stockKey = 'seckill:stock:' .. voucherId
--- 2.2 订单key
-local orderKey = 'seckill:order:' .. voucherId
-
--- 3.脚本业务
---3.1判断库存是否充足
-local stock = tonumber(redis.call('get', stockKey))
-if (not stock) or (stock <= 0) then
-    return 1
-end
---3.2 判断用户是否下单 SISMEMBER orderKey userId
-if(redis.call('sismember',orderKey,userId)==1)then
-    -- 用户已经下单，返回2
-    return 2;
-end
--- 3.4扣库存 incrby stockKey -1
-redis.call('incrby',stockKey,-1)
--- 3.5下单（保存用户）sadd orderKey userId
-redis.call('sadd',orderKey,userId)
----- 3.6发送消息到消息队列中，XADD stream.orders * k1 v1 k2 v2 ...
---redis.call('xadd','stream.orders','*','userId',userId,'voucherId',voucherId,'id',orderId)
-
-return 0;
+-- Validate before mutating: a Lua error does not undo earlier writes.
+local stockType = redis.call('type', stockKey).ok
+local orderType = redis.call('type', orderKey).ok
+local ownerType = redis.call('type', ownerKey).ok
+if stockType ~= 'string' and stockType ~= 'none' then return 3 end
+if orderType ~= 'set' and orderType ~= 'none' then return 3 end
+if ownerType ~= 'hash' and ownerType ~= 'none' then return 3 end
+local rawStock = redis.call('get', stockKey)
+if not rawStock then return 1 end
+local canonical = rawStock == '0' or string.match(rawStock, '^[1-9]%d*$')
+if not canonical or tonumber(rawStock) > 2147483647 then return 3 end
+if tonumber(rawStock) <= 0 then return 1 end
+if redis.call('sismember', orderKey, userId) == 1 then return 2 end
+if redis.call('hexists', ownerKey, userId) == 1 then return 3 end
+redis.call('incrby', stockKey, -1)
+redis.call('sadd', orderKey, userId)
+redis.call('hset', ownerKey, userId, orderId)
+return 0

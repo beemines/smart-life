@@ -50,6 +50,7 @@ class OrderSafetyIT {
     @AfterEach
     void cleanOnlyOwnedFixtures() {
         for (long owned : ownedVouchers) {
+            jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher WHERE id=?", owned);
@@ -104,11 +105,11 @@ class OrderSafetyIT {
     }
 
     @Test
-    void primaryKeyCollisionEscapesTheServiceAndRollsBackItsStockDeduction() {
+    void primaryKeyPayloadCollisionIsRejectedBeforeStockDeduction() {
         long existingId = IDS.incrementAndGet();
         insertOrder(existingId, userId + 1, voucherId);
         var colliding = new VoucherOrder().setId(existingId).setUserId(userId).setVoucherId(voucherId);
-        assertThatThrownBy(() -> orders.createVoucherOrder(colliding)).isInstanceOf(DuplicateKeyException.class);
+        assertThatThrownBy(() -> orders.createVoucherOrder(colliding)).isInstanceOf(IllegalArgumentException.class);
         assertThat(stock()).isEqualTo(10);
         assertThat(jdbc.queryForObject("SELECT user_id FROM tb_voucher_order WHERE id=?", Long.class, existingId)).isEqualTo(userId + 1);
     }

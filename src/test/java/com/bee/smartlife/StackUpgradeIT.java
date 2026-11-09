@@ -135,10 +135,12 @@ class StackUpgradeIT {
             assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order WHERE voucher_id=?", Long.class, voucherId)).isEqualTo(1L);
         } finally {
             if (voucherId != null) {
+                jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_voucher WHERE id=?", voucherId);
-                redis.delete(java.util.List.of("seckill:stock:" + voucherId, "seckill:order:" + voucherId));
+                redis.delete(java.util.List.of("seckill:stock:" + voucherId, "seckill:order:" + voucherId,
+                        "seckill:reservation:" + voucherId));
             }
             if (userId != null) jdbc.update("DELETE FROM tb_user WHERE id=?", userId);
             if (token != null) redis.delete("login:token:" + token);

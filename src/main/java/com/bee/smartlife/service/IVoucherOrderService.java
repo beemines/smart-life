@@ -1,6 +1,7 @@
 package com.bee.smartlife.service;
 
 import com.bee.smartlife.dto.Result;
+import com.bee.smartlife.dto.OrderProcessingResult;
 import com.bee.smartlife.entity.VoucherOrder;
 import com.baomidou.mybatisplus.spring.service.IService;
 
@@ -16,5 +17,5 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
 
     Result seckillVoucher(Long voucherId);
 
-    void createVoucherOrder(VoucherOrder voucherOrder);
+    OrderProcessingResult createVoucherOrder(VoucherOrder voucherOrder);
 }
