@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.redisson.api.RedissonClient;
 import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.sql.Statement;
 import java.nio.charset.StandardCharsets;
@@ -401,6 +403,13 @@ class OrderConsumptionIT {
             message.setUserId(userId);
             message.setVoucherId(voucherId);
             producer.sendSeckillOrder(message);
+            // A fresh topic may need a route-refresh/rebalance cycle before any delivery.
+            // Separate infrastructure readiness from the unchanged 15s business assertion.
+            var live = (DefaultMQPushConsumer) Objects.requireNonNull(ReflectionTestUtils.getField(consumer, "consumer"));
+            await().atMost(Duration.ofSeconds(45)).until(() -> live.getDefaultMQPushConsumerImpl()
+                    .getRebalanceImpl().getProcessQueueTable().entrySet().stream()
+                    .anyMatch(entry -> !entry.getValue().isDropped()
+                            && !entry.getKey().getTopic().startsWith("%RETRY%")));
             assertThat(firstRetry.await(15, TimeUnit.SECONDS)).isTrue();
             assertThat(orderCount()).isZero();
         } finally {
