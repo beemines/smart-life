@@ -52,4 +52,4 @@ Interfaces: reservation.reserve(VoucherOrder) -> long; reservation.compensate(Vo
 - [x] One independent whole-branch review, fix important findings with RED/GREEN tests and a green complete suite.
 - [x] Update migration/recovery guide, four problem statements, validation record and only verified todo entries.
 - [x] Run clean verify, all real integration suites and frontend checks; commit.
-- [ ] Fast-forward approved main delivery, push, inspect every final-commit CI job and fix any failure before completion.
+- [x] Fast-forward approved main delivery, push, inspect every final-commit CI job and fix any failure before completion. Code commit de3ab7c passed all three jobs in run 42638777873; verify the documentation-only closing commit as well.

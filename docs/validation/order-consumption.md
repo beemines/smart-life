@@ -47,3 +47,7 @@ node scripts/check-frontend.mjs
 - Redis数据丢失、分布式锁在故障切换中的保证、MQ保留策略和DLQ操作不由本次测试证明。
 
 具体代码行为、保留的四个原问题、迁移与核对SQL见 [订单消费说明](../order-consumption.md)。最终提交的远端CI在交付前逐项检查，不用本地测试代替远端结果。
+
+## 远端验收
+
+修正首次订阅就绪验证后，代码提交 `de3ab7c2a968ae86e3a6721abfeaaaba61adf140` 的 [CI运行](https://github.com/beemines/smart-life/actions/runs/42638777873) 三项全部成功：Java21、Frontend and Nginx、API and MQ integration (Java21)。此后只更新清单与验收记录，收尾提交同样在交付前核对其三项CI。
