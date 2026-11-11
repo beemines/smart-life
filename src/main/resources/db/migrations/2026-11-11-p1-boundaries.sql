@@ -10,6 +10,18 @@ CREATE TABLE IF NOT EXISTS tb_shop_permission (
     CONSTRAINT ck_shop_permission_scope CHECK ((role='ADMIN' AND shop_id=0) OR (role='OWNER' AND shop_id>0))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS tb_shop_cache_sync (
+    shop_id BIGINT UNSIGNED NOT NULL,
+    version BIGINT UNSIGNED NOT NULL,
+    synced_version BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    attempts INT UNSIGNED NOT NULL DEFAULT 0,
+    last_attempt_at DATETIME NULL,
+    last_error VARCHAR(255) NULL,
+    update_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (shop_id),
+    KEY idx_shop_sync (synced_version,update_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS tb_uploaded_file (
     name VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     user_id BIGINT UNSIGNED NOT NULL,

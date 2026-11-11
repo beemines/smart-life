@@ -51,9 +51,7 @@ public class ShopController {
         permission.requireAdmin();
         Shop shop=input.toShop(true);
         // 写入数据库
-        shopService.save(shop);
-        // 返回店铺id
-        return Result.ok(shop.getId());
+        return shopService.create(shop);
     }
 
     /**

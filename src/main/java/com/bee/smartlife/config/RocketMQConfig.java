@@ -15,6 +15,7 @@ public class RocketMQConfig {
     @Bean(initMethod = "start", destroyMethod = "shutdown")
     public DefaultMQProducer voucherOrderProducer() throws MQClientException {
         DefaultMQProducer producer = new DefaultMQProducer("voucher-order-producer-group");
+        producer.setInstanceName("smartlife-"+java.util.UUID.randomUUID());
         producer.setNamesrvAddr(nameServer);
         producer.setVipChannelEnabled(false);
         producer.setSendMsgTimeout(3000);

@@ -43,10 +43,10 @@ Files: ShopServiceImpl, focused ShopCache/ShopCacheSync helper, Spring retry/MQ 
 
 Interfaces: authority fromTask1; shop.create/update use per-shop lock + SQL transaction through TransactionTemplate. cache.find(id,load) locks miss/read/fill, bypasses caches while pending; sync.trySync(id) and retryPending(limit) evict then publish SEND_OK and conditional ack; receiver only evicts local cache.
 
-- [ ] RED: create immediately queryable, failed Bloom sync still queryable and recoverable, paused commit overlap and final local fill protected, existing target check.
-- [ ] Implement durable version, postcommit locked sync, pending-aware misses and retry; no cache fill outside lock.
-- [ ] RED/GREEN: two contexts with distinct local caches receive actual MQ broadcast; duplicate event safe; expired local entry plus missed notification falls back safely. Record refill count/latency separately from sync metadata queries if running benchmark.
-- [ ] Focused suite GREEN; commit.
+- [x] RED: create immediately queryable, failed Bloom sync still queryable and recoverable, paused commit overlap and final local fill protected, existing target check.
+- [x] Implement durable version, postcommit locked sync, pending-aware misses and retry; no cache fill outside lock.
+- [x] RED/GREEN: two contexts with distinct local caches receive actual MQ broadcast; duplicate event safe; expired local entry plus missed notification falls back safely. Record refill count/latency separately from sync metadata queries if running benchmark.
+- [x] Focused suite GREEN; commit.
 
 ### Task3: activity eligibility and durable first publication
 
