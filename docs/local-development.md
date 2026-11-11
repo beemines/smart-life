@@ -49,10 +49,10 @@ java -jar target/smart-life-0.0.1-SNAPSHOT.jar
 
 ```powershell
 $env:SMARTLIFE_INTEGRATION_TESTS = 'true'
-mvn '-Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT' test
+mvn '-Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionIT,OrderRequestRecoveryIT' test
 ```
 
-Linux / macOS：`SMARTLIFE_INTEGRATION_TESTS=true mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT test`。
+Linux / macOS：`SMARTLIFE_INTEGRATION_TESTS=true mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionIT,OrderRequestRecoveryIT test`。
 
 `StackUpgradeIT` 启动随机端口的应用，验证未登录 401、查询与分页、上传删除、验证码登录、Lua 预扣库存、真实 MQ 消费与数据库落单、重复领取拦截。`OrderSafetyIT` 验证数据库并发唯一约束、事务回滚与安全迁移；`RedisIdWorkerIT` 验证真实 Redis 共享序列、跨日和独立 JVM 重启。测试只在该隔离环境运行，使用合成账号和优惠券，并清理自己的数据。不要针对现有业务库运行。历史的批量 Redis 实验不在该测试范围。
 
@@ -63,8 +63,11 @@ Linux / macOS：`SMARTLIFE_INTEGRATION_TESTS=true mvn -Dtest=StackUpgradeIT,Orde
 ```bash
 npm ci --ignore-scripts
 npm run check:frontend
+npm run test:frontend
 ```
 
 停止服务可用 `docker compose -p smart-life-dev -f compose.dev.yaml down`；默认保留 MySQL 演示卷。Windows 重新打包前先停止正在运行的 JAR，避免文件被占用。
 
 当前客户端为 RocketMQ 5.5.1，官方 Broker 镜像为 5.5.0；经典 Producer / PushConsumer 链路由真实集成测试验证。升级过程与结果见 [验证记录](validation/stack-upgrade.md)。
+
+订单受理恢复需要执行新增表迁移，操作、截图与演示见 [受理恢复](order-recovery.md)。集成测试请关闭自动恢复调度以隔离夹具：`SMARTLIFE_ORDER_RECOVERY_ENABLED=false`。

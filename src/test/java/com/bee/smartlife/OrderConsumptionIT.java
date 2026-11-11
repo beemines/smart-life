@@ -106,6 +106,8 @@ class OrderConsumptionIT {
     void cleanOnlyOwnedFixture() {
         UserHolder.removeUser();
         for (long owned : ownedVouchers) {
+            jdbc.update("DELETE FROM tb_voucher_order_recovery WHERE voucher_id=?", owned);
+            jdbc.update("DELETE FROM tb_voucher_order_request WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", owned);
@@ -164,8 +166,7 @@ class OrderConsumptionIT {
     void replayingTheSameCompensationCannotIncreaseInventoryTwice() {
         long id = IDS.incrementAndGet();
         reserve(id);
-        compensate(id, null);
-        compensate(id, null);
+        for (int attempt = 0; attempt < 10; attempt++) compensate(id, null);
         assertThat(redis.opsForValue().get("seckill:stock:" + voucherId)).isEqualTo("10");
     }
 
@@ -231,7 +232,7 @@ class OrderConsumptionIT {
     }
 
     @Test
-    void delayedDeliveryAfterSendRejectionMustNotCreateAnOrderUsingReleasedStock() throws Exception {
+    void delayedDeliveryAfterUncertainSendUsesTheRetainedReservationExactlyOnce() throws Exception {
         authenticateFixtureUser();
         redis.opsForValue().set("seckill:stock:" + voucherId, "10");
         var delayed = new AtomicReference<VoucherOrderMessage>();
@@ -239,11 +240,13 @@ class OrderConsumptionIT {
             delayed.set(invocation.getArgument(0));
             throw new java.net.SocketTimeoutException("fixture: delivery delayed beyond send timeout");
         }).when(producer).sendSeckillOrder(any());
-        assertThat(orders.seckillVoucher(voucherId).getSuccess()).isFalse();
+        assertThat(orders.seckillVoucher(voucherId).getSuccess()).isTrue();
+        assertThat(redis.opsForValue().get("seckill:stock:" + voucherId)).isEqualTo("9");
         orders.createVoucherOrder(order(delayed.get().getOrderId()));
-        assertThat(orderCount()).isZero();
-        assertThat(stock()).isEqualTo(10);
-        assertThat(redis.opsForValue().get("seckill:stock:" + voucherId)).isEqualTo("10");
+        orders.createVoucherOrder(order(delayed.get().getOrderId()));
+        assertThat(orderCount()).isEqualTo(1);
+        assertThat(stock()).isEqualTo(9);
+        assertThat(redis.opsForValue().get("seckill:stock:" + voucherId)).isEqualTo("9");
     }
 
     @Test

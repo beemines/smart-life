@@ -56,7 +56,7 @@ SmartLife 面向本地生活消费场景，提供商户与分类查询、优惠�
 
 Lua 将库存判断、重复领取判断和预扣库存放在同一次 Redis 脚本执行中。订单持久化由 RocketMQ 消费者异步处理，数据库使用 `stock > 0` 条件扣减库存；消费抛出异常时请求消息重试。
 
-**抢购接口返回订单 ID 代表请求已进入异步处理，不代表订单已完成落库或支付。** 当前没有订单处理进度查询接口。
+**抢购接口返回字符串订单 ID 代表请求已持久受理，不代表订单已完成落库或支付。** 客户端通过请求标识或订单 ID 查询真实结果，现有抢购页面显示处理中、已创建、已拒绝或待核对。
 
 订单 ID 使用 UTC 秒差与 Redis 日序列，订单表以用户／优惠券组合唯一约束兜底。已有数据库需要执行一次增量迁移；序列保留、恢复约束及迁移步骤见 [订单安全说明](docs/order-safety.md)。
 
@@ -200,6 +200,8 @@ curl "http://127.0.0.1:8081/shop/of/type?typeId=1&current=1"
 | GET | `/voucher/list/{shopId}` | 商户优惠券 |
 | POST | `/voucher/seckill` | 创建秒杀券并写入 Redis 库存 |
 | POST | `/voucher-order/seckill/{id}` | 抢购优惠券，异步创建订单 |
+| GET | `/voucher-order/result/{orderId}` | 查询自己的订单受理结果 |
+| GET | `/voucher-order/request/{requestKey}` | 按当前用户的幂等请求标识查询结果 |
 | GET | `/blog/hot?current=1` | 热门探店笔记 |
 | PUT | `/blog/like/{id}` | 点赞 / 取消点赞 |
 | GET | `/blog/of/follow?lastId=...&offset=0` | 关注动态滚动查询 |
@@ -228,15 +230,15 @@ mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionIT test
 mvn -Dtest=SmartLifeApplicationIT,RedissonLockIT test
 ```
 
-CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，运行 `StackUpgradeIT`、`OrderSafetyIT`、`RedisIdWorkerIT` 和 `OrderConsumptionIT`，验证原有业务链路、数据库唯一约束／回滚／迁移、真实 Redis 发号，以及订单重投、锁竞争、事务提交边界与幂等补偿。运行命令见 [本地开发与集成验证](docs/local-development.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
+CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，运行 `StackUpgradeIT`、`OrderSafetyIT`、`RedisIdWorkerIT` 、`OrderConsumptionIT` 和 `OrderRequestRecoveryIT`，验证原有业务链路、数据库唯一约束／回滚／迁移、真实 Redis 发号，以及订单重投、锁竞争、事务提交边界与幂等补偿。运行命令见 [本地开发与集成验证](docs/local-development.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
 
-旧开发库先执行新增的 [失败记录迁移](src/main/resources/db/migrations/2026-11-09-order-consumption-failure.sql)。消费安全改动需要停止旧版生产者／消费者后协调切换，不支持新旧消费者混跑；说明及核对步骤见 [订单消费与补偿](docs/order-consumption.md)。
+旧开发库先执行 [失败记录迁移](src/main/resources/db/migrations/2026-11-09-order-consumption-failure.sql)，再执行 [受理与恢复迁移](src/main/resources/db/migrations/2026-11-11-order-request-recovery.sql)。消费安全改动需要停止旧版生产者／消费者后协调切换，不支持新旧消费者混跑；说明及核对步骤见 [订单消费与补偿](docs/order-consumption.md) 和 [受理恢复操作说明](docs/order-recovery.md)。
 
 ## 当前边界与后续方向
 
 当前版本适合本地学习、功能演示与后端工程实践。短信发送为模拟实现；支付、核销、退款、订单超时关闭和登出尚未完成。商户与上传相关接口也尚未建立完整的商家权限体系。
 
-已实现订单 ID 重投识别、锁竞争重试、持锁至事务完成、确定业务拒绝记录及订单归属校验的 Redis 补偿。历史预占归属无法验证或库存损坏时保留人工核对记录。后续仍需完整的受理状态查询、生产者中断恢复、库存对账、支付闭环与可复现压测，详见 [Roadmap](docs/roadmap.md)。
+已实现订单 ID 重投识别、锁竞争重试、持锁至事务完成、确定业务拒绝记录及订单归属校验的 Redis 补偿，并增加持久受理、原 ID 重发、结果查询与有审计的超时恢复。历史预占归属无法验证或库存损坏时保留人工核对记录，不根据库存差额盲目补量。支付闭环与可复现压测仍待完成，详见 [Roadmap](docs/roadmap.md)。
 
 逐项改造前后、验收场景及完成状态见 [todolist.md](todolist.md)。
 

@@ -5,6 +5,7 @@ import com.bee.smartlife.entity.SeckillVoucher;
 import com.bee.smartlife.entity.VoucherOrder;
 import com.bee.smartlife.mapper.VoucherOrderFailureMapper;
 import com.bee.smartlife.mapper.VoucherOrderMapper;
+import com.bee.smartlife.mapper.VoucherOrderRequestMapper;
 import com.bee.smartlife.service.ISeckillVoucherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,8 @@ class VoucherOrderPersistenceTest {
         doReturn(update).when(update).gt(anyString(), any());
         when(update.update()).thenReturn(true);
         when(vouchers.update()).thenReturn(update);
-        persistence = new VoucherOrderPersistence(mapper, mock(VoucherOrderFailureMapper.class), vouchers);
+        persistence = new VoucherOrderPersistence(mapper, mock(VoucherOrderFailureMapper.class), vouchers,
+                mock(VoucherOrderRequestMapper.class));
     }
 
     @Test

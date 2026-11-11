@@ -130,11 +130,14 @@ class StackUpgradeIT {
             assertThat(redis.opsForValue().get("seckill:stock:" + voucherId)).isEqualTo("1");
             JsonNode duplicate = http.exchange("/voucher-order/seckill/" + voucherId,
                     HttpMethod.POST, new HttpEntity<>(headers), JsonNode.class).getBody();
-            assertThat(duplicate.path("success").asBoolean()).isFalse();
+            assertThat(duplicate.path("success").asBoolean()).as("first=%s duplicate=%s requests=%s", accepted, duplicate,
+                    jdbc.queryForList("SELECT order_id,request_key,state,reason FROM tb_voucher_order_request WHERE voucher_id=?", voucherId)).isFalse();
             assertThat(duplicate.path("errorMsg").asText()).isEqualTo("不能重复下单");
             assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order WHERE voucher_id=?", Long.class, voucherId)).isEqualTo(1L);
         } finally {
             if (voucherId != null) {
+                jdbc.update("DELETE FROM tb_voucher_order_recovery WHERE voucher_id=?", voucherId);
+                jdbc.update("DELETE FROM tb_voucher_order_request WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", voucherId);

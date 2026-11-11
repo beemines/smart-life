@@ -11,7 +11,10 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 public class SmartLifeApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SmartLifeApplication.class, args);
+        var context = SpringApplication.run(SmartLifeApplication.class, args);
+        if (context.getEnvironment().getProperty("smartlife.orders.recovery-cli", Boolean.class, false)) {
+            context.close();
+        }
     }
 
 }

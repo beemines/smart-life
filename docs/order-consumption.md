@@ -36,15 +36,13 @@
 
 ## 发送超时与延迟消息
 
-发送抛异常不代表Broker一定没收到。现在同样在订单／用户锁保护下检查终态：已成功则返回原订单ID，不回滚其预占；尚未成功则先提交 SEND_FAILED 拒绝记录，再补偿。之后到达的延迟消息读取拒绝终态，不再使用已经释放的库存落单。
-
-如果此时锁、MySQL或Redis不可用，会返回带订单ID的“结果待确认”，保留预占、记录核对日志，不盲目恢复库存。该异常边界仍需运维核对；本改动没有实现生产者事务 Outbox，也不保证任意长时间数据库／Broker故障下的自动发布恢复。
+发送异常或非 SEND_OK 不代表 Broker 未收到。当前先持久化受理记录，保留预占并标记待核对，按原订单 ID 恢复发送；晚到消息复用消费幂等，不会因发送超时直接释放库存。发送结果不能覆盖消费者已提交的终态。详见 [受理、查询与恢复](order-recovery.md)。
 
 ## 部署：需要协调切换，不能混跑新旧消费者
 
 1. 暂停领券入口，等待在途HTTP请求结束。
 2. 停止并确认所有旧版消费者／生产者进程退出，等待在途消费者事务结束。不能仅新增表后直接混合滚动发布。
-3. 确认原用户＋券唯一约束已存在，执行 db/migrations/2026-11-09-order-consumption-failure.sql。它只新增表，不修改／删除已有订单。新建库DDL也包含此表。
+3. 确认原用户＋券唯一约束已存在，执行 db/migrations/2026-11-09-order-consumption-failure.sql。并执行 db/migrations/2026-11-11-order-request-recovery.sql。均只新增表，不修改／删除已有订单；新建库DDL已包含。
 4. 启动全部新版消费者，再开放新版生产者和领券入口。旧Redis Set可继续拦重复，但其中没有订单归属的失败补偿进入 manual，不凭空推断归属。
 5. 先核对小批量领券的订单、失败结果和两个存储的库存，再恢复常规流量。
 
@@ -60,7 +58,7 @@ WHERE compensation_status IN ('pending','manual')
 ORDER BY create_time;
 ```
 
-pending 先检查相同订单ID的成功记录、MQ重试和DLQ，再通过现有Broker运维工具以**原订单ID、用户、券**重新投递。重复投递会继续原拒绝结果的幂等补偿，不会创建新订单。这里没有额外引入调度框架。
+pending 先检查相同订单ID的成功记录、MQ重试和DLQ，再使用 [恢复CLI](order-recovery.md) 预览、执行。原拒绝结果继续幂等补偿，不会创建新订单；既有 Spring 调度负责超时扫描，没有额外调度框架。
 
 manual 必须先核对真实订单、Redis库存及资格归属，修复有证据的数据后才可把该记录改回 pending 并重投；不要只把状态改成 done 来掩盖问题。不得删除有效订单的资格。库存原本不一致时，退回本次预占只是撤销一次操作，不等于自动修复此前所有库存差异。
 
@@ -70,6 +68,6 @@ manual 必须先核对真实订单、Redis库存及资格归属，修复有证�
 
 提交后未ACK通过“生产服务先完成真实提交，再重投相同消息”覆盖等价业务边界；没有将它描述成已杀掉并重启整个应用进程的实验。
 
-接口、前端页面和依赖版本保持现有方案。仅新增必要持久化状态及小范围服务分工，没有增加业务页面或工作流框架。
+本次扩展现有抢购页面与查询接口；仅新增必要持久化状态及小范围服务分工，没有增加独立业务页面或工作流框架。
 
 官方接口依据：[RocketMQ Push Consumer](https://rocketmq.apache.org/docs/4.x/consumer/02push/)、[Spring事务注解](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html)、[Redis Lua](https://redis.io/docs/latest/develop/programmability/eval-intro/)。客户端仍为项目既有RocketMQ 5.5.1；Push Consumer使用其兼容的经典Java客户端接口。

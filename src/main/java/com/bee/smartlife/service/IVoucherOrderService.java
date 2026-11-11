@@ -17,5 +17,13 @@ public interface IVoucherOrderService extends IService<VoucherOrder> {
 
     Result seckillVoucher(Long voucherId);
 
+    Result seckillVoucher(Long voucherId, String requestKey);
+
+    Result queryOrderResult(Long orderId);
+
+    Result queryRequestResult(String requestKey);
+
+    String recoverOrder(Long orderId, java.time.LocalDateTime staleBefore);
+
     OrderProcessingResult createVoucherOrder(VoucherOrder voucherOrder);
 }

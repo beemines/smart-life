@@ -17,8 +17,13 @@ public class VoucherOrderReservation {
     private final StringRedisTemplate redis;
 
     public long reserve(VoucherOrder order) {
+        return reserve(order, true);
+    }
+
+    public long reserve(VoucherOrder order, boolean allowNewReservation) {
         Long result = redis.execute(RESERVE, keys(order.getVoucherId()),
-                order.getVoucherId().toString(), order.getUserId().toString(), order.getId().toString());
+                order.getVoucherId().toString(), order.getUserId().toString(), order.getId().toString(),
+                allowNewReservation ? "1" : "0");
         if (result == null) throw new OrderRetryException("Redis预占结果为空");
         return result;
     }

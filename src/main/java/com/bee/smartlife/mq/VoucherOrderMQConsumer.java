@@ -31,15 +31,22 @@ public class VoucherOrderMQConsumer implements MessageListenerConcurrently {
     @Value("${rocketmq.seckill-topic}")
     private String topic;
 
+    @Value("${rocketmq.consumer-group:voucher-order-consumer-group}")
+    private String consumerGroup;
+
     @Resource
     private IVoucherOrderService voucherOrderService;
 
     private DefaultMQPushConsumer consumer;
 
+    @Value("${smartlife.orders.consumer-enabled:true}")
+    private boolean enabled;
+
     @EventListener(ApplicationReadyEvent.class)
     public void start() {
+        if (!enabled) return;
         try {
-            consumer = new DefaultMQPushConsumer("voucher-order-consumer-group");
+            consumer = new DefaultMQPushConsumer(consumerGroup);
             consumer.setNamesrvAddr(nameServer);
             consumer.setVipChannelEnabled(false);
             consumer.subscribe(topic, "*");

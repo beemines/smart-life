@@ -23,13 +23,17 @@ axios.interceptors.response.use(function (response) {
 }, function (error) {
   // 一般是服务端异常或者网络异常
   console.log(error)
-  if(error.response.status == 401){
+  if(error.response && error.response.status == 401){
     // 未登录，跳转
     setTimeout(() => {
       location.href = "/login.html"
     }, 200);
     return Promise.reject("请先登录");
   }
+  if(error.code === 'ECONNABORTED' || error.code === 'ETIMEDOUT') {
+    return Promise.reject("请求超时，请稍后重试");
+  }
+  if(!error.response) return Promise.reject("网络连接异常，请稍后重试");
   return Promise.reject("服务器异常");
 });
 axios.defaults.paramsSerializer = function(params) {
@@ -43,6 +47,26 @@ axios.defaults.paramsSerializer = function(params) {
 }
 const util = {
   commonURL,
+  newRequestKey() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    return Array.from(crypto.getRandomValues(new Uint8Array(16)), value => value.toString(16).padStart(2, '0')).join('');
+  },
+  rotateOrderSession() {
+    // Only cache a random namespace, never the bearer credential. A fresh login
+    // drops the previous login's cached orders (the server remains authoritative).
+    const keys = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith('smartlife:order:')) keys.push(key);
+    }
+    keys.forEach(key => sessionStorage.removeItem(key));
+    const namespace = this.newRequestKey();
+    sessionStorage.setItem('smartlife:order-session', namespace);
+    return namespace;
+  },
+  orderSessionKey() {
+    return sessionStorage.getItem('smartlife:order-session') || this.rotateOrderSession();
+  },
   getUrlParam(name) {
     let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
     let r = window.location.search.substr(1).match(reg);

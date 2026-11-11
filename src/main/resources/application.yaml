@@ -9,6 +9,8 @@ spring:
     url: jdbc:mysql://${SMARTLIFE_DB_HOST:127.0.0.1}:${SMARTLIFE_DB_PORT:3306}/${SMARTLIFE_DB_NAME:smartlife}?sslMode=${SMARTLIFE_DB_SSL_MODE:PREFERRED}&serverTimezone=UTC&characterEncoding=utf8
     username: ${SMARTLIFE_DB_USER:root}
     password: ${SMARTLIFE_DB_PASSWORD:}
+    hikari:
+      connection-init-sql: "SET time_zone = '+00:00'"
   data:
     redis:
       host: ${SMARTLIFE_REDIS_HOST:127.0.0.1}
@@ -33,5 +35,12 @@ logging:
 rocketmq:
   name-server: ${SMARTLIFE_MQ_NAME_SERVER:127.0.0.1:9876}
   seckill-topic: ${SMARTLIFE_MQ_TOPIC:smartlife-seckill-order}
+  consumer-group: ${SMARTLIFE_MQ_CONSUMER_GROUP:voucher-order-consumer-group}
 smartlife:
   upload-dir: ${SMARTLIFE_UPLOAD_DIR:./uploads}
+  orders:
+    consumer-enabled: ${SMARTLIFE_ORDER_CONSUMER_ENABLED:true}
+    recovery-enabled: ${SMARTLIFE_ORDER_RECOVERY_ENABLED:true}
+    recovery-delay-ms: 60000
+    recovery-age-seconds: 120
+    recovery-batch: 100

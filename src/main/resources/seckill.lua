@@ -10,12 +10,20 @@ if stockType ~= 'string' and stockType ~= 'none' then return 3 end
 if orderType ~= 'set' and orderType ~= 'none' then return 3 end
 if ownerType ~= 'hash' and ownerType ~= 'none' then return 3 end
 local rawStock = redis.call('get', stockKey)
-if not rawStock then return 1 end
+if not rawStock then
+    if ARGV[4] == '0' then return 5 end
+    return 1
+end
 local canonical = rawStock == '0' or string.match(rawStock, '^[1-9]%d*$')
 if not canonical or tonumber(rawStock) > 2147483647 then return 3 end
-if tonumber(rawStock) <= 0 then return 1 end
-if redis.call('sismember', orderKey, userId) == 1 then return 2 end
+if redis.call('sismember', orderKey, userId) == 1 then
+    if redis.call('hget', ownerKey, userId) == orderId then return 4 end
+    return 2
+end
 if redis.call('hexists', ownerKey, userId) == 1 then return 3 end
+-- PENDING has already reserved; missing ownership is not permission to reserve twice.
+if ARGV[4] == '0' then return 5 end
+if tonumber(rawStock) <= 0 then return 1 end
 redis.call('incrby', stockKey, -1)
 redis.call('sadd', orderKey, userId)
 redis.call('hset', ownerKey, userId, orderId)

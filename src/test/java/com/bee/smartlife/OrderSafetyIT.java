@@ -50,6 +50,8 @@ class OrderSafetyIT {
     @AfterEach
     void cleanOnlyOwnedFixtures() {
         for (long owned : ownedVouchers) {
+            jdbc.update("DELETE FROM tb_voucher_order_recovery WHERE voucher_id=?", owned);
+            jdbc.update("DELETE FROM tb_voucher_order_request WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", owned);
