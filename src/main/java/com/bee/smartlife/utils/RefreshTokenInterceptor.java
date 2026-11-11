@@ -24,6 +24,8 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // A previous failed preHandle may never receive afterCompletion.
+        UserHolder.removeUser();
         // 1.获取请求头中的token
         String token = request.getHeader("authorization");
         if (StrUtil.isBlank(token)) {
@@ -39,11 +41,11 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         // 5.将查询到的Hash数据转换为UserDTO对象
         UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
 
-        // 6.存在，保存用户信息到ThreadLocal
-        UserHolder.saveUser(userDTO);
-
         // 7.刷新token有效期
-        stringRedisTemplate.expire(key,LOGIN_USER_TTL, TimeUnit.MINUTES);
+        // Only publish identity after the last fallible Redis operation. A false
+        // expiry means the session was removed between the hash read and renewal.
+        if (!Boolean.TRUE.equals(stringRedisTemplate.expire(key,LOGIN_USER_TTL, TimeUnit.MINUTES))) return true;
+        UserHolder.saveUser(userDTO);
         // 8.放行
         return true;
     }

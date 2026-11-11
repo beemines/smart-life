@@ -20,7 +20,7 @@ public class ImageUploadValidator {
         String expected=suffix.equals("png")?"png":suffix.equals("jpg")||suffix.equals("jpeg")?"jpeg":null;
         String mime=expected==null?null:expected.equals("png")?"image/png":"image/jpeg";
         if(expected==null||!mime.equalsIgnoreCase(file.getContentType())) throw ApiException.badRequest("仅支持类型与内容一致的PNG/JPEG图片");
-        try(var input=new MemoryCacheImageInputStream(file.getInputStream())) {
+        try(var raw=file.getInputStream();var input=new MemoryCacheImageInputStream(raw)) {
             var readers=ImageIO.getImageReaders(input);
             if(!readers.hasNext()) throw ApiException.badRequest("文件不是有效图片");
             var reader=readers.next();

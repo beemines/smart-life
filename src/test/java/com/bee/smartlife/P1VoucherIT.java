@@ -16,6 +16,7 @@ import org.springframework.core.io.ClassPathResource;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.concurrent.TimeUnit;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import com.bee.smartlife.utils.UserHolder;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -145,6 +146,29 @@ class P1VoucherIT {
         long id=create(1,now().minusHours(1),now().plusHours(1));
         jdbc.update("UPDATE tb_voucher_publication SET state='PENDING',version=version+1,may_seed_stock=0 WHERE voucher_id=?",id);redis.delete("seckill:stock:"+id);
         assertThat(publication.tryPublish(id)).isFalse();assertThat(redis.hasKey("seckill:stock:"+id)).isFalse();
+    }
+    @Test void migrationRecognizesPreUpgradeSeckillDetailsWithoutChangingOrdinaryVouchers() throws Exception {
+        // Old /voucher/seckill did not set type; MySQL defaulted it to zero.
+        long legacy=insert("INSERT INTO tb_voucher(shop_id,title,pay_value,actual_value) VALUES ("+shopId+",'pre-upgrade seckill',100,200)");ids.add(legacy);
+        long ordinary=insert("INSERT INTO tb_voucher(shop_id,title,pay_value,actual_value) VALUES ("+shopId+",'ordinary voucher',100,200)");ids.add(ordinary);
+        jdbc.update("INSERT INTO tb_seckill_voucher(voucher_id,stock,begin_time,end_time) VALUES (?,1,'2000-01-01','2100-01-01')",legacy);
+        redis.opsForValue().set("seckill:stock:"+legacy,"1");
+        try(var connection=Objects.requireNonNull(jdbc.getDataSource()).getConnection()){
+            ScriptUtils.executeSqlScript(connection,new ClassPathResource("db/migrations/2026-11-11-p1-boundaries.sql"));
+        }
+        assertThat(publication.tryPublish(legacy)).isTrue();
+        assertThat(claim(legacy,UUID.randomUUID().toString()).path("success").asBoolean()).isTrue();
+        assertThat(jdbc.queryForObject("SELECT type FROM tb_voucher WHERE id=?",Integer.class,legacy)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT type FROM tb_voucher WHERE id=?",Integer.class,ordinary)).isZero();
+    }
+    @Test void administratorCannotPublishVoucherForAMissingShop() {
+        jdbc.update("INSERT INTO tb_shop_permission(user_id,shop_id,role) VALUES (?,0,'ADMIN')",userId);
+        for(String path:List.of("/voucher","/voucher/seckill")){
+            var body=Map.of("shopId",Long.MAX_VALUE,"title","missing shop","payValue",100,"actualValue",200,"stock",1,"beginTime",now().minusHours(1).toString(),"endTime",now().plusHours(1).toString());
+            var response=http.exchange(path,HttpMethod.POST,new HttpEntity<>(body,headers()),JsonNode.class);
+            if(response.getBody().path("success").asBoolean())ids.add(response.getBody().path("data").asLong());
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        }
     }
     @Test void statusChangeUsesPersistedShopOwnershipAndPreservesReservedStock() {
         long id=create(1,now().minusHours(1),now().plusHours(1));

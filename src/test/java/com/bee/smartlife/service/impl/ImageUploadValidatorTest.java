@@ -9,6 +9,9 @@ import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.zip.CRC32;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 import static org.assertj.core.api.Assertions.*;
 
 class ImageUploadValidatorTest {
@@ -44,6 +47,16 @@ class ImageUploadValidatorTest {
         byte[] clean=image("png"),extra=Arrays.copyOf(clean,clean.length+100);
         Arrays.fill(extra,clean.length,extra.length,(byte)'x');
         assertThat(validator.validate(file("photo.png","image/png",extra)).bytes().length).isLessThan(extra.length);
+    }
+    @Test void originalMultipartStreamIsClosedOnSuccessfulAndFailedValidation() throws Exception {
+        for(byte[] bytes:new byte[][]{image("png"),new byte[]{1,2,3}}) {
+            AtomicBoolean closed=new AtomicBoolean();
+            var upload=new MockMultipartFile("file","photo.png","image/png",bytes){
+                @Override public InputStream getInputStream(){return new ByteArrayInputStream(bytes){@Override public void close(){closed.set(true);}};}
+            };
+            try{validator.validate(upload);}catch(ApiException invalid){assertThat(bytes.length).isEqualTo(3);}
+            assertThat(closed).as("raw multipart stream must close").isTrue();
+        }
     }
     MockMultipartFile file(String name,String mime,byte[] bytes){return new MockMultipartFile("file",name,mime,bytes);}
     byte[] image(String format)throws Exception{var out=new ByteArrayOutputStream();ImageIO.write(new BufferedImage(2,2,BufferedImage.TYPE_INT_RGB),format,out);return out.toByteArray();}

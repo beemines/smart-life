@@ -23,6 +23,8 @@ import java.nio.file.*;
 import java.sql.Statement;
 import java.time.*;
 import java.util.*;
+import org.springframework.test.util.ReflectionTestUtils;
+import com.bee.smartlife.service.impl.UploadedImageService;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -36,6 +38,7 @@ class P1BoundaryIT {
     @Autowired TestRestTemplate http;
     @Autowired JdbcTemplate jdbc;
     @Autowired StringRedisTemplate redis;
+    @Autowired UploadedImageService imageService;
     long shopId, userId, otherId;
     String token, otherToken;
 
@@ -127,6 +130,30 @@ class P1BoundaryIT {
         assertThat(call("/upload/blog?name=/imgs"+name,HttpMethod.DELETE,null,token).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(call("/upload/blog?name=../outside.png",HttpMethod.DELETE,null,token).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(UPLOADS.resolve(name.substring(1))).exists();
+    }
+    @Test void nonActiveMetadataMustNotPermitAnUnlink() throws Exception {
+        String name=uploadName();Path file=UPLOADS.resolve(name.substring(1));
+        jdbc.update("UPDATE tb_uploaded_file SET state='QUARANTINED' WHERE name=?",name);
+        assertThat(call("/upload/blog?name="+name,HttpMethod.DELETE,null,token).getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(file).exists();
+    }
+    @Test void linkedUploadDirectoryCannotCreateShardsOutsideTheUploadRoot() throws Exception {
+        Path root=Files.createDirectories(Path.of("target","p1-linked-root-"+UUID.randomUUID()).toAbsolutePath());
+        Path outside=Files.createDirectories(Path.of("target","p1-linked-target-"+UUID.randomUUID()).toAbsolutePath());
+        Path link=root.resolve("blogs");
+        try{Files.createSymbolicLink(link,outside);}
+        catch(Exception unavailable){
+            if(System.getProperty("os.name").startsWith("Windows")) {
+                var junction=new ProcessBuilder("cmd","/c","mklink","/J",link.toString(),outside.toString()).redirectErrorStream(true).start();
+                assertThat(junction.waitFor()).as(new String(junction.getInputStream().readAllBytes())).isZero();
+            }else throw unavailable;
+        }
+        Object original=ReflectionTestUtils.getField(imageService,"directory");
+        try {
+            ReflectionTestUtils.setField(imageService,"directory",root.toString());
+            assertThat(upload("real.png","image/png",png(),token).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            try(var contents=Files.list(outside)){assertThat(contents.count()).isZero();}
+        } finally {ReflectionTestUtils.setField(imageService,"directory",original);Files.deleteIfExists(link);}
     }
     @Test void logoutRevokesTheCurrentSessionAndIsRepeatable() {
         var first=call("/user/logout",HttpMethod.POST,null,token);

@@ -17,6 +17,7 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.data.redis.RedisConnectionFailureException;
+import org.redisson.api.RLock;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.redisson.api.RedissonClient;
@@ -89,6 +90,10 @@ class ShopCacheIT {
     @Test void cacheMissCannotRefillOldDataBetweenInvalidationAndSqlCommit() throws Exception {
         assertThat(name(shops.queryById(shopId).getData())).isEqualTo("cache old");
         var beforeCommit=new CountDownLatch(1);var allowCommit=new CountDownLatch(1);
+        var readerAtLock=new CountDownLatch(1);
+        RLock tracked=spy(cache.lock(shopId));
+        doAnswer(invocation->{if(Thread.currentThread().getName().equals("p1-cold-cache-reader"))readerAtLock.countDown();return invocation.callRealMethod();}).when(tracked).tryLock(3,TimeUnit.SECONDS);
+        doReturn(tracked).when(cache).lock(shopId);
         doAnswer(invocation->{
             Shop input=invocation.getArgument(0);
             int changed=jdbc.update("UPDATE tb_shop SET name=? WHERE id=?",input.getName(),input.getId());
@@ -98,16 +103,17 @@ class ShopCacheIT {
         }).when(mapper).updateById(any(Shop.class));
         try(var pool=Executors.newFixedThreadPool(2)) {
             var update=pool.submit(()->{UserHolder.saveUser(user());try{var s=new Shop();s.setId(shopId);s.setName("cache new");return shops.update(s);}finally{UserHolder.removeUser();}});
-            Future<?> query=null;
+            Future<com.bee.smartlife.dto.Result> query=null;
             try {
                 assertThat(beforeCommit.await(10,TimeUnit.SECONDS)).isTrue();
-                // Original implementation already invalidated its caches here;
-                // a concurrent lookup could refill the old committed SQL row.
-                query=pool.submit(()->shops.queryById(shopId));
-                Thread.sleep(150);
+                // Force a true cold read and prove it has reached the actual
+                // Redis lock while the writer is still at its commit barrier.
+                cache.evictLocal(shopId);redis.delete("cache:shop:"+shopId);
+                query=pool.submit(()->{Thread.currentThread().setName("p1-cold-cache-reader");return shops.queryById(shopId);});
+                assertThat(readerAtLock.await(10,TimeUnit.SECONDS)).isTrue();
             } finally {allowCommit.countDown();}
             assertThat(update.get(10,TimeUnit.SECONDS).getSuccess()).isTrue();
-            if(query!=null)query.get(10,TimeUnit.SECONDS);
+            if(query!=null)assertThat(name(query.get(10,TimeUnit.SECONDS).getData())).isEqualTo("cache new");
         }
         assertThat(name(shops.queryById(shopId).getData())).isEqualTo("cache new");
     }

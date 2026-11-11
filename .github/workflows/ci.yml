@@ -96,6 +96,8 @@ jobs:
           name: integration-results
           path: |
             target/surefire-reports/
+            target/publication-crash-*.log
+            target/crash-*.log
             service-logs.txt
       - name: Stop isolated test services
         if: always()

@@ -53,3 +53,14 @@ test('actual logout clears token, user info and order cache for the login',async
   p.definition.methods.logout.call({$message:{error:assert.fail}});await flush();
   for(const key of ['token','userInfo','smartlife:order-session','smartlife:order:old-session:1']) assert.equal(p.storage.has(key),false,key);
 });
+test('concurrent and duplicate image deletions remove acknowledged names rather than stale indices',async()=>{
+  for(const duplicate of [false,true]){
+    const responses=[];
+    const p=page('blog-edit.html',{delete:()=>new Promise(resolve=>responses.push(resolve))});
+    const state={fileList:['/blogs/a.png','/blogs/b.png','/blogs/c.png'],$message:{error:assert.fail}};
+    p.definition.methods.deletePic.call(state,0);
+    p.definition.methods.deletePic.call(state,duplicate?0:1);
+    responses[0]({});await flush();responses[1]({});await flush();
+    assert.deepEqual(state.fileList,duplicate?['/blogs/b.png','/blogs/c.png']:['/blogs/c.png']);
+  }
+});

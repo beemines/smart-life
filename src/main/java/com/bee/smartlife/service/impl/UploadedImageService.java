@@ -33,6 +33,7 @@ public class UploadedImageService {
         int hash=id.hashCode();
         String name="/blogs/"+Integer.toHexString(hash&15)+"/"+Integer.toHexString((hash>>4)&15)+"/"+id+"."+image.suffix();
         Path path=resolve(name);Path temporary=null;boolean created=false;
+        rejectSymlinks(path); // Check existing ancestry before creating anything.
         try {
             Files.createDirectories(path.getParent());
             rejectSymlinks(path);
@@ -44,6 +45,7 @@ public class UploadedImageService {
             return name;
         } catch(IOException|RuntimeException failure) {
             try {if(created)Files.deleteIfExists(path);if(temporary!=null)Files.deleteIfExists(temporary);} catch(IOException cleanup){failure.addSuppressed(cleanup);}
+            if(failure instanceof ApiException invalid)throw invalid;
             throw new IllegalStateException("图片保存失败",failure);
         }
     }
@@ -56,6 +58,7 @@ public class UploadedImageService {
             var row=rows.getFirst();
             if(((Number)row.get("user_id")).longValue()!=user) throw new ApiException(HttpStatus.FORBIDDEN,"无权删除该文件");
             if("DELETED".equals(row.get("state"))) return;
+            if(!"ACTIVE".equals(row.get("state")))throw new ApiException(HttpStatus.CONFLICT,"文件状态不允许删除");
             Path path=resolve((String)row.get("name"));
             if(!path.equals(requested)) throw ApiException.badRequest("文件标识不正确");
             try {rejectSymlinks(path);Files.deleteIfExists(path);} catch(IOException e){throw new IllegalStateException("文件删除失败",e);}
@@ -75,8 +78,13 @@ public class UploadedImageService {
     }
     private void rejectSymlinks(Path path) {
         Path root=Paths.get(directory).toAbsolutePath().normalize();
+        Path realRoot;
+        try{realRoot=Files.exists(root)?root.toRealPath():root;}catch(IOException invalid){throw ApiException.badRequest("上传目录不能访问");}
         for(Path current=path;current!=null&&current.startsWith(root);current=current.getParent()) {
             if(Files.isSymbolicLink(current)) throw ApiException.badRequest("不支持符号链接路径");
+            // Windows directory junctions are not necessarily reported as symbolic links.
+            try{if(Files.exists(current)&&!current.toRealPath().startsWith(realRoot))throw ApiException.badRequest("文件路径越界");}
+            catch(IOException invalid){throw ApiException.badRequest("上传路径不能访问");}
         }
     }
 }

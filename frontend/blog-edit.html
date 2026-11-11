@@ -130,8 +130,13 @@
           .catch(this.$message.error);
       },
       deletePic(i) {
-        axios.delete("/upload/blog", {params: {name: this.fileList[i]}})
-          .then(() => this.fileList.splice(i, 1))
+        const name = this.fileList[i];
+        if (!name) return;
+        axios.delete("/upload/blog", {params: {name}})
+          .then(() => {
+            const current = this.fileList.indexOf(name);
+            if (current >= 0) this.fileList.splice(current, 1);
+          })
           .catch(this.$message.error)
       },
       checkLogin() {

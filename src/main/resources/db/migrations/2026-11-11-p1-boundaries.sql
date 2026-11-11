@@ -1,5 +1,9 @@
 SET NAMES utf8mb4;
 
+-- Pre-upgrade /voucher/seckill could omit type; its real detail row is authoritative.
+UPDATE tb_voucher v JOIN tb_seckill_voucher sv ON sv.voucher_id=v.id
+SET v.type=1 WHERE v.type=0;
+
 CREATE TABLE IF NOT EXISTS tb_voucher_publication (
     voucher_id BIGINT UNSIGNED NOT NULL,
     version BIGINT UNSIGNED NOT NULL DEFAULT 1,

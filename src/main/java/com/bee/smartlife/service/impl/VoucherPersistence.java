@@ -2,6 +2,7 @@ package com.bee.smartlife.service.impl;
 
 import com.bee.smartlife.entity.*;
 import com.bee.smartlife.mapper.*;
+import com.bee.smartlife.security.ApiException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ public class VoucherPersistence {
     public Voucher load(long id){return vouchers.selectById(id);}
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     public void create(Voucher voucher,boolean seckill) {
+        if(jdbc.queryForList("SELECT id FROM tb_shop WHERE id=? FOR SHARE",Long.class,voucher.getShopId()).isEmpty())throw ApiException.badRequest("店铺不存在");
         if(vouchers.insert(voucher)!=1)throw new IllegalStateException("优惠券保存失败");
         if(!seckill)return;
         var stock=new SeckillVoucher().setVoucherId(voucher.getId()).setStock(voucher.getStock())
