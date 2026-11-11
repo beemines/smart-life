@@ -84,6 +84,9 @@ public class VoucherOrderPersistence {
         VoucherOrder existing = findUserVoucher(order);
         OrderProcessingResult reason = result == 1 ? OrderProcessingResult.REJECTED_OUT_OF_STOCK
                 : result == 2 ? OrderProcessingResult.REJECTED_ALREADY_PURCHASED
+                : result == 6 ? OrderProcessingResult.REJECTED_VOUCHER_UNAVAILABLE
+                : result == 7 ? OrderProcessingResult.REJECTED_NOT_STARTED
+                : result == 8 ? OrderProcessingResult.REJECTED_ENDED
                 : OrderProcessingResult.REJECTED_RESERVATION_INVALID;
         OrderProcessingResult rejected = reject(order, reason, existing == null ? null : existing.getId());
         if (reason == OrderProcessingResult.REJECTED_RESERVATION_INVALID) {

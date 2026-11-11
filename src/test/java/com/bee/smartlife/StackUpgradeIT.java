@@ -141,8 +141,8 @@ class StackUpgradeIT {
             JsonNode created = http.exchange("/voucher/seckill",HttpMethod.POST,new HttpEntity<>(Map.of(
                     "shopId", 1, "title", "Stack upgrade fixture", "payValue", 100,
                     "actualValue", 200, "type", 1, "status", 1, "stock", 2,
-                    "beginTime", LocalDateTime.now().minusHours(1).toString(),
-                    "endTime", LocalDateTime.now().plusHours(1).toString()),headers), JsonNode.class).getBody();
+                    "beginTime", LocalDateTime.now(java.time.ZoneId.of("Asia/Shanghai")).minusHours(1).toString(),
+                    "endTime", LocalDateTime.now(java.time.ZoneId.of("Asia/Shanghai")).plusHours(1).toString()),headers), JsonNode.class).getBody();
             assertSuccess(created);
             voucherId = created.path("data").asLong();
             assertThat(voucherId).isPositive();
@@ -171,6 +171,7 @@ class StackUpgradeIT {
                 jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", voucherId);
+                jdbc.update("DELETE FROM tb_voucher_publication WHERE voucher_id=?", voucherId);
                 jdbc.update("DELETE FROM tb_voucher WHERE id=?", voucherId);
                 redis.delete(java.util.List.of("seckill:stock:" + voucherId, "seckill:order:" + voucherId,
                         "seckill:reservation:" + voucherId));

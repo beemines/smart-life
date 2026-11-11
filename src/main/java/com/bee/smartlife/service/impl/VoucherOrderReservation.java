@@ -15,15 +15,28 @@ public class VoucherOrderReservation {
     private static final DefaultRedisScript<Long> RESERVE = script("seckill.lua");
     private static final DefaultRedisScript<Long> COMPENSATE = script("seckill_rollback.lua");
     private final StringRedisTemplate redis;
+    private final VoucherEligibility eligibility;
+    private final VoucherPublication publication;
 
     public long reserve(VoucherOrder order) {
         return reserve(order, true);
     }
 
     public long reserve(VoucherOrder order, boolean allowNewReservation) {
+        if(!allowNewReservation)return evaluate(order,false,new VoucherEligibility.Rule(false,0,0));
+        var lock=publication.lock(order.getVoucherId());boolean held=false;
+        try {
+            held=lock.tryLock(3,java.util.concurrent.TimeUnit.SECONDS);
+            if(!held)throw new OrderRetryException("活动正在更新，稍后重试");
+            return evaluate(order,true,eligibility.rule(order.getVoucherId()));
+        }catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new OrderRetryException("活动预占被中断");}
+        finally{if(held)lock.unlock();}
+    }
+
+    private long evaluate(VoucherOrder order,boolean allowNewReservation,VoucherEligibility.Rule rule) {
         Long result = redis.execute(RESERVE, keys(order.getVoucherId()),
                 order.getVoucherId().toString(), order.getUserId().toString(), order.getId().toString(),
-                allowNewReservation ? "1" : "0");
+                allowNewReservation ? "1" : "0",rule.available()?"1":"0",Long.toString(rule.beginSecond()),Long.toString(rule.endSecond()));
         if (result == null) throw new OrderRetryException("Redis预占结果为空");
         return result;
     }

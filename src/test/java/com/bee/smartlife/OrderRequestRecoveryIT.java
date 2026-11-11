@@ -86,6 +86,7 @@ class OrderRequestRecoveryIT {
         voucherId = Objects.requireNonNull(key.getKey()).longValue();
         userId = ThreadLocalRandom.current().nextLong(3_000_000_000L, 4_000_000_000L);
         jdbc.update("INSERT INTO tb_seckill_voucher(voucher_id,stock,begin_time,end_time) VALUES (?,10,DATE_SUB(NOW(),INTERVAL 1 HOUR),DATE_ADD(NOW(),INTERVAL 1 HOUR))", voucherId);
+        OrderTestActivity.ready(jdbc,voucherId);
         redis.opsForValue().set("seckill:stock:" + voucherId, "10");
         token = UUID.randomUUID().toString();
         requestKey = UUID.randomUUID().toString();
@@ -104,6 +105,7 @@ class OrderRequestRecoveryIT {
         jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", voucherId);
         jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", voucherId);
         jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", voucherId);
+        jdbc.update("DELETE FROM tb_voucher_publication WHERE voucher_id=?", voucherId);
         jdbc.update("DELETE FROM tb_voucher WHERE id=?", voucherId);
         redis.delete(List.of("seckill:stock:" + voucherId, "seckill:order:" + voucherId,
                 "seckill:reservation:" + voucherId, "login:token:" + token));
@@ -151,8 +153,8 @@ class OrderRequestRecoveryIT {
         script.setLocation(new ClassPathResource("seckill.lua"));
         script.setResultType(Long.class);
         var keys = List.of("seckill:stock:" + voucherId, "seckill:order:" + voucherId, "seckill:reservation:" + voucherId);
-        assertThat(redis.execute(script, keys, Long.toString(voucherId), Long.toString(userId), "123456789", "1")).isZero();
-        assertThat(redis.execute(script, keys, Long.toString(voucherId), Long.toString(userId), "123456789", "1")).isEqualTo(4);
+        assertThat(redis.execute(script, keys, Long.toString(voucherId), Long.toString(userId), "123456789", "1", "1", "946684800", "4102444800")).isZero();
+        assertThat(redis.execute(script, keys, Long.toString(voucherId), Long.toString(userId), "123456789", "1", "1", "946684800", "4102444800")).isEqualTo(4);
         assertThat(redis.opsForValue().get("seckill:stock:" + voucherId)).isEqualTo("9");
     }
 

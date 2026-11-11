@@ -55,6 +55,7 @@ class OrderSafetyIT {
             jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", owned);
+            jdbc.update("DELETE FROM tb_voucher_publication WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher WHERE id=?", owned);
         }
     }
@@ -181,6 +182,7 @@ class OrderSafetyIT {
         long id = Objects.requireNonNull(key.getKey()).longValue();
         ownedVouchers.add(id);
         jdbc.update("INSERT INTO tb_seckill_voucher (voucher_id,stock,begin_time,end_time) VALUES (?,10,DATE_SUB(NOW(), INTERVAL 1 HOUR),DATE_ADD(NOW(), INTERVAL 1 HOUR))", id);
+        OrderTestActivity.ready(jdbc,id);
         return id;
     }
 

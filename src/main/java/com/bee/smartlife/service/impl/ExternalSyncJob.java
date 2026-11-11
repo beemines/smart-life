@@ -11,10 +11,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ExternalSyncJob {
     private final ShopCacheSync shops;
+    private final VoucherPublication vouchers;
     @Value("${smartlife.sync.enabled:true}") private boolean enabled;
     @Scheduled(initialDelayString="${smartlife.sync.delay-ms:5000}",fixedDelayString="${smartlife.sync.delay-ms:5000}")
     public void retry() {
         if(!enabled)return;
         try{shops.retryPending(100);}catch(RuntimeException unavailable){log.warn("外部同步等待恢复 error={}",unavailable.getClass().getSimpleName());}
+        try{vouchers.retryPending(100);}catch(RuntimeException unavailable){log.warn("活动同步等待恢复 error={}",unavailable.getClass().getSimpleName());}
     }
 }

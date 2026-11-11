@@ -222,6 +222,9 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         if ("REJECTED_OUT_OF_STOCK".equals(reason)) return "库存不足";
         if ("REJECTED_ALREADY_PURCHASED".equals(reason)) return "不能重复下单";
         if ("REJECTED_SEND_FAILED".equals(reason)) return "下单失败";
+        if ("REJECTED_VOUCHER_UNAVAILABLE".equals(reason)) return "优惠券不存在、未上架或尚未准备就绪";
+        if ("REJECTED_NOT_STARTED".equals(reason)) return "优惠券抢购尚未开始";
+        if ("REJECTED_ENDED".equals(reason)) return "优惠券抢购已经结束";
         return "订单需要人工核对";
     }
 }

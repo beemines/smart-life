@@ -6,7 +6,10 @@ public enum OrderProcessingResult {
     REJECTED_OUT_OF_STOCK(true),
     REJECTED_ALREADY_PURCHASED(true),
     REJECTED_SEND_FAILED(true),
-    REJECTED_RESERVATION_INVALID(true);
+    REJECTED_RESERVATION_INVALID(true),
+    REJECTED_VOUCHER_UNAVAILABLE(true),
+    REJECTED_NOT_STARTED(true),
+    REJECTED_ENDED(true);
 
     private final boolean rejected;
 

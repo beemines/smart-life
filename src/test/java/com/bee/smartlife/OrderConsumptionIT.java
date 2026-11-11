@@ -99,6 +99,7 @@ class OrderConsumptionIT {
         long id = Objects.requireNonNull(key.getKey()).longValue();
         ownedVouchers.add(id);
         jdbc.update("INSERT INTO tb_seckill_voucher (voucher_id,stock,begin_time,end_time) VALUES (?,?,DATE_SUB(NOW(),INTERVAL 1 HOUR),DATE_ADD(NOW(),INTERVAL 1 HOUR))", id, stock);
+        OrderTestActivity.ready(jdbc,id);
         return id;
     }
 
@@ -111,6 +112,7 @@ class OrderConsumptionIT {
             jdbc.update("DELETE FROM tb_voucher_order_failure WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher_order WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_seckill_voucher WHERE voucher_id=?", owned);
+            jdbc.update("DELETE FROM tb_voucher_publication WHERE voucher_id=?", owned);
             jdbc.update("DELETE FROM tb_voucher WHERE id=?", owned);
             redis.delete(List.of("seckill:stock:" + owned, "seckill:order:" + owned,
                     "seckill:reservation:" + owned));
@@ -538,7 +540,8 @@ class OrderConsumptionIT {
         return Objects.requireNonNull(redis.execute(script,
                 List.of("seckill:stock:" + voucherId, "seckill:order:" + voucherId,
                         "seckill:reservation:" + voucherId),
-                Long.toString(voucherId), Long.toString(userId), Long.toString(id), retainedOrderId));
+                Long.toString(voucherId), Long.toString(userId), Long.toString(id),
+                name.equals("seckill.lua")?"1":retainedOrderId,"1","946684800","4102444800"));
     }
 
     private VoucherOrder order(long id) {

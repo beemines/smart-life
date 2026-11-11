@@ -3,61 +3,54 @@ package com.bee.smartlife.service.impl;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.entity.Voucher;
-import com.bee.smartlife.entity.VoucherOrder;
 import com.bee.smartlife.mapper.VoucherMapper;
-import com.bee.smartlife.entity.SeckillVoucher;
-import com.bee.smartlife.service.ISeckillVoucherService;
+import com.bee.smartlife.security.ApiException;
+import com.bee.smartlife.security.ShopPermission;
 import com.bee.smartlife.service.IVoucherService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import jakarta.annotation.Resource;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.concurrent.TimeUnit;
 
-import static com.bee.smartlife.utils.RedisConstants.SECKILL_STOCK_KEY;
-
-/**
- * <p>
- *  服务实现类
- * </p>
- *
- * @author beemines
- * @since 2021-12-22
- */
+@Slf4j
 @Service
-public class VoucherServiceImpl extends ServiceImpl<VoucherMapper, Voucher> implements IVoucherService {
-
-    @Resource
-    private ISeckillVoucherService seckillVoucherService;
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
-
+public class VoucherServiceImpl extends ServiceImpl<VoucherMapper,Voucher> implements IVoucherService {
+    @Resource private VoucherPersistence persistence;
+    @Resource private VoucherPublication publication;
+    @Resource private ShopPermission permission;
+    @Override public Result queryVoucherOfShop(Long shopId){return Result.ok(getBaseMapper().queryVoucherOfShop(shopId));}
     @Override
-    public Result queryVoucherOfShop(Long shopId) {
-        // 查询优惠券信息
-        List<Voucher> vouchers = getBaseMapper().queryVoucherOfShop(shopId);
-        // 返回结果
-        return Result.ok(vouchers);
+    @Transactional(propagation=Propagation.NOT_SUPPORTED)
+    public void addVoucher(Voucher voucher) {
+        permission.requireShopWrite(voucher.getShopId());
+        if(voucher.getId()!=null)throw ApiException.badRequest("新增优惠券不能指定ID");
+        persistence.create(voucher,false);
     }
-
     @Override
-    @Transactional
+    @Transactional(propagation=Propagation.NOT_SUPPORTED)
     public void addSeckillVoucher(Voucher voucher) {
-        // 保存优惠券
-        save(voucher);
-        // 保存秒杀信息
-        SeckillVoucher seckillVoucher = new SeckillVoucher();
-        seckillVoucher.setVoucherId(voucher.getId());
-        seckillVoucher.setStock(voucher.getStock());
-        seckillVoucher.setBeginTime(voucher.getBeginTime());
-        seckillVoucher.setEndTime(voucher.getEndTime());
-        seckillVoucherService.save(seckillVoucher);
-        // 保存秒杀库存到Redis中
-        stringRedisTemplate.opsForValue().set(SECKILL_STOCK_KEY + voucher.getId(), voucher.getStock().toString());
+        permission.requireShopWrite(voucher.getShopId());
+        if(voucher.getId()!=null)throw ApiException.badRequest("新增优惠券不能指定ID");
+        persistence.create(voucher,true); // Returns only after SQL commits.
+        publication.tryPublish(voucher.getId());
     }
-
-
-
+    @Override
+    @Transactional(propagation=Propagation.NOT_SUPPORTED)
+    public Result changeStatus(Long id,int status) {
+        if(id==null||id<=0||status<1||status>3)throw ApiException.badRequest("优惠券状态不正确");
+        var lock=publication.lock(id);boolean held=false;
+        try {
+            held=lock.tryLock(3,TimeUnit.SECONDS);if(!held)return Result.fail("活动正在更新，请稍后重试");
+            Voucher existing=persistence.load(id);
+            if(existing==null)return Result.fail("优惠券不存在");
+            permission.requireShopWrite(existing.getShopId()); // Never trust a caller-supplied shop ID.
+            if(Integer.valueOf(status).equals(existing.getStatus()))return Result.ok();
+            persistence.changeStatus(existing,status);
+            if(Integer.valueOf(1).equals(existing.getType()))publication.tryPublish(id);
+            return Result.ok();
+        }catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new IllegalStateException("活动更新被中断",interrupted);}
+        finally{if(held)try{lock.unlock();}catch(RuntimeException unavailable){log.warn("活动更新锁等待恢复 voucherId={}",id);}}
+    }
 }

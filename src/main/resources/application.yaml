@@ -41,6 +41,9 @@ rocketmq:
   seckill-topic: ${SMARTLIFE_MQ_TOPIC:smartlife-seckill-order}
   consumer-group: ${SMARTLIFE_MQ_CONSUMER_GROUP:voucher-order-consumer-group}
 smartlife:
+  business-zone: ${SMARTLIFE_BUSINESS_ZONE:Asia/Shanghai}
+  sync:
+    enabled: ${SMARTLIFE_SYNC_ENABLED:true}
   upload-dir: ${SMARTLIFE_UPLOAD_DIR:./uploads}
   orders:
     consumer-enabled: ${SMARTLIFE_ORDER_CONSUMER_ENABLED:true}

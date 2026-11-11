@@ -54,10 +54,10 @@ Files: VoucherServiceImpl/DTO/status endpoint, VoucherEligibility/Publication he
 
 Interfaces: authorityTask1 uses persisted shop ID for status change; publication record in voucher SQL transaction with version/state/may_seed_stock, retry scheduler bounded; lock name shared by mutate/publish/new reserve. Eligibility supplies exists/ready/up and epoch bounds to Lua; same owner/terminal checked first. Default business zoneAsia/Shanghai.
 
-- [ ] RED: future/end/down/unknown activity no order/preallocation, begin inclusive/end exclusive; owned PREPARING/PENDING replay and late consumption stay valid.
-- [ ] RED: SQLcommit failure publishes nothing, Redis failure leaves durable pending, retry/real process restart never resets stock; legacy migration cannot create missing stock.
-- [ ] Implement transactional publication intent, aftercommit/retry, readiness and Lua clock/rules; explicit status change shares lock and version fencing.
-- [ ] Update original order safety/crash tests with valid synthetic activity fixtures; full backend GREEN; commit.
+- [x] RED: future/end/down/unknown activity no order/preallocation, begin inclusive/end exclusive; owned PREPARING/PENDING replay and late consumption stay valid.
+- [x] RED: SQLcommit failure publishes nothing, Redis failure leaves durable pending, retry/real process restart never resets stock; legacy migration cannot create missing stock.
+- [x] Implement transactional publication intent, aftercommit/retry, readiness and Lua clock/rules; explicit status change shares lock and version fencing.
+- [x] Update original order safety/crash tests with valid synthetic activity fixtures; full backend GREEN; commit.
 
 ### Task4: real pages, independent review and delivery
 

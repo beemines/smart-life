@@ -36,7 +36,7 @@ public class VoucherController {
     public Result addVoucher(@RequestBody VoucherWrite input) {
         permission.requireShopWrite(input.shopId());
         Voucher voucher=input.toVoucher(false);
-        voucherService.save(voucher);
+        voucherService.addVoucher(voucher);
         return Result.ok(voucher.getId());
     }
 
@@ -62,5 +62,10 @@ public class VoucherController {
     @PublicRead
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
        return voucherService.queryVoucherOfShop(shopId);
+    }
+    public record StatusChange(int status) {}
+    @PatchMapping("/{id}/status")
+    public Result changeStatus(@PathVariable Long id,@RequestBody StatusChange input) {
+        return voucherService.changeStatus(id,input.status());
     }
 }
