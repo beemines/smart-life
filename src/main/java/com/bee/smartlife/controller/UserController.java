@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import static com.bee.smartlife.utils.RedisConstants.LOGIN_USER_KEY;
 
 /**
  * <p>
@@ -35,6 +38,7 @@ public class UserController {
 
     @Resource
     private IUserInfoService userInfoService;
+    @Resource private StringRedisTemplate redis;
 
     /**
      * 发送手机验证码
@@ -60,9 +64,11 @@ public class UserController {
      * @return 无
      */
     @PostMapping("/logout")
-    public Result logout(){
-        // TODO 实现登出功能
-        return Result.fail("功能未完成");
+    public Result logout(HttpServletRequest request){
+        String token=request.getHeader("authorization");
+        if(token!=null && !token.isBlank()) redis.delete(LOGIN_USER_KEY+token);
+        UserHolder.removeUser();
+        return Result.ok();
     }
 
     @GetMapping("/me")

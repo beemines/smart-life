@@ -32,10 +32,10 @@ Files: LoginInterceptor/MvcConfig/public-read annotation, minimal authority help
 
 Interfaces: authority.requireAdmin()/requireShopWrite(Long); uploaded.store(MultipartFile)/delete(String) use UserHolder; shop/voucher controllers sanitize DTOs then call existing modules. Logout revokes request header token and returns repeat-safe success.
 
-- [ ] RED: anonymous/cross-owner writes, real/fake/empty/wrong MIME/oversize images, owner DELETE versus GET/path traversal, revoked/repeat logout; update existing intentionally anonymous fixture assumptions only after observing RED.
-- [ ] Implement minimal permission checks and owner metadata, image validation/re-encoding, idempotent deletion, logout; keep public reads.
-- [ ] RED actual blog-edit stores原始name, DELETE uses originalname, published images retain display URLs; info clears login cache; implement and GREEN.
-- [ ] Focused Java/HTTP/JS GREEN; commit.
+- [x] RED: anonymous/cross-owner writes, real/fake/empty/wrong MIME/oversize images, owner DELETE versus GET/path traversal, revoked/repeat logout; update existing intentionally anonymous fixture assumptions only after observing RED.
+- [x] Implement minimal permission checks and owner metadata, image validation/re-encoding, idempotent deletion, logout; keep public reads.
+- [x] RED actual blog-edit stores原始name, DELETE uses originalname, published images retain display URLs; info clears login cache; implement and GREEN.
+- [x] Focused Java/HTTP/JS GREEN; commit.
 
 ### Task2: shop visibility and coherent cache misses
 

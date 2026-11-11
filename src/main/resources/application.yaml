@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: smart-life
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${SMARTLIFE_DB_HOST:127.0.0.1}:${SMARTLIFE_DB_PORT:3306}/${SMARTLIFE_DB_NAME:smartlife}?sslMode=${SMARTLIFE_DB_SSL_MODE:PREFERRED}&serverTimezone=UTC&characterEncoding=utf8

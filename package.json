@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "check:frontend": "node scripts/check-frontend.mjs",
-    "test:frontend": "node --test scripts/order-client.test.mjs"
+    "test:frontend": "node --test scripts/order-client.test.mjs scripts/p1-pages.test.mjs"
   },
   "devDependencies": {
     "@vue/compiler-dom": "3.5.45"

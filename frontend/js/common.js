@@ -34,6 +34,10 @@ axios.interceptors.response.use(function (response) {
     return Promise.reject("请求超时，请稍后重试");
   }
   if(!error.response) return Promise.reject("网络连接异常，请稍后重试");
+  if(error.response.status >= 400 && error.response.status < 500
+      && typeof error.response.data?.errorMsg === 'string') {
+    return Promise.reject(error.response.data.errorMsg);
+  }
   return Promise.reject("服务器异常");
 });
 axios.defaults.paramsSerializer = function(params) {
@@ -47,6 +51,16 @@ axios.defaults.paramsSerializer = function(params) {
 }
 const util = {
   commonURL,
+  clearLogin() {
+    const keys = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith('smartlife:order:')) keys.push(key);
+    }
+    keys.push('token', 'userInfo', 'smartlife:order-session');
+    keys.forEach(key => sessionStorage.removeItem(key));
+    token = null;
+  },
   newRequestKey() {
     if (crypto.randomUUID) return crypto.randomUUID();
     return Array.from(crypto.getRandomValues(new Uint8Array(16)), value => value.toString(16).padStart(2, '0')).join('');

@@ -3,6 +3,9 @@ package com.bee.smartlife.controller;
 
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.entity.Voucher;
+import com.bee.smartlife.dto.VoucherWrite;
+import com.bee.smartlife.security.PublicRead;
+import com.bee.smartlife.security.ShopPermission;
 import com.bee.smartlife.service.IVoucherService;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +25,7 @@ public class VoucherController {
 
     @Resource
     private IVoucherService voucherService;
+    @Resource private ShopPermission permission;
 
     /**
      * 新增普通券
@@ -29,7 +33,9 @@ public class VoucherController {
      * @return 优惠券id
      */
     @PostMapping
-    public Result addVoucher(@RequestBody Voucher voucher) {
+    public Result addVoucher(@RequestBody VoucherWrite input) {
+        permission.requireShopWrite(input.shopId());
+        Voucher voucher=input.toVoucher(false);
         voucherService.save(voucher);
         return Result.ok(voucher.getId());
     }
@@ -40,7 +46,9 @@ public class VoucherController {
      * @return 优惠券id
      */
     @PostMapping("seckill")
-    public Result addSeckillVoucher(@RequestBody Voucher voucher) {
+    public Result addSeckillVoucher(@RequestBody VoucherWrite input) {
+        permission.requireShopWrite(input.shopId());
+        Voucher voucher=input.toVoucher(true);
         voucherService.addSeckillVoucher(voucher);
         return Result.ok(voucher.getId());
     }
@@ -51,6 +59,7 @@ public class VoucherController {
      * @return 优惠券列表
      */
     @GetMapping("/list/{shopId}")
+    @PublicRead
     public Result queryVoucherOfShop(@PathVariable("shopId") Long shopId) {
        return voucherService.queryVoucherOfShop(shopId);
     }

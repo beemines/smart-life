@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.dto.UserDTO;
 import com.bee.smartlife.entity.Blog;
+import com.bee.smartlife.security.PublicRead;
 import com.bee.smartlife.service.IBlogService;
 import com.bee.smartlife.utils.SystemConstants;
 import com.bee.smartlife.utils.UserHolder;
@@ -51,6 +52,7 @@ public class BlogController {
     }
 
     @GetMapping("/hot")
+    @PublicRead
     public Result queryHotBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
         return blogService.queryHotBlog(current);
     }

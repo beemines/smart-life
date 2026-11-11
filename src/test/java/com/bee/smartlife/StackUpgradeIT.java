@@ -2,6 +2,8 @@ package com.bee.smartlife;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +23,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.UUID;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,6 +47,23 @@ class StackUpgradeIT {
     @Autowired TestRestTemplate http;
     @Autowired StringRedisTemplate redis;
     @Autowired JdbcTemplate jdbc;
+    private long uploadUser;
+    private String uploadToken;
+
+    @BeforeEach void authenticatedUploadFixture() {
+        String phone="138"+ThreadLocalRandom.current().nextLong(10_000_000L,99_999_999L);
+        jdbc.update("INSERT INTO tb_user(phone,nick_name) VALUES (?,'upgrade upload fixture')",phone);
+        uploadUser=jdbc.queryForObject("SELECT id FROM tb_user WHERE phone=?",Long.class,phone);
+        uploadToken=UUID.randomUUID().toString();
+        redis.opsForHash().putAll("login:token:"+uploadToken,Map.of("id",Long.toString(uploadUser),"nickName","fixture"));
+        redis.expire("login:token:"+uploadToken,Duration.ofMinutes(5));
+    }
+    @AfterEach void cleanUploadFixture() throws IOException {
+        for(String name:jdbc.queryForList("SELECT name FROM tb_uploaded_file WHERE user_id=?",String.class,uploadUser)) Files.deleteIfExists(UPLOADS.resolve(name.substring(1)));
+        jdbc.update("DELETE FROM tb_uploaded_file WHERE user_id=?",uploadUser);
+        jdbc.update("DELETE FROM tb_user WHERE id=?",uploadUser);
+        redis.delete("login:token:"+uploadToken);
+    }
 
     @Test
     void protectedEndpointStillRequiresLogin() {
@@ -68,19 +91,25 @@ class StackUpgradeIT {
     @Test
     void multipartUploadAndDeleteUseConfiguredDirectory() throws IOException {
         var form = new LinkedMultiValueMap<String, Object>();
-        byte[] content = "migration-upload-fixture".getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        form.add("file", new ByteArrayResource(content) {
+        var image=new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(2,2,BufferedImage.TYPE_INT_RGB),"png",image);
+        byte[] content = image.toByteArray();
+        var partHeaders=new HttpHeaders();partHeaders.setContentType(MediaType.IMAGE_PNG);
+        form.add("file", new HttpEntity<>(new ByteArrayResource(content) {
             @Override public String getFilename() { return "fixture.png"; }
-        });
+        },partHeaders));
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.set("authorization",uploadToken);
         JsonNode result = http.postForObject("/upload/blog", new HttpEntity<>(form, headers), JsonNode.class);
         assertSuccess(result);
         String name = result.path("data").asText();
         Path uploaded = UPLOADS.resolve(name.substring(1));
         try {
             assertThat(Files.readAllBytes(uploaded)).isEqualTo(content);
-            get("/upload/blog/delete?name=" + name);
+            var deleteHeaders=new HttpHeaders();deleteHeaders.set("authorization",uploadToken);
+            JsonNode deleted=http.exchange("/upload/blog?name="+name,HttpMethod.DELETE,new HttpEntity<>(deleteHeaders),JsonNode.class).getBody();
+            assertSuccess(deleted);
             assertThat(uploaded).doesNotExist();
         } finally {
             Files.deleteIfExists(uploaded);
@@ -103,16 +132,17 @@ class StackUpgradeIT {
             JsonNode me = http.exchange("/user/me", HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class).getBody();
             assertSuccess(me);
             userId = me.path("data").path("id").asLong();
+            jdbc.update("INSERT INTO tb_shop_permission(user_id,shop_id,role) VALUES (?,1,'OWNER')",userId);
             assertThat(userId).isPositive();
             JsonNode slashMe = http.exchange("/user/me/", HttpMethod.GET, new HttpEntity<>(headers), JsonNode.class).getBody();
             assertSuccess(slashMe);
             assertThat(slashMe.path("data").path("id").asLong()).isEqualTo(userId);
 
-            JsonNode created = http.postForObject("/voucher/seckill", Map.of(
+            JsonNode created = http.exchange("/voucher/seckill",HttpMethod.POST,new HttpEntity<>(Map.of(
                     "shopId", 1, "title", "Stack upgrade fixture", "payValue", 100,
                     "actualValue", 200, "type", 1, "status", 1, "stock", 2,
                     "beginTime", LocalDateTime.now().minusHours(1).toString(),
-                    "endTime", LocalDateTime.now().plusHours(1).toString()), JsonNode.class);
+                    "endTime", LocalDateTime.now().plusHours(1).toString()),headers), JsonNode.class).getBody();
             assertSuccess(created);
             voucherId = created.path("data").asLong();
             assertThat(voucherId).isPositive();
@@ -145,7 +175,10 @@ class StackUpgradeIT {
                 redis.delete(java.util.List.of("seckill:stock:" + voucherId, "seckill:order:" + voucherId,
                         "seckill:reservation:" + voucherId));
             }
-            if (userId != null) jdbc.update("DELETE FROM tb_user WHERE id=?", userId);
+            if (userId != null) {
+                jdbc.update("DELETE FROM tb_shop_permission WHERE user_id=?",userId);
+                jdbc.update("DELETE FROM tb_user WHERE id=?", userId);
+            }
             if (token != null) redis.delete("login:token:" + token);
             redis.delete("login:code:" + phone);
         }

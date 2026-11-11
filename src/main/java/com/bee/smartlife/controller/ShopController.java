@@ -5,6 +5,9 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.entity.Shop;
+import com.bee.smartlife.dto.ShopWrite;
+import com.bee.smartlife.security.PublicRead;
+import com.bee.smartlife.security.ShopPermission;
 import com.bee.smartlife.service.IShopService;
 import com.bee.smartlife.utils.SystemConstants;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +28,7 @@ public class ShopController {
 
     @Resource
     public IShopService shopService;
+    @Resource private ShopPermission permission;
 
     /**
      * 根据id查询商铺信息
@@ -32,6 +36,7 @@ public class ShopController {
      * @return 商铺详情数据
      */
     @GetMapping("/{id}")
+    @PublicRead
     public Result queryShopById(@PathVariable("id") Long id) {
         return shopService.queryById(id);
     }
@@ -42,7 +47,9 @@ public class ShopController {
      * @return 商铺id
      */
     @PostMapping
-    public Result saveShop(@RequestBody Shop shop) {
+    public Result saveShop(@RequestBody ShopWrite input) {
+        permission.requireAdmin();
+        Shop shop=input.toShop(true);
         // 写入数据库
         shopService.save(shop);
         // 返回店铺id
@@ -55,7 +62,9 @@ public class ShopController {
      * @return 无
      */
     @PutMapping
-    public Result updateShop(@RequestBody Shop shop) {
+    public Result updateShop(@RequestBody ShopWrite input) {
+        permission.requireShopWrite(input.id());
+        Shop shop=input.toShop(false);
         // 写入数据库
         return shopService.update(shop);
     }
@@ -67,6 +76,7 @@ public class ShopController {
      * @return 商铺列表
      */
     @GetMapping("/of/type")
+    @PublicRead
     public Result queryShopByType(
             @RequestParam("typeId") Integer typeId,
             @RequestParam(value = "current", defaultValue = "1") Integer current,
@@ -83,6 +93,7 @@ public class ShopController {
      * @return 商铺列表
      */
     @GetMapping("/of/name")
+    @PublicRead
     public Result queryShopByName(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "current", defaultValue = "1") Integer current

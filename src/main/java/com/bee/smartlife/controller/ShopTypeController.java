@@ -5,6 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.bee.smartlife.dto.Result;
 import com.bee.smartlife.entity.ShopType;
+import com.bee.smartlife.security.PublicRead;
 import com.bee.smartlife.service.IShopTypeService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -45,6 +46,7 @@ public class ShopTypeController {
 
 
     @GetMapping("list")
+    @PublicRead
     public Result queryTypeList() {
         //构建缓存key
         String cacheKey = CACHE_SHOP_TYPE_KEY;
