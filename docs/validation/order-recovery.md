@@ -46,3 +46,7 @@ npm run test:frontend
 ## 仍保留的边界
 
 不把提交后未ACK的“等价消息重放”描述成整个进程已被杀；真正halt实验是上面两项独立子进程测试。无压测性能承诺。任意Redis丢数据、历史归属缺失及矛盾终态需要人工核对；记录归档、支付与退款仍未实现。生产部署须按 [迁移与协调切换](../order-recovery.md) 执行。
+
+## GitHub验证
+
+代码提交 `d2d1132f3c7e85783b5af3cc5504c7fa7066fc52` 的三项CI均成功：Java21、Frontend and Nginx、API and MQ integration。集成任务59项通过，单元任务24项通过；[实际运行记录](https://github.com/beemines/smart-life/actions/runs/42968643927)。通过后才勾选根目录对应四项P0；收尾文档提交的CI继续核对。

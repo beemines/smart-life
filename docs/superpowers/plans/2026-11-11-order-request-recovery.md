@@ -55,4 +55,6 @@ Files: common.js, shop-detail.html, small order-request client module, JS tests,
 
 - [x] One independent review; fix important findings with failing regressions then full green suite.
 - [x] Full build/unit/integration/JS tests; update migrations, operations, validation and roadmap.
-- [ ] Push approved update, inspect all CI, fix failures; only then mark the four remaining P0 rows complete and verify final CI again.
+- [x] Push approved code, inspect all three successful CI jobs, and only then mark the four remaining P0 rows complete.
+
+Final documentation commit CI must also be checked before user handoff.
