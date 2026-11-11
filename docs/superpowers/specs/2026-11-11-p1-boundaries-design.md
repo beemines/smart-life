@@ -1,0 +1,38 @@
+# P1 permission, eligibility, cache and upload boundaries
+
+## Intent and authorization
+
+User approved the eight concrete fixes reviewed in chat and requested backend, frontend and real-page verification before pushing. Keep the reviewed approach: extend current services/pages, no new framework or business page. The seven not-yet-built order/payment/refund features remain outside this repair batch. Existing one-user/one-voucher lifetime rule and durable order request behavior remain.
+
+## Approaches
+
+Selected by the user's approval of the reviewed recommendations: small service-level authorization, existing Redis/Lua and RocketMQ, durable synchronization where external writes can fail, actual image validation and owner-bound deletion. A new security/workflow framework is unnecessary; frontend-only guards or best-effort afterCommit callbacks alone cannot satisfy the identified failures. Execute inline with one final independent review, as in the preceding batch.
+
+## Concrete implementation calls
+
+These defaults are implementation calls, not additional user-provided requirements:
+
+- Add one minimal permission relation: administrator at platform scope, owner at a specific shop. Only administrators create shops; administrators or that shop's owners edit it or create/update its vouchers. Grants are provisioned explicitly in SQL, never self-claimed over an API; no existing account is silently promoted. Public GET handlers remain anonymous. Protected writes fail 401/403. Writes use narrow DTOs instead of binding arbitrary entity fields.
+- Uploads require login; allow real PNG/JPEG up to 5MiB and 20 million pixels (each side at most8192), check suffix/MIME/decoded format, re-encode before saving with a generated name, and persist owner metadata. DELETE uses the original relative name, validates ownership and canonical path, and is idempotent for that owner's deleted record. Anonymous/other-user deletion fails, GET never deletes, legacy files without owner metadata remain readable but not arbitrarily deletable. Frontend stores the original name and derives /imgs only for display; keep published blog image URL compatibility. File deletion remains safely retryable if SQL status update fails; no promise of arbitrary filesystem/DB atomicity.
+- Logout revokes only the supplied session, accepts repeats, clears per-login browser caches, and does not recreate revoked Redis keys. Preserve the existing session lifetime policy.
+- Business activity datetimes retain their current offset-free API representation with an explicit Asia/Shanghai business zone. New reservation checks existing/up status, initialization readiness and [begin,end), using Redis TIME for the final Lua time comparison. A same-order existing reservation/terminal result wins over today's activity time so valid in-flight work is preserved. Existing legacy direct MQ messages retain their P0 handling. Add a protected status update in the existing voucher module so supported status changes share the activity lock and initialization flow.
+- Voucher creation writes voucher, stock and a pending publication record in one MySQL transaction. After commit, initialize Redis stock only for a brand-new unpublished activity, then mark ready; retry pending records with the existing Spring scheduler. A ready activity never recreates lost stock blindly. Legacy migration records may publish rules only when an existing valid stock key is present. New claims are gated on durable readiness; failed publication is observable and retried. Repeated publication preserves already-decremented stock. Do not use Redis success as evidence of SQL commit.
+- Shop writes and cache-miss fills share a per-shop Redisson lock; hold it across the SQL transaction commit and invalidation attempt. Commit a per-shop synchronization version in the same SQL transaction. Synchronization adds new IDs to the shared Bloom, invalidates Redis/local cache, broadcasts invalidation through existing RocketMQ, then conditionally marks that version synchronized. Failed synchronization stays pending and is retried. A Bloom-negative new shop with pending synchronization can fall back to SQL; cache misses while pending bypass stale Redis and do not refill it. Local caches keep the existing3-minute expire-after-write bound, and all instances subscribe in BROADCASTING mode. Test normal propagation and missed-event TTL fallback; do not claim instantaneous linearizable reads across every instance during outages.
+
+## Files and boundaries
+
+Builder check completed: no new product decisions required. Fresh publisher permanently records whether stock may be seeded; status updates/publishing/new claims share a voucher lock. Known closed/unready/new invalid activities receive definite business rejection without inventory mutation, rather than manual compensation. Shop miss locking includes the final local-cache fill; pending sync is checked before Redis positive/empty hits. Image dimensions are inspected before decoding and Nginx/request caps include multipart overhead. A normal broadcast target of15seconds is tested; missed events retain the existing3-minute local TTL fallback, with pending synchronization bypassing stale shared cache on a miss. The cache-concurrency todo stays unchecked unless refill counts/P95/failure scenarios are actually measured.
+
+Add additive migration/fresh DDL for permissions, uploaded-file ownership, per-shop cache synchronization and voucher publication. Keep grant bootstrap explicit in documentation and synthetic fixtures. No modifications to external/user databases; use only dedicated smart-life-upgrade services and fresh synthetic fixtures.
+
+Reuse LoginInterceptor/RefreshTokenInterceptor, WebExceptionAdvice, ShopServiceImpl/CacheClient, VoucherServiceImpl/VoucherOrderReservation/seckill.lua, UploadController, common.js, blog-edit.html and info.html. Small focused helpers may own permissions, publication, cache sync and uploaded files. Preserve public query routes and legacy trailing-slash compatibility; exact /user/login/ remains protected as before.
+
+## Verification contract
+
+- Write regressions and observe RED before production changes. Prove unauthenticated and cross-owner writes fail with unchanged data; admin/owner writes work and public reads remain available.
+- Real PNG/JPEG lifecycle through HTTP and Nginx; fake/empty/oversize/wrong MIME rejected without leaked files; other-user/anonymous/path-traversal and GET deletion rejected; original path deletion removes the real file; repeated owner deletion safe.
+- New shops immediately visible, including Bloom write failure recovery. Pause SQL commit and overlap cache fill to prove no old-value refill; start two actual contexts/processes and prove broadcast invalidates both, duplicate events harmless and TTL fallback bounded.
+- Before start, end boundary, expired, down and nonexistent activities cannot form orders; a valid reservation survives delayed consumption. Inject publication failure/commit failure, replay publisher and restart recovery without orphan eligibility or stock reset.
+- Existing unit/integration/order crash tests remain valid; update old test fixtures that intentionally relied on anonymous writes or arbitrary bytes as images.
+- JS tests of actual page handlers, frontend template/resource checks, packaged app plus actual browser screenshots for upload/delete/logout and existing order UI. No new UI flows merely for demonstration.
+- Full local build/integration and every job of the final pushed SHA must succeed. Mark only covered P1 todo rows after passing code CI; leave new business functions and unmet benchmark claims unchecked.
