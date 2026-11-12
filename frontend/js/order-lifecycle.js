@@ -53,7 +53,10 @@
         } catch (error) {
           onError(String(error));
           // A competing payment/close/redeem may have changed the state. Refresh it.
-          try { this.detail = (await api.get('/voucher-order/' + (merchant ? 'merchant/' : 'detail/') + encodeURIComponent(id))).data; }
+          try {
+            this.detail = (await api.get('/voucher-order/' + (merchant ? 'merchant/' : 'detail/') + encodeURIComponent(id))).data;
+            await this.load(true);
+          }
           catch (refreshError) { this.detail = null; this.detailOpen = false; }
         } finally { this.busy = false; }
       }

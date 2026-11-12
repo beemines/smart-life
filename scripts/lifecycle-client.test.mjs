@@ -26,3 +26,9 @@ test('actual order component template compiles under the pinned Vue compiler',()
  const context=vm.createContext({window:{},Date});vm.runInContext(readFileSync(file,'utf8')+'\nwindow.panel=SmartLifeOrderPanel;',context);
  compile(context.window.panel.template,{onError(error){throw error;}});
 });
+test('successful mutation still refreshes list when first detail read fails transiently',async()=>{
+ let details=0,lists=0;const c=client({post:async()=>({}),get:async path=>{
+  if(path.includes('/mine')){lists++;return {data:{items:[{id:'123',status:2}],hasMore:false}};}
+  if(++details===1)throw 'temporary read timeout';return {data:{id:'123',status:2,canPay:false}};
+ }});c.items=[{id:'123',status:1}];c.detail={id:'123',canPay:true};await c.action('pay');assert.equal(c.detail.status,2);assert.equal(lists,1);assert.equal(c.items[0].status,2);
+});
