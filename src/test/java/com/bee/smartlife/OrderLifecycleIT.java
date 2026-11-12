@@ -352,6 +352,69 @@ class OrderLifecycleIT {
   }
 
   @Test
+  void timeoutQueueFairnessSurvivesMorePoisonThanCooldownCapacity() {
+    assertRecoveryFairness("close_attempt_at", false);
+  }
+
+  @Test
+  void refundQueueFairnessSurvivesMorePoisonThanCooldownCapacity() {
+    assertRecoveryFairness("refund_attempt_at", true);
+  }
+
+  private void assertRecoveryFairness(String attemptColumn, boolean refund) {
+    var poisoned = new ArrayList<Long>();
+    try {
+      for (int i = 0; i < 400; i++) {
+        long other = id - 1000 - i;
+        poisoned.add(other);
+        jdbc.update(
+            "INSERT INTO tb_voucher_order(id,user_id,voucher_id,status,create_time) SELECT"
+                + " ?,user_id+?,voucher_id+1000,?,create_time FROM tb_voucher_order WHERE id=?",
+            other,
+            i + 1,
+            refund ? 5 : 1,
+            id);
+        jdbc.update(
+            "INSERT INTO tb_order_lifecycle(order_id,snapshot_valid,shop_id,shop_name,title,"
+                + "pay_value,actual_value,pay_deadline,use_begin_time,use_end_time,close_scheduled)"
+                + " SELECT ?,?,shop_id,shop_name,title,pay_value,actual_value,'2000-01-01',"
+                + "use_begin_time,use_end_time,1 FROM tb_order_lifecycle WHERE order_id=?",
+            other,
+            refund ? 0 : 1,
+            id);
+      }
+      if (refund) {
+        persistence.action(id, "pay", false);
+        persistence.action(id, "refund", false);
+      } else {
+        sql("UPDATE tb_order_lifecycle SET pay_deadline=UTC_TIMESTAMP(6) WHERE order_id=?");
+      }
+      // Model a 10-second scan cadence without sleeping through the 30-second cooldown.
+      // Four hundred older poisoned rows exceed three batches of cooldown capacity.
+      for (int batch = 0; batch < 5; batch++) {
+        lifecycle.recover();
+        for (long other : poisoned) {
+          jdbc.update(
+              "UPDATE tb_order_lifecycle SET "
+                  + attemptColumn
+                  + "=DATE_SUB("
+                  + attemptColumn
+                  + ",INTERVAL 10 SECOND) WHERE order_id=?",
+              other);
+        }
+      }
+      assertThat(status()).isEqualTo(refund ? 6 : 4);
+      assertStockReturned();
+    } finally {
+      for (long other : poisoned) {
+        jdbc.update("DELETE FROM tb_order_stock_return WHERE order_id=?", other);
+        jdbc.update("DELETE FROM tb_order_lifecycle WHERE order_id=?", other);
+        jdbc.update("DELETE FROM tb_voucher_order WHERE id=?", other);
+      }
+    }
+  }
+
+  @Test
   void durableCloseSchedulingAndActualDelayedDelivery() throws Exception {
     var mq = context.getBean(com.bee.smartlife.mq.OrderCloseMQ.class);
     org.springframework.test.util.ReflectionTestUtils.setField(mq, "enabled", true);

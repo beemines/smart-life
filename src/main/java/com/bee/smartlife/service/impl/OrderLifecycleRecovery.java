@@ -26,13 +26,17 @@ public class OrderLifecycleRecovery {
   }
 
   public void runBatch() {
+    // MySQL sorts NULL first: unattempted work precedes retries, then the oldest
+    // attempt wins. A fixed business-ID priority can starve later orders once
+    // more poisoned rows exist than fit inside a retry cooldown.
+
     for (long id :
         jdbc.queryForList(
             "SELECT o.id FROM tb_voucher_order o JOIN tb_order_lifecycle l ON l.order_id=o.id WHERE"
                 + " o.status=1 AND l.snapshot_valid=1 AND l.pay_deadline<=UTC_TIMESTAMP(6) AND"
                 + " (l.close_attempt_at IS NULL OR"
                 + " l.close_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND)) ORDER BY"
-                + " l.pay_deadline,o.id LIMIT 100",
+                + " l.close_attempt_at,l.pay_deadline,o.id LIMIT 100",
             Long.class)) {
       jdbc.update(
           "UPDATE tb_order_lifecycle SET close_attempt_at=UTC_TIMESTAMP(6) WHERE order_id=?", id);
@@ -50,7 +54,7 @@ public class OrderLifecycleRecovery {
             "SELECT o.id FROM tb_voucher_order o JOIN tb_order_lifecycle l ON l.order_id=o.id WHERE"
                 + " o.status=5 AND (l.refund_attempt_at IS NULL OR"
                 + " l.refund_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND)) ORDER BY"
-                + " o.id LIMIT 100",
+                + " l.refund_attempt_at,o.id LIMIT 100",
             Long.class)) {
       jdbc.update(
           "UPDATE tb_order_lifecycle SET refund_attempt_at=UTC_TIMESTAMP(6) WHERE order_id=?", id);
@@ -65,7 +69,7 @@ public class OrderLifecycleRecovery {
         jdbc.queryForList(
             "SELECT order_id FROM tb_order_stock_return WHERE state='PENDING' AND (last_attempt_at"
                 + " IS NULL OR last_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND)) ORDER"
-                + " BY order_id LIMIT 100",
+                + " BY last_attempt_at,order_id LIMIT 100",
             Long.class)) syncReturn(id);
     for (long id :
         jdbc.queryForList(
@@ -73,7 +77,7 @@ public class OrderLifecycleRecovery {
                 + " WHERE l.snapshot_valid=1 AND l.close_scheduled=0 AND o.status=1 AND"
                 + " (l.schedule_attempt_at IS NULL OR"
                 + " l.schedule_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND)) ORDER BY"
-                + " l.order_id LIMIT 100",
+                + " l.schedule_attempt_at,l.order_id LIMIT 100",
             Long.class)) schedule(id);
   }
 
