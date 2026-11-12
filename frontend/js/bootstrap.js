@@ -11,5 +11,8 @@ function mountSmartLife(options) {
   if (typeof SmartLifeFooter !== "undefined") {
     application.component("foot-bar", SmartLifeFooter);
   }
+  if (typeof SmartLifeOrderPanel !== "undefined") {
+    application.component("order-panel", SmartLifeOrderPanel);
+  }
   return application.mount(selector);
 }

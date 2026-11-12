@@ -91,6 +91,7 @@
       <strong>{{orderTitle(orderStates[v.id].state)}}</strong>
       <p>{{orderStates[v.id].message}}</p>
       <small v-if="orderStates[v.id].orderId">订单号：{{orderStates[v.id].orderId}}</small>
+      <a v-if="orderStates[v.id].state === 'CREATED'" href="/info.html#orders">查看我的订单 / 支付</a>
       <button v-if="orderStates[v.id].canContinue" type="button" class="order-continue" @click="continueOrder(v)">继续查询</button>
     </div>
     </template>
