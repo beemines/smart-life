@@ -63,7 +63,7 @@ Interfaces: authorityTask1 uses persisted shop ID for status change; publication
 
 Files: docs/screenshots/p1-boundaries, operations/migration/validation, CI and todolist.
 
-- [ ] Full clean verify including all original integration and new P1 suites, actual JS and frontend checks, Nginx config/static checks.
-- [ ] Packaged app + actual Nginx/browser: upload display/delete, fake file rejection, logout/login protection, activity refusal and valid existing order; save and inspect screenshots.
-- [ ] One fresh whole-branch reviewer; accepted important findings get RED→GREEN and full rerun, no endless re-review loop.
+- [x] Full clean verify including all original integration and new P1 suites, actual JS and frontend checks, Nginx config/static checks.
+- [x] Packaged app + actual Nginx/browser: upload display/delete, fake file rejection, logout/login protection, activity refusal and valid existing order; save and inspect screenshots.
+- [x] One fresh whole-branch reviewer; accepted important findings get RED→GREEN and full rerun, no endless re-review loop.
 - [ ] Push approved main update, inspect every job for exact SHA; fix failures. Only then check covered todo rows and final-doc CI; record finish.

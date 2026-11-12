@@ -25,25 +25,27 @@ SmartLife 面向本地生活消费场景，提供商户与分类查询、优惠�
 
 | 模块 | 当前功能 |
 | --- | --- |
-| 用户与会话 | 模拟短信验证码登录、Redis Token 存储、请求续期、当前用户信息 |
+| 用户与会话 | 模拟短信验证码登录、Redis Token 存储、请求续期、当前用户信息、退出当前会话 |
 | 商户与分类 | 商户详情、分类列表、按分类分页、名称搜索、商户信息更新 |
 | 优惠券 | 普通券与秒杀券创建、商户券列表、库存校验、一人一单、异步创建订单 |
 | 探店笔记 | 发布笔记、热门笔记、个人笔记、点赞与取消点赞、最近点赞用户 |
 | 关注动态 | 关注与取消关注、共同关注、基于收件箱的滚动动态查询 |
 | 用户签到 | Redis Bitmap 签到、连续签到天数统计 |
-| 图片上传 | 本地文件存储，可配置上传目录 |
+| 图片上传 | PNG/JPEG 内容校验、归属记录、本地存储、本人文件幂等删除 |
 
 ## 实现要点
 
 ### 1. 商户详情的多级缓存
 
-商户详情先读取 Caffeine 本地缓存，再读取 Redis；未命中时结合布隆过滤器判断，最后查询 MySQL。数据库未查到的结果使用短期空值缓存；普通缓存写入时增加随机过期时间。商户更新后删除当前实例的本地缓存和 Redis 缓存。
+商户详情使用 Caffeine、Redis、共享布隆过滤器与 MySQL。更新持锁到 SQL 提交后再失效缓存；冷读在同一把锁内完成回源与两层填充，避免旧值晚填。持久同步记录未完成时优先读 MySQL，不让旧空值挡住新商户。既有 RocketMQ 以广播模式通知各实例清理本地缓存，失败由定时任务重试。
 
 - 商户详情本地缓存：最多 10,000 项，写入后 3 分钟过期。
-- 商户 ID 布隆过滤器：启动时从数据库初始化。
+- 商户 ID 布隆过滤器：启动时初始化，新增商户提交后追加，失败可恢复。
 - 商户分类列表：独立使用 Caffeine + Redis 缓存。
 
 入口：[ShopServiceImpl](src/main/java/com/bee/smartlife/service/impl/ShopServiceImpl.java)、[CacheClient](src/main/java/com/bee/smartlife/utils/CacheClient.java)。
+
+权限、同步状态、首次库存发布与旧库迁移见 [P1 运行说明](docs/p1-boundaries.md)。此处是功能一致性验证，尚无支撑性能数字的压测报告。
 
 ### 2. Redis Lua + RocketMQ 异步抢购
 
@@ -54,7 +56,7 @@ SmartLife 面向本地生活消费场景，提供商户与分类查询、优惠�
             └─ Redisson 用户锁 → 重复订单检查 → MySQL 条件扣库存 → 保存订单
 ```
 
-Lua 将库存判断、重复领取判断和预扣库存放在同一次 Redis 脚本执行中。订单持久化由 RocketMQ 消费者异步处理，数据库使用 `stock > 0` 条件扣减库存；消费抛出异常时请求消息重试。
+Lua 将服务端提供的活动状态、Redis 服务端时间、库存、重复领取和预扣放在同次执行中。活动领取区间为 `[begin,end)`，默认业务时区 `Asia/Shanghai`。券、数据库库存与首次发布意图先在 MySQL 提交，再发布 Redis；重试不覆盖已存在的库存。订单持久化由 RocketMQ 消费者处理，数据库以 `stock > 0` 条件扣减；临时失败请求消息重试。
 
 **抢购接口返回字符串订单 ID 代表请求已持久受理，不代表订单已完成落库或支付。** 客户端通过请求标识或订单 ID 查询真实结果，现有抢购页面显示处理中、已创建、已拒绝或待核对。
 
@@ -142,7 +144,7 @@ SOURCE /absolute/path/to/smart-life/src/main/resources/db/smart-life.sql;
 SOURCE /absolute/path/to/smart-life/src/main/resources/db/smart-life-demo.sql;
 ```
 
-首次执行创建 `smartlife` 数据库及 11 张表。结构脚本用于新建环境，重复执行会提示表已存在；不要在已有业务库上直接重建表。
+结构脚本用于新建环境，重复执行会提示表已存在；不要在已有业务库上直接重建表。旧库按各批迁移顺序升级；本批新增权限、上传归属、商户缓存同步与券发布记录，见 [P1 迁移说明](docs/p1-boundaries.md)。
 
 ### 3. 设置连接信息并启动
 
@@ -194,11 +196,15 @@ curl "http://127.0.0.1:8081/shop/of/type?typeId=1&current=1"
 | POST | `/user/code?phone=...` | 生成模拟验证码，开发日志中查看 |
 | POST | `/user/login` | 手机号与验证码登录 |
 | GET | `/user/me` | 当前登录用户 |
+| POST | `/user/logout` | 撤销当前 Token，重复调用安全 |
 | GET | `/shop-type/list` | 商户分类 |
 | GET | `/shop/{id}` | 商户详情 |
 | GET | `/shop/of/type?typeId=1&current=1` | 分类分页 |
 | GET | `/voucher/list/{shopId}` | 商户优惠券 |
-| POST | `/voucher/seckill` | 创建秒杀券并写入 Redis 库存 |
+| POST | `/voucher/seckill` | 本店店主／管理员创建秒杀券，提交后发布库存 |
+| PATCH | `/voucher/{id}/status` | 本店店主／管理员修改上下架状态 |
+| POST | `/upload/blog` | 登录用户上传经过内容校验的 PNG/JPEG |
+| DELETE | `/upload/blog?name=...` | 按上传返回的原始名称删除本人文件 |
 | POST | `/voucher-order/seckill/{id}` | 抢购优惠券，异步创建订单 |
 | GET | `/voucher-order/result/{orderId}` | 查询自己的订单受理结果 |
 | GET | `/voucher-order/request/{requestKey}` | 按当前用户的幂等请求标识查询结果 |
@@ -230,13 +236,13 @@ mvn -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionIT test
 mvn -Dtest=SmartLifeApplicationIT,RedissonLockIT test
 ```
 
-CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，运行 `StackUpgradeIT`、`OrderSafetyIT`、`RedisIdWorkerIT` 、`OrderConsumptionIT` 和 `OrderRequestRecoveryIT`，验证原有业务链路、数据库唯一约束／回滚／迁移、真实 Redis 发号，以及订单重投、锁竞争、事务提交边界与幂等补偿。运行命令见 [本地开发与集成验证](docs/local-development.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
+CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端实际处理函数、资源、Vue 模板、Nginx 配置和静态页面访问。独立集成任务通过 Docker 启动 MySQL 8.4、Redis 8.4、RocketMQ 5.5.0，保留原有五组回归，并新增 `P1BoundaryIT`、`ShopCacheIT`、`P1VoucherIT`，覆盖权限、文件归属、真实两实例广播、活动边界与首次发布崩溃恢复。运行命令见 [本地开发与集成验证](docs/local-development.md)，本轮证据见 [P1 验证](docs/validation/p1-boundaries.md)。其余历史 `*IT` 仍是手动实验，其中包含批量写 Redis 的操作。
 
 旧开发库先执行 [失败记录迁移](src/main/resources/db/migrations/2026-11-09-order-consumption-failure.sql)，再执行 [受理与恢复迁移](src/main/resources/db/migrations/2026-11-11-order-request-recovery.sql)。消费安全改动需要停止旧版生产者／消费者后协调切换，不支持新旧消费者混跑；说明及核对步骤见 [订单消费与补偿](docs/order-consumption.md) 和 [受理恢复操作说明](docs/order-recovery.md)。
 
 ## 当前边界与后续方向
 
-当前版本适合本地学习、功能演示与后端工程实践。短信发送为模拟实现；支付、核销、退款、订单超时关闭和登出尚未完成。商户与上传相关接口也尚未建立完整的商家权限体系。
+当前版本适合本地学习、功能演示与后端工程实践。短信发送为模拟实现；支付、核销、退款、订单超时关闭和完整订单列表尚未完成。已有商户／券写操作采用显式 ADMIN／OWNER 授权；普通用户不能自授角色，部署者需按说明配置权限。退出当前会话与本人图片删除已实现。
 
 已实现订单 ID 重投识别、锁竞争重试、持锁至事务完成、确定业务拒绝记录及订单归属校验的 Redis 补偿，并增加持久受理、原 ID 重发、结果查询与有审计的超时恢复。历史预占归属无法验证或库存损坏时保留人工核对记录，不根据库存差额盲目补量。支付闭环与可复现压测仍待完成，详见 [Roadmap](docs/roadmap.md)。
 

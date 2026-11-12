@@ -71,3 +71,9 @@ npm run test:frontend
 当前客户端为 RocketMQ 5.5.1，官方 Broker 镜像为 5.5.0；经典 Producer / PushConsumer 链路由真实集成测试验证。升级过程与结果见 [验证记录](validation/stack-upgrade.md)。
 
 订单受理恢复需要执行新增表迁移，操作、截图与演示见 [受理恢复](order-recovery.md)。集成测试请关闭自动恢复调度以隔离夹具：`SMARTLIFE_ORDER_RECOVERY_ENABLED=false`。
+
+## P1 权限、缓存与发布回归
+
+已有开发卷执行 [P1 增量迁移](p1-boundaries.md)，不要重建已有表。新用户没有商户写权限；由部署者核实身份后显式配置 ADMIN／OWNER，不能以会员 level 代替授权。
+
+本批全量测试命令与实际页面截图见 [P1 验证](validation/p1-boundaries.md)。集成夹具另设置 `SMARTLIFE_SYNC_ENABLED=false`，并将 `P1BoundaryIT,ShopCacheIT,P1VoucherIT` 加入原来的五组测试；正常演示默认启用该同步任务。新券在数据库提交后发布库存，状态未 READY 前拒绝领取；旧券库存丢失进入 REVIEW，不自动播种库存。

@@ -19,12 +19,16 @@
 | `SMARTLIFE_REDIS_SSL` | `false` | 是否通过 TLS 连接 Redis |
 | `SMARTLIFE_MQ_NAME_SERVER` | `127.0.0.1:9876` | RocketMQ NameServer |
 | `SMARTLIFE_MQ_TOPIC` | `smartlife-seckill-order` | 秒杀订单 Topic |
+| `SMARTLIFE_BUSINESS_ZONE` | `Asia/Shanghai` | 券活动无时区日期的业务时区，领取区间为 `[begin,end)` |
+| `SMARTLIFE_SYNC_ENABLED` | `true` | 商户缓存与券首次发布的持久重试任务；仅集成夹具隔离时关闭 |
 | `SMARTLIFE_UPLOAD_DIR` | `./uploads` | 图片根目录，相对于启动目录 |
 | `SMARTLIFE_LOG_LEVEL` | `debug` | 项目日志级别，模拟验证码在 DEBUG 日志中 |
 
 Spring Redis 与 Redisson 复用同一组主机、端口、密码、数据库和 TLS 配置，避免缓存与锁连接到不同实例。本项目使用单节点 Redis 配置；未配置 Sentinel 或 Cluster。
 
 上传接口返回 `/blogs/...` 相对名称。仓库的 Nginx 配置将前端 `/imgs/...` 请求映射到静态图片或 `uploads/` 中的上传文件；具体配置见 [前端启动说明](frontend.md)。
+
+上传限制为合法 PNG/JPEG、5 MiB、单边 8192／总像素 2000 万，Nginx 请求上限 6 MiB。DELETE 传原始相对名并验证本人归属。旧库权限／文件／同步表及显式商户授权见 [P1 运行说明](p1-boundaries.md)。
 
 ## IDEA 运行
 
