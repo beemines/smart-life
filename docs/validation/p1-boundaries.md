@@ -74,4 +74,4 @@ npm run test:frontend
 
 本批完成现有领取路径的有效期和权限检查，不代表支付／核销阶段已经存在。缓存回归证明受测提交交错与多实例通知有效，没有测热点回源 P95／QPS，不填写性能提升数字。持久同步不能替代 Redis 数据丢失后的库存业务核对，不能盲目重建库存。
 
-远端最终提交与三项 CI 结果将在发布核对后追记。
+代码与截图发布提交 `4428853e2f34c8293aae05f669503290b7859e5b` 的 [Build #12](https://github.com/beemines/smart-life/actions/runs/43149518688) 三项全部成功：Java 21、Frontend and Nginx、API and MQ integration (Java 21)。随后仅追记本验证、计划与待办状态；交付前仍核对追记提交的完整 CI。每次运行可在 [工作流列表](https://github.com/beemines/smart-life/actions/workflows/ci.yml) 按 main 提交 SHA 查看。
