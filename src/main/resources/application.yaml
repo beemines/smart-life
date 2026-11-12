@@ -46,6 +46,8 @@ smartlife:
     enabled: ${SMARTLIFE_SYNC_ENABLED:true}
   upload-dir: ${SMARTLIFE_UPLOAD_DIR:./uploads}
   orders:
+    lifecycle-enabled: ${SMARTLIFE_LIFECYCLE_ENABLED:true}
+    payment-window-seconds: ${SMARTLIFE_PAYMENT_WINDOW_SECONDS:900}
     consumer-enabled: ${SMARTLIFE_ORDER_CONSUMER_ENABLED:true}
     recovery-enabled: ${SMARTLIFE_ORDER_RECOVERY_ENABLED:true}
     recovery-delay-ms: 60000

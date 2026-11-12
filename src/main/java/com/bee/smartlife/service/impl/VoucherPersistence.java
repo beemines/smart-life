@@ -19,6 +19,10 @@ public class VoucherPersistence {
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     public void create(Voucher voucher,boolean seckill) {
         if(jdbc.queryForList("SELECT id FROM tb_shop WHERE id=? FOR SHARE",Long.class,voucher.getShopId()).isEmpty())throw ApiException.badRequest("店铺不存在");
+        if(voucher.getUseBeginTime()==null){
+            var now=jdbc.queryForObject("SELECT UTC_TIMESTAMP(6)",java.time.LocalDateTime.class);
+            voucher.setUseBeginTime(now);voucher.setUseEndTime(now.plusDays(30));
+        }
         if(vouchers.insert(voucher)!=1)throw new IllegalStateException("优惠券保存失败");
         if(!seckill)return;
         var stock=new SeckillVoucher().setVoucherId(voucher.getId()).setStock(voucher.getStock())

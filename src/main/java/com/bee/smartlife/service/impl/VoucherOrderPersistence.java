@@ -25,6 +25,7 @@ public class VoucherOrderPersistence {
     private final VoucherOrderFailureMapper failures;
     private final ISeckillVoucherService vouchers;
     private final VoucherOrderRequestMapper requests;
+    @org.springframework.beans.factory.annotation.Autowired private OrderLifecyclePersistence lifecycle;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public VoucherOrderRequest accept(VoucherOrder order, String key) {
@@ -122,6 +123,7 @@ public class VoucherOrderPersistence {
 
         // Do not swallow insert/unique-key failures: this deduction must roll back.
         if (orders.insert(order) != 1) throw new IllegalStateException("订单保存失败");
+        lifecycle.capture(order.getId());
         updateRequest(order.getId(), "CREATED", null);
         return OrderProcessingResult.CREATED;
     }

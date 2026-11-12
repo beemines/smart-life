@@ -29,6 +29,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
     @Resource private RedissonClient redissonClient;
     @Resource private VoucherOrderMQProducer voucherOrderMQProducer;
     @Resource private VoucherOrderPersistence persistence;
+    @Resource private OrderLifecycleService lifecycle;
     @Resource private VoucherOrderReservation reservation;
     @Resource private VoucherOrderFailureMapper failures;
     @Resource private VoucherOrderRequestMapper requests;
@@ -125,6 +126,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
                 }
             }
             completeRejection(order, result);
+            if(!result.isRejected())lifecycle.afterCreated(order.getId());
             return result;
         });
     }

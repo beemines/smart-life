@@ -37,6 +37,8 @@ public class Voucher implements Serializable {
      * 商铺id
      */
     private Long shopId;
+    private LocalDateTime useBeginTime;
+    private LocalDateTime useEndTime;
 
     /**
      * 代金券标题
