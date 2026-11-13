@@ -21,6 +21,21 @@ class VoucherBatchXlsxParserTest {
    var file=workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue("userId");s.createRow(1).createCell(0).setCellValue("9007199254740993");s.createRow(2).createCell(0).setCellValue("9007199254740993");s.createRow(3).createCell(0).setCellFormula("1+2");s.createRow(4).createCell(0).setCellValue(1234567890123456d);});
    var rows=parse(file);assertThat(rows).hasSize(4);assertThat(rows.get(0).userId()).isEqualTo("9007199254740993");assertThat(rows.get(1).rowNumber()).isEqualTo(3);assertThat(rows.get(2).userId()).doesNotMatch("[0-9]+");assertThat(rows.get(3).userId()).doesNotMatch("[0-9]+");
  }
+ @Test void acceptsSafeIntegralNumericDecimalAndExponentNotation()throws Exception{
+   var file=workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue("userId");s.createRow(1).createCell(0).setCellValue(123d);s.createRow(2).createCell(0).setCellValue(123000000000000d);s.createRow(3).createCell(0).setCellValue(123.5d);s.createRow(4).createCell(0).setCellValue(0d);});
+   var rows=parse(file);assertThat(rows.get(0).userId()).isEqualTo("123");assertThat(rows.get(1).userId()).isEqualTo("123000000000000");assertThat(rows.get(2).userId()).doesNotMatch("[0-9]+");assertThat(rows.get(3).userId()).doesNotMatch("[0-9]+");
+ }
+ @Test void boundsExtremeNumericExponentsBeforeIntegerExpansion()throws Exception{
+   var original=workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue("userId");s.createRow(1).createCell(0).setCellValue(123d);});
+   for(String raw:new String[]{"1E2147483647","1E-2147483647","100E2147483647","1.5E1"}){
+     var out=new ByteArrayOutputStream();
+     try(var in=new java.util.zip.ZipInputStream(original.getInputStream());var zip=new java.util.zip.ZipOutputStream(out)){
+       java.util.zip.ZipEntry entry;while((entry=in.getNextEntry())!=null){byte[] bytes=in.readAllBytes();if(entry.getName().equals("xl/worksheets/sheet1.xml")){String xml=new String(bytes,java.nio.charset.StandardCharsets.UTF_8);assertThat(xml).contains("<v>123.0</v>");bytes=xml.replace("<v>123.0</v>","<v>"+raw+"</v>").getBytes(java.nio.charset.StandardCharsets.UTF_8);}zip.putNextEntry(new java.util.zip.ZipEntry(entry.getName()));zip.write(bytes);zip.closeEntry();}
+     }
+     var file=new MockMultipartFile("file","users.xlsx","xlsx",out.toByteArray());
+     org.junit.jupiter.api.Assertions.assertTimeout(java.time.Duration.ofSeconds(3),()->{String id=parse(file).get(0).userId();if(raw.equals("1.5E1"))assertThat(id).isEqualTo("15");else assertThat(id).doesNotMatch("[0-9]+");});
+   }
+ }
  @Test void rejectsBadHeadersAdditionalSheetsAndLateInvalidColumnBeforeReturningAnyRows()throws Exception {
    for(int variant=0;variant<3;variant++){final int v=variant;var file=workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue(v==0?"phone":"userId");s.createRow(1).createCell(0).setCellValue("1");if(v==1)w.createSheet();if(v==2)s.createRow(2).createCell(1).setCellValue("late malformed");});assertThatThrownBy(()->parse(file)).isInstanceOf(Exception.class);}
  }

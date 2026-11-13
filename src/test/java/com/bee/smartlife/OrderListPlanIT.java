@@ -13,7 +13,8 @@ class OrderListPlanIT {
  @Autowired JdbcTemplate jdbc;
  @Test void reportActualMineQueriesAtTenThousandOrders()throws Exception{
    try(var c=jdbc.getDataSource().getConnection()){org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(c,new org.springframework.core.io.ClassPathResource("db/migrations/2026-11-13-order-list-indexes.sql"));}
-   long user=9_999_888_777L,base=8_888_000_000_000L;var args=new ArrayList<Object[]>();for(int i=0;i<10000;i++)args.add(new Object[]{base+i,user,base+i,i%1000==0?2:1});
+   // Separate ownership/range each run: a killed fixture must not collide with its successor.
+   long base=java.util.concurrent.ThreadLocalRandom.current().nextLong(8_000_000_000_000_000L,9_000_000_000_000_000L),user=base+20000;var args=new ArrayList<Object[]>();for(int i=0;i<10000;i++)args.add(new Object[]{base+i,user,base+i,i%1000==0?2:1});
    try{jdbc.batchUpdate("INSERT INTO tb_voucher_order(id,user_id,voucher_id,status,create_time) VALUES (?,?,?,?,DATE_SUB('2026-01-01',INTERVAL ? SECOND))",args.stream().map(a->new Object[]{a[0],a[1],a[2],a[3],((Number)a[0]).longValue()-base}).toList());
      jdbc.execute("ANALYZE TABLE tb_voucher_order");StringBuilder report=new StringBuilder();
      for(String status:List.of(""," AND o.status=2")){
@@ -21,6 +22,6 @@ class OrderListPlanIT {
        report.append(sql).append('\n').append(jdbc.queryForList("EXPLAIN ANALYZE "+sql)).append('\n');
      }
      Files.writeString(Path.of("target/order-list-queryplan.txt"),report);assertThat(report.toString()).contains("actual time").doesNotContain("-> Sort:");
-   }finally{jdbc.update("DELETE FROM tb_voucher_order WHERE user_id=?",user);}
+   }finally{jdbc.update("DELETE FROM tb_voucher_order WHERE user_id=? AND id>=? AND id<? AND voucher_id=id",user,base,base+10000);}
  }
 }

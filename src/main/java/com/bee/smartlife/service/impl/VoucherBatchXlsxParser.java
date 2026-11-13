@@ -53,7 +53,16 @@ public class VoucherBatchXlsxParser {
        String value=text.toString();if("s".equals(type)){try{value=shared.get(Integer.parseInt(value));}catch(Exception e){throw new SAXException("shared string index");}}
        if(!header){if(row!=1||formula||!value.equals("userId"))throw new SAXException("header must be userId");header=true;return;}
        if(formula)value="[公式不可用]";
-       else if(!"s".equals(type)&&!"inlineStr".equals(type)&&(!value.matches("[1-9][0-9]{0,14}")||type!=null&&!type.equals("n")))value="[数字ID不明确]";
+       else if(!"s".equals(type)&&!"inlineStr".equals(type)){
+         try{
+           if(type!=null&&!type.equals("n"))throw new NumberFormatException("not numeric");
+           var number=new java.math.BigDecimal(value).stripTrailingZeros();
+           // Check scale using long arithmetic BEFORE expanding an exponent to an integer.
+           if(number.signum()<=0||number.scale()>0||(long)number.precision()-number.scale()>15)
+             throw new NumberFormatException("ambiguous numeric ID");
+           value=number.toBigIntegerExact().toString();
+         }catch(ArithmeticException|NumberFormatException invalid){value="[数字ID不明确]";}
+       }
        sink.accept(new VoucherBatchService.Input(row,value));count++;
      }
    }
