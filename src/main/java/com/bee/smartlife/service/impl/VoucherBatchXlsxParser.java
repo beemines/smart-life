@@ -43,14 +43,25 @@ public class VoucherBatchXlsxParser {
  private static void read(InputStream in,DefaultHandler h)throws Exception{XMLReader xml=XMLHelper.newXMLReader();xml.setContentHandler(h);xml.parse(new InputSource(in));}
  private static class Sheet extends DefaultHandler {
    final List<String> shared;final org.apache.poi.xssf.model.StylesTable styles;final java.util.function.Consumer<VoucherBatchService.Input> sink;boolean header,formula,inText,dateStyle;String type;StringBuilder text;int row,cells,lastRow,count;
+   Integer columnStyle,rowStyle;int columnDefinitions;
    Sheet(List<String> shared,org.apache.poi.xssf.model.StylesTable styles,java.util.function.Consumer<VoucherBatchService.Input> sink){this.shared=shared;this.styles=styles;this.sink=sink;}
    @Override public void startElement(String u,String l,String q,Attributes a)throws SAXException{
-     if(l.equals("row")){try{row=Integer.parseInt(a.getValue("r"));}catch(Exception e){throw new SAXException("row number");}if(row<=lastRow||row>10001||count>=10000)throw new SAXException("row budget");lastRow=row;cells=0;text=new StringBuilder();formula=false;type=null;}
+     if(l.equals("col")){
+       if(++columnDefinitions>10000)throw new SAXException("column definition budget");
+       try{int min=Integer.parseInt(a.getValue("min")),max=Integer.parseInt(a.getValue("max"));if(min<1||max<min||max>16384)throw new SAXException("column range");
+         if(min==1&&a.getValue("style")!=null){if(columnStyle!=null)throw new SAXException("overlapping column defaults");columnStyle=styleIndex(a.getValue("style"));}
+       }catch(NumberFormatException e){throw new SAXException("column range",e);}
+     }
+     if(l.equals("row")){try{row=Integer.parseInt(a.getValue("r"));}catch(Exception e){throw new SAXException("row number");}if(row<=lastRow||row>10001||count>=10000)throw new SAXException("row budget");lastRow=row;cells=0;text=new StringBuilder();formula=false;type=null;rowStyle=a.getValue("s")==null?null:styleIndex(a.getValue("s"));}
      if(l.equals("c")){if(++cells>1||a.getValue("r")==null||!a.getValue("r").equals("A"+row))throw new SAXException("one column required");type=a.getValue("t");dateStyle=false;
-       if(styles!=null||a.getValue("s")!=null){try{int index=a.getValue("s")==null?0:Integer.parseInt(a.getValue("s"));if(styles==null||index<0||index>=styles.getNumCellStyles())throw new IllegalArgumentException("style index");var style=styles.getStyleAt(index);dateStyle=org.apache.poi.ss.usermodel.DateUtil.isADateFormat(style.getDataFormat(),style.getDataFormatString());}catch(Exception e){throw new SAXException("invalid cell style",e);}}
+       // Match pinned POI6 XSSFCell.getCellStyle: explicit > column > row > style0.
+       if(styles!=null||a.getValue("s")!=null){int index=a.getValue("s")!=null?styleIndex(a.getValue("s")):columnStyle!=null?columnStyle:rowStyle!=null?rowStyle:styleIndex("0");var style=styles.getStyleAt(index);dateStyle=org.apache.poi.ss.usermodel.DateUtil.isADateFormat(style.getDataFormat(),style.getDataFormatString());}
      }
      if(l.equals("f"))formula=true;
      if(l.equals("v")||l.equals("t"))inText=true;
+   }
+   private int styleIndex(String value)throws SAXException{
+     try{int index=Integer.parseInt(value);if(styles==null||index<0||index>=styles.getNumCellStyles())throw new IllegalArgumentException("style index");return index;}catch(Exception e){throw new SAXException("invalid cell style",e);}
    }
    @Override public void characters(char[] c,int s,int n)throws SAXException{if(inText){if(text.length()+n>128)throw new SAXException("cell budget");text.append(c,s,n);}}
    @Override public void endElement(String u,String l,String q)throws SAXException{

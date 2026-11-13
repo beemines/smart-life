@@ -8,6 +8,22 @@ import org.springframework.mock.web.MockMultipartFile;
 import com.bee.smartlife.service.impl.VoucherBatchXlsxParser;
 
 class VoucherBatchXlsxParserTest {
+ @org.junit.jupiter.params.ParameterizedTest
+ @org.junit.jupiter.params.provider.ValueSource(strings={"COLUMN_DATE","ROW_DATE","EXPLICIT_GENERAL_COLUMN","EXPLICIT_GENERAL_ROW","COLUMN_GENERAL_ROW_DATE","COLUMN_DATE_ROW_GENERAL"})
+ void omittedCellStylesHonorColumnThenRowDefaultsAndExplicitGeneralWins(String scenario)throws Exception{
+   var original=workbook(w->{var sheet=w.createSheet();var date=w.createCellStyle();date.setDataFormat(w.createDataFormat().getFormat("yyyy-mm-dd"));
+     if(scenario.contains("COLUMN"))sheet.setDefaultColumnStyle(0,scenario.equals("COLUMN_GENERAL_ROW_DATE")?w.getCellStyleAt(0):date);
+     sheet.createRow(0).createCell(0).setCellValue("userId");var row=sheet.createRow(1);
+     if(scenario.contains("ROW"))row.setRowStyle(scenario.equals("COLUMN_DATE_ROW_GENERAL")?w.getCellStyleAt(0):date);row.createCell(0).setCellValue(45000d);
+   });
+   var out=new ByteArrayOutputStream();try(var in=new java.util.zip.ZipInputStream(original.getInputStream());var zip=new java.util.zip.ZipOutputStream(out)){
+     java.util.zip.ZipEntry entry;while((entry=in.getNextEntry())!=null){byte[] bytes=in.readAllBytes();if(entry.getName().equals("xl/worksheets/sheet1.xml")){String xml=new String(bytes,java.nio.charset.StandardCharsets.UTF_8);var m=java.util.regex.Pattern.compile("<c\\b[^>]*\\br=\"A2\"[^>]*>").matcher(xml);assertThat(m.find()).isTrue();String cell=m.group().replaceAll(" s=\"[^\"]*\"","");if(scenario.startsWith("EXPLICIT"))cell=cell.replace(">"," s=\"0\">");xml=xml.substring(0,m.start())+cell+xml.substring(m.end());bytes=xml.getBytes(java.nio.charset.StandardCharsets.UTF_8);}zip.putNextEntry(new java.util.zip.ZipEntry(entry.getName()));zip.write(bytes);zip.closeEntry();}
+   }
+   var file=new MockMultipartFile("file","users.xlsx","xlsx",out.toByteArray());boolean dateExpected=scenario.equals("COLUMN_DATE")||scenario.equals("ROW_DATE")||scenario.equals("COLUMN_DATE_ROW_GENERAL");
+   // Independently check effective precedence against the pinned POI6 user model.
+   try(var model=new XSSFWorkbook(file.getInputStream())){var style=model.getSheetAt(0).getRow(1).getCell(0).getCellStyle();assertThat(org.apache.poi.ss.usermodel.DateUtil.isADateFormat(style.getDataFormat(),style.getDataFormatString())).isEqualTo(dateExpected);}
+   String id=parse(file).get(0).userId();if(dateExpected)assertThat(id).doesNotMatch("[0-9]+");else assertThat(id).isEqualTo("45000");
+ }
  @Test void defaultDateStyleAppliesWhenNumericCellOmitsItsStyleIndex()throws Exception{
    var original=workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue("userId");s.createRow(1).createCell(0).setCellValue(45000d);w.getCellStyleAt(0).setDataFormat(w.createDataFormat().getFormat("yyyy-mm-dd"));});
    var out=new ByteArrayOutputStream();try(var in=new java.util.zip.ZipInputStream(original.getInputStream());var zip=new java.util.zip.ZipOutputStream(out)){
