@@ -2,15 +2,15 @@
   'use strict';
   const validId = value => /^[1-9][0-9]{0,18}$/.test(value) && BigInt(value) <= 9223372036854775807n;
   window.createVoucherBatches = function (api, onError) {
+    const manualKeys=new Map(), importKeys=new WeakMap();
     return {
       voucherId:'', recipients:'', file:null, busy:false, loading:false,
       tasks:[], hasMore:false, nextId:null, listGeneration:0,
       detail:null, rows:[], rowMore:false, nextRow:null, rowLoading:false, detailGeneration:0,
       requestSignature:null, requestKey:null,
       key(signature) {
-        if (signature !== this.requestSignature) {
-          this.requestSignature = signature; this.requestKey = crypto.randomUUID();
-        }
+        if (!manualKeys.has(signature)) manualKeys.set(signature,crypto.randomUUID());
+        this.requestSignature = signature; this.requestKey = manualKeys.get(signature);
         return this.requestKey;
       },
       async load(reset) {
@@ -69,8 +69,10 @@
           onError('请选择不超过5MiB的.xlsx名单，并填写正确的券ID');return;
         }
         // Keep the key for the exact selected File object across a network retry.
-        const signature={voucherId,file};
-        if(!this.requestSignature || this.requestSignature.voucherId!==voucherId || this.requestSignature.file!==file) this.key(signature);
+        if(!importKeys.has(file)) importKeys.set(file,new Map());
+        const keys=importKeys.get(file);
+        if(!keys.has(voucherId)) keys.set(voucherId,crypto.randomUUID());
+        this.requestSignature={voucherId,file};this.requestKey=keys.get(voucherId);
         const body=new FormData();body.append('voucherId',voucherId);body.append('requestKey',this.requestKey);body.append('file',file);
         this.busy=true;
         try {

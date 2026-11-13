@@ -27,10 +27,31 @@ test('double click while submit is pending cannot create a second batch',async()
  let finish,posts=0;const {client:c}=setup({post:()=>{posts++;return new Promise(r=>finish=r);},get:async()=>({data:{items:[],hasMore:false}})});
  c.voucherId='123';c.recipients='1';const first=c.submit();await c.submit();assert.equal(posts,1);finish({data:task()});await first;assert.equal(c.busy,false);
 });
+test('manual retry retains its identity across an intervening import',async()=>{
+ const keys=[];const {client:c}=setup({post:async(p,b)=>{keys.push(p.endsWith('/import')?b.get('requestKey'):b.requestKey);throw 'timeout';}});
+ c.voucherId='123';c.recipients='1';await c.submit();c.file=new File(['x'],'a.xlsx');await c.importFile();await c.submit();assert.equal(keys[0],keys[2]);
+});
+test('original file retry retains its identity across an intervening manual task',async()=>{
+ const keys=[];const {client:c}=setup({post:async(p,b)=>{keys.push(p.endsWith('/import')?b.get('requestKey'):b.requestKey);throw 'timeout';}});
+ c.voucherId='123';c.file=new File(['x'],'a.xlsx');await c.importFile();c.recipients='1';await c.submit();await c.importFile();assert.equal(keys[0],keys[2]);
+});
 test('xlsx upload sends file and fields without fabricating multipart headers',async()=>{
  let request;const {client:c}=setup({post:async(...args)=>{request=args;return {data:task()};},get:async()=>({data:{items:[],hasMore:false}})});
  c.voucherId='123';c.file=new File(['xlsx fixture'],'recipients.xlsx');await c.importFile();
  assert.equal(request[0],'/voucher/batches/import');assert.equal(request[1].get('voucherId'),'123');assert.equal(request[1].get('file').name,'recipients.xlsx');assert.equal(request[2],undefined);
+});
+test('manual identity survives a different payload and normalizes whitespace',async()=>{
+ const keys=[];const {client:c}=setup({post:async(p,b)=>{keys.push(b.requestKey);throw 'timeout';}});
+ c.voucherId='123';c.recipients='1';await c.submit();c.recipients='2';await c.submit();
+ c.voucherId=' 123 ';c.recipients=' 1\n';await c.submit();
+ assert.notEqual(keys[0],keys[1]);assert.equal(keys[0],keys[2]);
+});
+test('import identity distinguishes same-name same-size files and voucher IDs',async()=>{
+ const keys=[];const {client:c}=setup({post:async(p,b)=>{keys.push(b.get('requestKey'));throw 'timeout';}});
+ const original=new File(['x'],'a.xlsx'),different=new File(['y'],'a.xlsx');
+ c.voucherId='123';c.file=original;await c.importFile();c.file=different;await c.importFile();
+ c.file=original;c.voucherId='124';await c.importFile();c.voucherId='123';await c.importFile();
+ assert.notEqual(keys[0],keys[1]);assert.notEqual(keys[0],keys[2]);assert.equal(keys[0],keys[3]);
 });
 test('late task selection response cannot replace currently selected task',async()=>{
  const requests=[];const {client:c}=setup({get:()=>new Promise(resolve=>requests.push(resolve))});
