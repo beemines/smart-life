@@ -2,14 +2,14 @@
   'use strict';
   const validId = value => /^[1-9][0-9]{0,18}$/.test(value) && BigInt(value) <= 9223372036854775807n;
   window.createVoucherBatches = function (api, onError) {
-    const manualKeys=new Map(), importKeys=new WeakMap();
+    const manualKeys=new Map(), importKeys=new Map();
     return {
       voucherId:'', recipients:'', file:null, busy:false, loading:false,
       tasks:[], hasMore:false, nextId:null, listGeneration:0,
       detail:null, rows:[], rowMore:false, nextRow:null, rowLoading:false, detailGeneration:0,
       requestSignature:null, requestKey:null,
       key(signature) {
-        if (!manualKeys.has(signature)) manualKeys.set(signature,crypto.randomUUID());
+        if (!manualKeys.has(signature)) manualKeys.set(signature,util.newRequestKey());
         this.requestSignature = signature; this.requestKey = manualKeys.get(signature);
         return this.requestKey;
       },
@@ -55,8 +55,9 @@
         if(!validId(voucherId) || !userIds.length || userIds.length>1000 || userIds.some(id=>!validId(id))) {
           onError('请输入正确的券ID和用户ID，每行一个用户，最多1000行');return;
         }
-        const requestKey=this.key(JSON.stringify([voucherId,userIds]));this.busy=true;
+        this.busy=true;
         try {
+          const requestKey=this.key(JSON.stringify([voucherId,userIds]));
           const {data}=await api.post('/voucher/batches',{voucherId,requestKey,userIds});
           await this.load(true);await this.open(data.id);
         } catch(error) { onError(String(error)); }
@@ -68,14 +69,18 @@
         if(!validId(voucherId) || !file || !/\.xlsx$/i.test(file.name) || file.size>5*1024*1024) {
           onError('请选择不超过5MiB的.xlsx名单，并填写正确的券ID');return;
         }
-        // Keep the key for the exact selected File object across a network retry.
-        if(!importKeys.has(file)) importKeys.set(file,new Map());
-        const keys=importKeys.get(file);
-        if(!keys.has(voucherId)) keys.set(voucherId,crypto.randomUUID());
-        this.requestSignature={voucherId,file};this.requestKey=keys.get(voucherId);
-        const body=new FormData();body.append('voucherId',voucherId);body.append('requestKey',this.requestKey);body.append('file',file);
         this.busy=true;
         try {
+          // A picker can return a new File for the same bytes. Hash the bounded
+          // upload, not its name, size or JavaScript object identity.
+          if(!crypto.subtle) throw new Error('导入需要 HTTPS 或 localhost 安全连接，请更换访问地址后重试');
+          const bytes=await file.arrayBuffer();
+          if(bytes.byteLength>5*1024*1024) throw new Error('名单文件不能超过5MiB');
+          const digest=await crypto.subtle.digest('SHA-256',bytes);
+          const signature=voucherId+':'+Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+          if(!importKeys.has(signature)) importKeys.set(signature,util.newRequestKey());
+          this.requestSignature=signature;this.requestKey=importKeys.get(signature);
+          const body=new FormData();body.append('voucherId',voucherId);body.append('requestKey',this.requestKey);body.append('file',file);
           const {data}=await api.post('/voucher/batches/import',body);
           await this.load(true);await this.open(data.id);
         } catch(error) { onError(String(error)); }

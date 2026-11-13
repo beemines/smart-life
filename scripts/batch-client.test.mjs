@@ -3,11 +3,16 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync,existsSync} from 'node:fs';
 import {compile} from '@vue/compiler-dom';
+import {webcrypto} from 'node:crypto';
 const file=new URL('../frontend/js/voucher-batches.js',import.meta.url);
 const task=(id='9007199254740997')=>({id,voucherId:'123',shopId:'1',state:'READY',total:2,ready:2,processing:0,succeeded:0,failed:0,retryableFailed:0,error:null,createdAt:'2026-11-13T00:00:00Z'});
 const row={rowNumber:2,userId:'9007199254740999',orderId:'9007199254740998',state:'PROCESSING',retryable:false,attempts:1,error:null};
-function setup(api,onError=()=>{}) {
- let keys=0;const scope={window:{},console,FormData,crypto:{randomUUID:()=>`request-key-number-${++keys}`}};
+function setup(api,onError=()=>{},options={}) {
+ let keys=0;const scope={window:{},console,FormData,crypto:{randomUUID:()=>`request-key-number-${++keys}`,subtle:webcrypto.subtle,getRandomValues:array=>webcrypto.getRandomValues(array)},
+  axios:{defaults:{},interceptors:{request:{use(){}},response:{use(){}}}},sessionStorage:{getItem(){return null;}}};
+ if(options.noUUID) delete scope.crypto.randomUUID;
+ if(options.noDigest) delete scope.crypto.subtle;
+ vm.runInNewContext(readFileSync(new URL('../frontend/js/common.js',import.meta.url),'utf8'),scope);
  vm.runInNewContext(existsSync(file)?readFileSync(file,'utf8'):'',scope);
  assert.equal(typeof scope.window.createVoucherBatches,'function','actual batch client is missing');
  return {client:scope.window.createVoucherBatches(api,onError),scope};
@@ -52,6 +57,28 @@ test('import identity distinguishes same-name same-size files and voucher IDs',a
  c.voucherId='123';c.file=original;await c.importFile();c.file=different;await c.importFile();
  c.file=original;c.voucherId='124';await c.importFile();c.voucherId='123';await c.importFile();
  assert.notEqual(keys[0],keys[1]);assert.notEqual(keys[0],keys[2]);assert.equal(keys[0],keys[3]);
+});
+
+test('reselecting A after B preserves identity when the picker creates a new File object',async()=>{
+ const keys=[];const {client:c}=setup({post:async(p,b)=>{keys.push(b.get('requestKey'));throw 'timeout';}});
+ c.voucherId='123';c.file=new File(['original bytes'],'a.xlsx');await c.importFile();
+ c.file=new File(['different data'],'b.xlsx');await c.importFile();
+ c.file=new File(['original bytes'],'a.xlsx');await c.importFile();
+ assert.notEqual(keys[0],keys[1]);assert.equal(keys[0],keys[2]);
+});
+
+test('manual and import use the existing cryptographic key fallback without randomUUID',async()=>{
+ const keys=[];const errors=[];const {client:c}=setup({post:async(p,b)=>{keys.push(p.endsWith('/import')?b.get('requestKey'):b.requestKey);throw 'timeout';}},e=>errors.push(e),{noUUID:true});
+ c.voucherId='123';c.recipients='1';await c.submit();
+ c.file=new File(['x'],'a.xlsx');await c.importFile();
+ assert.equal(keys.length,2);keys.forEach(key=>assert.match(key,/^[a-f0-9]{32}$/));
+ assert.equal(errors.length,2);assert.equal(c.busy,false);
+});
+
+test('unavailable secure digest reports an actionable error and never uploads with a fresh key',async()=>{
+ let posts=0;const errors=[];const {client:c}=setup({post:async()=>{posts++;throw 'timeout';}},e=>errors.push(e),{noDigest:true});
+ c.voucherId='123';c.file=new File(['x'],'a.xlsx');await c.importFile();
+ assert.equal(posts,0);assert.match(errors[0],/HTTPS|localhost/);assert.equal(c.busy,false);
 });
 test('late task selection response cannot replace currently selected task',async()=>{
  const requests=[];const {client:c}=setup({get:()=>new Promise(resolve=>requests.push(resolve))});

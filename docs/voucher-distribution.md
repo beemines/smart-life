@@ -26,6 +26,8 @@
 
 提交、导入、重试均返回任务对象。`requestKey` 只用于同一负载重试，同一 key 不能改变券或名单。Excel 请求由浏览器生成 multipart boundary，无需手工指定 Content-Type。
 
+浏览器对不超过 5 MiB 的文件计算 SHA-256，以券 ID＋文件内容保持本页重试标识；重新选择同一内容不会因新的 File 对象而重复建任务，同名同大小但不同内容也不会混用。导入需通过 HTTPS 或 localhost 访问，以使用浏览器摘要 API；不可用时页面会明确提示且不上传。手工名单复用项目既有随机请求键及兼容回退。
+
 ## 范围
 
 本人订单列表、状态筛选和游标分页复用已有生命周期接口。订单金额、商户和使用期限以订单快照为准，模板后改不应影响已经创建的订单。固定价格购券不等同于商品购物车满减；当前没有新增商品订单、叠加券或真实支付渠道。
@@ -45,3 +47,5 @@ Excel 先以有界读取计算文件摘要，再按行解析，每100条提交�
 ## 库接口依据
 
 Excel 实现前核对了 Apache POI 的[发行说明](https://poi.apache.org/download.cgi)、[XSSF 事件读取方式](https://poi.apache.org/components/spreadsheet/how-to.html)、[XSSFReader API](https://poi.apache.org/apidocs/dev/org/apache/poi/xssf/eventusermodel/XSSFReader.html)和 [ZIP 读取保护](https://poi.apache.org/apidocs/dev/org/apache/poi/openxml4j/util/ZipSecureFile.html)。流式读取不等于所有内存恒定，还需要限制共享字符串、单元格、行数和展开内容，并以实测说明边界。
+
+浏览器文件摘要按 [SubtleCrypto.digest](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest) 和 [Blob.arrayBuffer](https://developer.mozilla.org/en-US/docs/Web/API/Blob/arrayBuffer) 接口实现；摘要 API 本身不流式，前端只读取已限制的 5 MiB 文件，不缓存文件内容。
