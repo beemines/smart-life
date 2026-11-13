@@ -41,6 +41,8 @@ rocketmq:
   seckill-topic: ${SMARTLIFE_MQ_TOPIC:smartlife-seckill-order}
   consumer-group: ${SMARTLIFE_MQ_CONSUMER_GROUP:voucher-order-consumer-group}
 smartlife:
+  batches:
+    enabled: ${SMARTLIFE_BATCH_ENABLED:true}
   business-zone: ${SMARTLIFE_BUSINESS_ZONE:Asia/Shanghai}
   sync:
     enabled: ${SMARTLIFE_SYNC_ENABLED:true}
@@ -53,3 +55,5 @@ smartlife:
     recovery-delay-ms: 60000
     recovery-age-seconds: 120
     recovery-batch: 100
+
+# Durable batch queue; disabled only by explicit fixture configuration.

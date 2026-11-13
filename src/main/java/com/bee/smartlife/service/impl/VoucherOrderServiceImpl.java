@@ -93,6 +93,23 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         return "SEND";
     }
 
+    /** Batch identity is committed before this call. Never uses the operator as recipient. */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void orderForRecipient(long voucherId, long recipientId, long orderId, String requestKey) {
+        var proposed = new VoucherOrder().setId(orderId).setUserId(recipientId).setVoucherId(voucherId);
+        VoucherOrderPersistence.validate(proposed);
+        VoucherOrderRequest request;
+        try { request = persistence.accept(proposed, requestKey); }
+        catch (DuplicateKeyException race) {
+            request = persistence.requestByKey(recipientId, requestKey);
+            if (request == null) throw race;
+        }
+        if (!Objects.equals(request.getOrderId(), orderId) || !Objects.equals(request.getVoucherId(), voucherId))
+            throw new IllegalArgumentException("批次订单身份冲突");
+        String action = withOrderLocks(proposed, () -> prepareLocked(proposed, false));
+        if ("SEND".equals(action)) publish(proposed);
+    }
+
     private boolean publish(VoucherOrder order) {
         var message = new VoucherOrderMessage();
         message.setOrderId(order.getId());

@@ -152,6 +152,12 @@ class OrderLifecycleIT {
     assertThat(data.path("title").asText()).isEqualTo("snapshot title");
     assertThat(data.path("payValue").asLong()).isEqualTo(100);
     assertThat(data.path("shopId").asText()).isEqualTo(Long.toString(shop));
+    // Client money fields and later template edits cannot reprice the server-owned snapshot.
+    var paid=http.exchange("/voucher-order/"+id+"/pay",HttpMethod.POST,
+        new HttpEntity<>(Map.of("payValue",1,"actualValue",999999,"amount",1),headers()),JsonNode.class);
+    assertThat(paid.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(paid.getBody().path("data").path("payValue").asLong()).isEqualTo(100);
+    assertThat(paid.getBody().path("data").path("actualValue").asLong()).isEqualTo(200);
   }
 
   @Test

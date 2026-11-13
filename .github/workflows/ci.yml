@@ -68,6 +68,7 @@ jobs:
       SMARTLIFE_ORDER_RECOVERY_ENABLED: 'false'
       SMARTLIFE_SYNC_ENABLED: 'false'
       SMARTLIFE_LIFECYCLE_ENABLED: 'false'
+      SMARTLIFE_BATCH_ENABLED: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -87,7 +88,7 @@ jobs:
           echo 'RocketMQ broker did not register' >&2
           exit 1
       - name: Test real login, queries, multipart upload and asynchronous ordering
-        run: mvn --batch-mode --no-transfer-progress -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionIT,OrderRequestRecoveryIT,P1BoundaryIT,ShopCacheIT,P1VoucherIT,OrderLifecycleIT,CacheWorkloadIT test
+        run: mvn --batch-mode --no-transfer-progress -Dtest=StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionIT,OrderRequestRecoveryIT,P1BoundaryIT,ShopCacheIT,P1VoucherIT,OrderLifecycleIT,CacheWorkloadIT,VoucherBatchIT,OrderListPlanIT test
       - name: Save test reports and service logs
         if: always()
         run: docker compose -p smart-life-ci -f compose.dev.yaml logs --no-color > service-logs.txt
@@ -100,6 +101,9 @@ jobs:
             target/publication-crash-*.log
             target/crash-*.log
             target/lifecycle-*.log
+            target/batch-crash-*.log
+            target/batch-memory-*.log
+            target/order-list-queryplan.txt
             target/cache-workload.json
             service-logs.txt
       - name: Stop isolated test services
