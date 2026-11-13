@@ -100,6 +100,7 @@ const SmartLifeOrderPanel = {
       <h4>商户核销</h4><p class="orders-note">仅能查询和核销您有权限管理的商户订单。</p>
       <el-input v-model="client.lookup" placeholder="输入完整订单号" aria-label="核销订单号" @keyup.enter="client.lookupOrder()"></el-input>
       <el-button :loading="client.busy" @click="client.lookupOrder()">查询核销订单</el-button>
+      <voucher-batch-panel></voucher-batch-panel>
     </section>
     <el-dialog v-model="client.detailOpen" title="订单详情" width="min(94vw,560px)">
       <div v-if="client.detail" class="order-details">

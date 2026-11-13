@@ -10,3 +10,11 @@
 .merchant-panel .el-input{max-width:340px;margin:0 8px 10px 0}
 .order-details{line-height:1.7;overflow-wrap:anywhere}.order-details p{margin:10px 0}
 .order-details .el-button{margin:4px}
+.batch-panel{margin-top:20px;padding-top:12px;border-top:1px solid #ddd}
+.batch-panel summary{cursor:pointer;font-weight:600;padding:10px 0}
+.batch-panel label{display:block;margin:12px 0 6px}
+.batch-panel input[type=file]{display:block;max-width:100%;margin:8px 0}
+.batch-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:16px}
+.batch-details,.batch-row{overflow-wrap:anywhere}
+.batch-row{padding:12px 0;border-bottom:1px solid #eee}
+.batch-error{color:#b42318;white-space:pre-wrap;overflow-wrap:anywhere}

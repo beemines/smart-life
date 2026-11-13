@@ -14,5 +14,8 @@ function mountSmartLife(options) {
   if (typeof SmartLifeOrderPanel !== "undefined") {
     application.component("order-panel", SmartLifeOrderPanel);
   }
+  if (typeof SmartLifeVoucherBatchPanel !== "undefined") {
+    application.component("voucher-batch-panel", SmartLifeVoucherBatchPanel);
+  }
   return application.mount(selector);
 }
