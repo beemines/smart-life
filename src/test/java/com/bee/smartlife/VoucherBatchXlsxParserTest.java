@@ -8,6 +8,17 @@ import org.springframework.mock.web.MockMultipartFile;
 import com.bee.smartlife.service.impl.VoucherBatchXlsxParser;
 
 class VoucherBatchXlsxParserTest {
+ @Test void defaultDateStyleAppliesWhenNumericCellOmitsItsStyleIndex()throws Exception{
+   var original=workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue("userId");s.createRow(1).createCell(0).setCellValue(45000d);w.getCellStyleAt(0).setDataFormat(w.createDataFormat().getFormat("yyyy-mm-dd"));});
+   var out=new ByteArrayOutputStream();try(var in=new java.util.zip.ZipInputStream(original.getInputStream());var zip=new java.util.zip.ZipOutputStream(out)){
+     java.util.zip.ZipEntry entry;while((entry=in.getNextEntry())!=null){byte[] bytes=in.readAllBytes();if(entry.getName().equals("xl/worksheets/sheet1.xml"))bytes=new String(bytes,java.nio.charset.StandardCharsets.UTF_8).replace(" s=\"0\"","").getBytes(java.nio.charset.StandardCharsets.UTF_8);zip.putNextEntry(new java.util.zip.ZipEntry(entry.getName()));zip.write(bytes);zip.closeEntry();}
+   }
+   assertThat(parse(new MockMultipartFile("file","users.xlsx","xlsx",out.toByteArray())).get(0).userId()).doesNotMatch("[0-9]+");
+ }
+ @Test void dateAndTimeFormattedSerialsAreNotRecipientIds()throws Exception{
+   var file=workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue("userId");s.createRow(1).createCell(0).setCellValue(45000d);int i=2;for(String format:new String[]{"m/d/yy","yyyy-mm-dd","hh:mm:ss","[h]:mm:ss"}){var style=w.createCellStyle();style.setDataFormat(w.createDataFormat().getFormat(format));var cell=s.createRow(i++).createCell(0);cell.setCellValue(45000d);cell.setCellStyle(style);}});
+   var rows=parse(file);assertThat(rows.get(0).userId()).isEqualTo("45000");for(int i=1;i<rows.size();i++)assertThat(rows.get(i).userId()).doesNotMatch("[0-9]+");
+ }
  @Test void emitsRowsBeforeMalformedEofInsteadOfCollectingTheWorkbook()throws Exception{
    var file=workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue("userId");for(int i=1;i<=101;i++)s.createRow(i).createCell(0).setCellValue(Long.toString(i));s.createRow(102).createCell(1).setCellValue("bad tail");});
    var count=new java.util.concurrent.atomic.AtomicInteger();assertThatThrownBy(()->new VoucherBatchXlsxParser().parse(file,row->count.incrementAndGet())).isInstanceOf(Exception.class);assertThat(count.get()).isEqualTo(101);

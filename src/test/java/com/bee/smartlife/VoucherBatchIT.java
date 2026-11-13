@@ -22,6 +22,32 @@ class VoucherBatchIT {
  @BeforeEach void migrate() throws Exception {try(var c=jdbc.getDataSource().getConnection()){org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(c,new org.springframework.core.io.ClassPathResource("db/migrations/2026-11-13-voucher-batches.sql"));}}
  @Autowired TestRestTemplate http;
  @Autowired StringRedisTemplate redis;
+ @Autowired com.bee.smartlife.service.impl.VoucherOrderPersistence persistence;
+ @Test void revokedCreatorCannotAcceptANewRecipientIntent(){
+  try(var f=new BatchReviewFixture(jdbc,redis,batches)){long task=f.submit(),order=f.order(task);f.revoke();batches.recover();assertThat(f.row(task).get("state")).isEqualTo("FAILED");assertThat(f.row(task).get("retryable")).isEqualTo(false);assertThat(persistence.findRequest(order)).isNull();assertThat(redis.opsForValue().get("seckill:stock:"+f.voucher)).isEqualTo("10");}
+ }
+ @Test void revokedCreatorDoesNotAbandonAlreadyAcceptedIntent()throws Exception{
+  try(var f=new BatchReviewFixture(jdbc,redis,batches)){long task=f.submit(),order=f.order(task);f.accept(task,persistence,f.recipient,"PREPARING");f.revoke();batches.recover();org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(20)).untilAsserted(()->assertThat(persistence.findOrder(order)).isNotNull());jdbc.update("UPDATE tb_voucher_batch_row SET last_attempt_at='2000-01-01' WHERE task_id=?",task);batches.recover();assertThat(f.row(task).get("state")).isEqualTo("SUCCEEDED");}
+ }
+ @org.junit.jupiter.params.ParameterizedTest
+ @org.junit.jupiter.params.provider.ValueSource(strings={"ORDER_USER","ORDER_VOUCHER","REQUEST_USER","REVIEW","REJECTED","BOTH"})
+ void mismatchedIdentitiesAndConflictingOutcomesNeverBecomeBatchSuccess(String scenario){
+   try(var f=new BatchReviewFixture(jdbc,redis,batches)){long task=f.submit(),order=f.order(task);String state=scenario.equals("REVIEW")?"REVIEW":scenario.equals("REJECTED")?"REJECTED":"PREPARING";f.accept(task,persistence,scenario.equals("REQUEST_USER")?f.creator:f.recipient,state);
+    jdbc.update("INSERT INTO tb_voucher_order(id,user_id,voucher_id) VALUES (?,?,?)",order,scenario.equals("ORDER_USER")?f.creator:f.recipient,scenario.equals("ORDER_VOUCHER")?f.voucher+100:f.voucher);
+    if(scenario.equals("BOTH")||scenario.equals("REJECTED"))jdbc.update("INSERT INTO tb_voucher_order_failure(order_id,user_id,voucher_id,reason,compensation_status) VALUES (?,?,?,'REJECTED_OUT_OF_STOCK','done')",order,f.recipient,f.voucher);
+    batches.recover();assertThat(f.row(task).get("state")).as(scenario).isEqualTo("FAILED");assertThat(f.row(task).get("retryable")).as(scenario).isEqualTo(false);assertThat(f.row(task).get("error").toString()).as(scenario).contains("核对");assertThat(jdbc.queryForObject("SELECT stock FROM tb_seckill_voucher WHERE voucher_id=?",Integer.class,f.voucher)).isEqualTo(10);assertThat(redis.opsForValue().get("seckill:stock:"+f.voucher)).isEqualTo("10");
+   }
+ }
+ @Test void dateStyledRecipientIsRejectedBeforeAnyIntentWhilePlainNumericRecipientIssues()throws Exception{
+  try(var f=new BatchReviewFixture(jdbc,redis,batches)){
+   var file=VoucherBatchXlsxParserTest.workbook(w->{var s=w.createSheet();s.createRow(0).createCell(0).setCellValue("userId");var c=s.createRow(1).createCell(0);c.setCellValue(f.recipient);var style=w.createCellStyle();style.setDataFormat(w.createDataFormat().getFormat("yyyy-mm-dd"));c.setCellStyle(style);s.createRow(2).createCell(0).setCellValue(f.recipient);});
+   long task=Long.parseLong(batches.upload(Long.toString(f.voucher),UUID.randomUUID().toString(),file).get("id").toString());
+   assertThat(jdbc.queryForObject("SELECT state FROM tb_voucher_batch_row WHERE task_id=? AND source_row=2",String.class,task)).isEqualTo("FAILED");assertThat(jdbc.queryForObject("SELECT state FROM tb_voucher_batch_row WHERE task_id=? AND source_row=3",String.class,task)).isEqualTo("READY");batches.recover();
+   long plain=jdbc.queryForObject("SELECT order_id FROM tb_voucher_batch_row WHERE task_id=? AND source_row=3",Long.class,task);
+   org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(20)).untilAsserted(()->assertThat(persistence.findOrder(plain)).isNotNull());
+   assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order_request q JOIN tb_voucher_batch_row r ON r.order_id=q.order_id WHERE r.task_id=?",Integer.class,task)).isEqualTo(1);
+  }
+ }
  @Test void staleImportPreservesItsPrefixAndFailsWithoutDispatch(){
    long task=IDS.addAndGet(1000),order=IDS.incrementAndGet();
    try{

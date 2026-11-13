@@ -25,24 +25,30 @@ public class VoucherBatchXlsxParser {
      try(var pkg=OPCPackage.open(temp.toFile(),PackageAccess.READ)){
        for(var part:pkg.getParts())if(part.getContentType().toLowerCase(Locale.ROOT).contains("macro")||part.getContentType().toLowerCase(Locale.ROOT).contains("vba"))throw new IOException("only non-macro xlsx supported");
        var reader=new XSSFReader(pkg);var shared=new ArrayList<String>();
+       org.apache.poi.xssf.model.StylesTable styles=null;
+       try(var data=reader.getStylesData()){
+         if(data!=null){byte[] bytes=data.readNBytes(1024*1024+1);if(bytes.length>1024*1024)throw new IOException("style budget");styles=new org.apache.poi.xssf.model.StylesTable(new ByteArrayInputStream(bytes));if(styles.getNumCellStyles()>10001)throw new IOException("style count");}
+       }
        try(var data=reader.getSharedStringsData()){if(data!=null)read(data,new DefaultHandler(){StringBuilder value;int chars;
          @Override public void startElement(String u,String l,String q,Attributes a)throws SAXException{if(l.equals("si")){if(shared.size()>=10001)throw new SAXException("shared string count");value=new StringBuilder();}}
          @Override public void characters(char[] c,int s,int n)throws SAXException{if(value!=null){if((chars+=n)>1_300_000||value.length()+n>128)throw new SAXException("shared string budget");value.append(c,s,n);}}
          @Override public void endElement(String u,String l,String q){if(l.equals("si")){shared.add(value.toString());value=null;}}
        });}
        var sheets=reader.getSheetsData();if(!sheets.hasNext())throw new IOException("missing sheet");
-       var handler=new Sheet(shared,sink);try(var sheet=sheets.next()){read(sheet,handler);}if(sheets.hasNext())throw new IOException("one sheet required");
+       var handler=new Sheet(shared,styles,sink);try(var sheet=sheets.next()){read(sheet,handler);}if(sheets.hasNext())throw new IOException("one sheet required");
        if(!handler.header||handler.count==0)throw new IOException("missing rows");
      }
    }finally{Files.deleteIfExists(temp);}
  }
  private static void read(InputStream in,DefaultHandler h)throws Exception{XMLReader xml=XMLHelper.newXMLReader();xml.setContentHandler(h);xml.parse(new InputSource(in));}
  private static class Sheet extends DefaultHandler {
-   final List<String> shared;final java.util.function.Consumer<VoucherBatchService.Input> sink;boolean header,formula,inText;String type;StringBuilder text;int row,cells,lastRow,count;
-   Sheet(List<String> shared,java.util.function.Consumer<VoucherBatchService.Input> sink){this.shared=shared;this.sink=sink;}
+   final List<String> shared;final org.apache.poi.xssf.model.StylesTable styles;final java.util.function.Consumer<VoucherBatchService.Input> sink;boolean header,formula,inText,dateStyle;String type;StringBuilder text;int row,cells,lastRow,count;
+   Sheet(List<String> shared,org.apache.poi.xssf.model.StylesTable styles,java.util.function.Consumer<VoucherBatchService.Input> sink){this.shared=shared;this.styles=styles;this.sink=sink;}
    @Override public void startElement(String u,String l,String q,Attributes a)throws SAXException{
      if(l.equals("row")){try{row=Integer.parseInt(a.getValue("r"));}catch(Exception e){throw new SAXException("row number");}if(row<=lastRow||row>10001||count>=10000)throw new SAXException("row budget");lastRow=row;cells=0;text=new StringBuilder();formula=false;type=null;}
-     if(l.equals("c")){if(++cells>1||a.getValue("r")==null||!a.getValue("r").equals("A"+row))throw new SAXException("one column required");type=a.getValue("t");}
+     if(l.equals("c")){if(++cells>1||a.getValue("r")==null||!a.getValue("r").equals("A"+row))throw new SAXException("one column required");type=a.getValue("t");dateStyle=false;
+       if(styles!=null||a.getValue("s")!=null){try{int index=a.getValue("s")==null?0:Integer.parseInt(a.getValue("s"));if(styles==null||index<0||index>=styles.getNumCellStyles())throw new IllegalArgumentException("style index");var style=styles.getStyleAt(index);dateStyle=org.apache.poi.ss.usermodel.DateUtil.isADateFormat(style.getDataFormat(),style.getDataFormatString());}catch(Exception e){throw new SAXException("invalid cell style",e);}}
+     }
      if(l.equals("f"))formula=true;
      if(l.equals("v")||l.equals("t"))inText=true;
    }
@@ -56,6 +62,7 @@ public class VoucherBatchXlsxParser {
        else if(!"s".equals(type)&&!"inlineStr".equals(type)){
          try{
            if(type!=null&&!type.equals("n"))throw new NumberFormatException("not numeric");
+           if(dateStyle)throw new NumberFormatException("date/time is not an ID");
            var number=new java.math.BigDecimal(value).stripTrailingZeros();
            // Check scale using long arithmetic BEFORE expanding an exponent to an integer.
            if(number.signum()<=0||number.scale()>0||(long)number.precision()-number.scale()>15)

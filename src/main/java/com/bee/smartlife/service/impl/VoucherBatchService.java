@@ -3,6 +3,7 @@ package com.bee.smartlife.service.impl;
 import com.bee.smartlife.controller.VoucherBatchController.Submit;
 import com.bee.smartlife.security.*;
 import com.bee.smartlife.utils.RedisIdWorker;
+import com.bee.smartlife.entity.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -137,23 +138,44 @@ public class VoucherBatchService {
    }
  }
  private void process(long task,int number,String token){
-   var r=jdbc.queryForMap("SELECT r.*,b.voucher_id FROM tb_voucher_batch_row r JOIN tb_voucher_batch b ON b.id=r.task_id WHERE task_id=? AND source_row=?",task,number);
+   var r=jdbc.queryForMap("SELECT r.*,b.voucher_id,b.creator_id FROM tb_voucher_batch_row r JOIN tb_voucher_batch b ON b.id=r.task_id WHERE task_id=? AND source_row=?",task,number);
    long order=((Number)r.get("order_id")).longValue(),user=((Number)r.get("canonical_user_id")).longValue(),voucher=((Number)r.get("voucher_id")).longValue();
    String state="PROCESSING",error=null;boolean retry=false;
    try{
-     var request=persistence.findRequest(order);
+     var initial=snapshot(order);
+     if(conflicting(initial,user,voucher,r.get("request_key").toString())){finish(task,number,token,"FAILED",false,"订单记录冲突，请人工核对");return;}
+     var request=initial.request();
      if(request==null){
+       long creator=((Number)r.get("creator_id")).longValue();
+       boolean authorized=Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM tb_voucher v JOIN tb_shop_permission p ON p.user_id=? AND ((p.shop_id=v.shop_id AND p.role='OWNER') OR (p.shop_id=0 AND p.role='ADMIN')) WHERE v.id=?)",Boolean.class,creator,voucher));
+       if(!authorized){finish(task,number,token,"FAILED",false,"商户权限已失效，不能创建新订单");return;}
        if(!Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM tb_user WHERE id=?)",Boolean.class,user))){finish(task,number,token,"FAILED",false,"用户不存在");return;}
        var rule=eligibility.rule(voucher);long now=Instant.now().getEpochSecond();
        if(!rule.available()||now<rule.beginSecond()||now>=rule.endSecond()){finish(task,number,token,"FAILED",false,"优惠券不可领取或不在领取时间");return;}
        orders.orderForRecipient(voucher,user,order,r.get("request_key").toString());
      }else if("PREPARING".equals(request.getState())||"PENDING".equals(request.getState()))orders.recoverOrder(order,LocalDateTime.now().minusSeconds(30));
    }catch(Exception e){error="暂时无法处理，请稍后重试";}
-   var accepted=persistence.findRequest(order);
+   var latest=snapshot(order);var accepted=latest.request();
+   if(conflicting(latest,user,voucher,r.get("request_key").toString())){finish(task,number,token,"FAILED",false,"订单记录冲突，请人工核对");return;}
    if(accepted==null){state="FAILED";retry=true;}
-   else if(persistence.findOrder(order)!=null){state="SUCCEEDED";error=null;}
+   else if("CREATED".equals(accepted.getState())&&latest.order()!=null){state="SUCCEEDED";error=null;}
    else if("REJECTED".equals(accepted.getState())||"REVIEW".equals(accepted.getState())){state="FAILED";error=accepted.getReason()==null?"订单需要人工核对":accepted.getReason();}
    finish(task,number,token,state,retry,error);
+ }
+ private record Snapshot(VoucherOrderRequest request,VoucherOrder order,VoucherOrderFailure failure) {}
+ private Snapshot snapshot(long order){return new Snapshot(persistence.findRequest(order),persistence.findOrder(order),persistence.findFailure(order));}
+ /** Never recover somebody else's intent or turn contradictory/terminal outcomes into success. */
+ private boolean conflicting(Snapshot s,long user,long voucher,String key){
+   var q=s.request();var o=s.order();var f=s.failure();
+   if(q!=null&&(!Objects.equals(q.getUserId(),user)||!Objects.equals(q.getVoucherId(),voucher)||!Objects.equals(q.getRequestKey(),key)))return true;
+   if(o!=null&&(!Objects.equals(o.getUserId(),user)||!Objects.equals(o.getVoucherId(),voucher)))return true;
+   if(f!=null&&(!Objects.equals(f.getUserId(),user)||!Objects.equals(f.getVoucherId(),voucher)))return true;
+   if(q==null)return o!=null||f!=null;
+   if(o!=null&&f!=null)return true;
+   if("REVIEW".equals(q.getState()))return true;
+   if("CREATED".equals(q.getState()))return o==null;
+   if("REJECTED".equals(q.getState()))return o!=null||f==null;
+   return !"PREPARING".equals(q.getState())&&!"PENDING".equals(q.getState());
  }
  private void finish(long task,int row,String token,String state,boolean retry,String error){jdbc.update("UPDATE tb_voucher_batch_row SET state=?,retryable=?,error=?,lease_token=NULL,lease_until=NULL WHERE task_id=? AND source_row=? AND lease_token=?",state,retry,error,task,row,token);}
 }
