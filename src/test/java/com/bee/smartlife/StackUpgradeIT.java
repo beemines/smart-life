@@ -24,6 +24,10 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.HashSet;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import java.sql.Statement;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -79,12 +83,35 @@ class StackUpgradeIT {
         assertThat(first.path("data").path("name").asText()).isEqualTo("SmartLife Cafe");
         assertThat(get("/shop/1")).isEqualTo(first);
         assertThat(get("/shop/1/")).isEqualTo(first);
-        assertThat(get("/shop/of/type?typeId=1&current=1").path("data").size()).isEqualTo(1);
-        assertThat(get("/shop/of/type?typeId=1&current=2").path("data").isEmpty()).isTrue();
-        assertThat(get("/shop/of/name?name=SmartLife&current=1").path("data").size()).isEqualTo(2);
-        assertThat(get("/shop/of/name?name=SmartLife&current=2").path("data").isEmpty()).isTrue();
-        assertThat(get("/shop-type/list").path("data").size()).isEqualTo(2);
-        assertThat(get("/shop-type/list/").path("data").size()).isEqualTo(2);
+        // Own eleven rows: demonstrations left in the dedicated DB must not
+        // change pagination expectations (type pages5, name pages10).
+        int type = ThreadLocalRandom.current().nextInt(1_000_000_000, 2_000_000_000);
+        String prefix = "upgrade-page-" + UUID.randomUUID();
+        var fixtureIds = new ArrayList<Long>();
+        try {
+            for (int i=0;i<11;i++) {
+                var key = new GeneratedKeyHolder();
+                String name=prefix+"-"+i;
+                jdbc.update(c->{var s=c.prepareStatement("INSERT INTO tb_shop(name,type_id,images,address,x,y,sold,comments,score) VALUES (?,?,'','pagination fixture',113,23,0,0,45)",Statement.RETURN_GENERATED_KEYS);s.setString(1,name);s.setInt(2,type);return s;},key);
+                fixtureIds.add(key.getKey().longValue());
+            }
+            for (String path:java.util.List.of("/shop/of/type?typeId="+type,"/shop/of/name?name="+prefix)) {
+                int pageSize=path.contains("/of/type")?5:10;
+                int pages=path.contains("/of/type")?3:2;
+                var returned=new HashSet<Long>();
+                for(int page=1;page<=pages;page++){
+                    JsonNode rows=get(path+"&current="+page).path("data");
+                    assertThat(rows.size()).isEqualTo(page==pages?1:pageSize);
+                    rows.forEach(row->returned.add(row.path("id").asLong()));
+                }
+                assertThat(returned).containsExactlyInAnyOrderElementsOf(fixtureIds);
+                assertThat(get(path+"&current="+(pages+1)).path("data").isEmpty()).isTrue();
+            }
+        } finally {for(long id:fixtureIds)jdbc.update("DELETE FROM tb_shop WHERE id=?",id);}
+        for(String path:java.util.List.of("/shop-type/list","/shop-type/list/")) {
+            var types=new HashSet<Long>();get(path).path("data").forEach(row->types.add(row.path("id").asLong()));
+            assertThat(types).contains(1L,2L);
+        }
         assertThat(get("/blog/hot?current=1").path("data").isArray()).isTrue();
     }
 

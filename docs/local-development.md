@@ -77,3 +77,7 @@ npm run test:frontend
 已有开发卷执行 [P1 增量迁移](p1-boundaries.md)，不要重建已有表。新用户没有商户写权限；由部署者核实身份后显式配置 ADMIN／OWNER，不能以会员 level 代替授权。
 
 本批全量测试命令与实际页面截图见 [P1 验证](validation/p1-boundaries.md)。集成夹具另设置 `SMARTLIFE_SYNC_ENABLED=false`，并将 `P1BoundaryIT,ShopCacheIT,P1VoucherIT` 加入原来的五组测试；正常演示默认启用该同步任务。新券在数据库提交后发布库存，状态未 READY 前拒绝领取；旧券库存丢失进入 REVIEW，不自动播种库存。
+
+## 订单生命周期回归
+
+已有卷先执行 [生命周期迁移](order-lifecycle.md)，新库结构已包含新增字段和表。隔离集成测试另设 `SMARTLIFE_LIFECYCLE_ENABLED=false`，加入 `OrderLifecycleIT,CacheWorkloadIT`。本轮完整命令、147 项 Java／24 项前端结果、真实页面截图及测试边界见 [验证记录](validation/order-lifecycle.md)。正常启动不要关闭恢复扫描；使用显式授权的合成商户账号演示核销，支付与退款均为模拟。

@@ -113,7 +113,7 @@ const SmartLifeOrderPanel = {
         <p v-if="client.detail.useTime">核销时间：{{time(client.detail.useTime)}}</p>
         <p v-if="client.detail.refundTime">退款时间：{{time(client.detail.refundTime)}}</p>
         <p v-if="client.detail.closeReason">关闭原因：{{client.detail.closeReason === 'TIMEOUT' ? '超时未支付' : '主动取消'}}</p>
-        <p v-if="client.detail.stockReturnState && client.detail.stockReturnState !== 'DONE'">后续处理：{{client.detail.stockReturnState === 'REVIEW' ? '后台正在核对，请勿重复操作' : '后台处理中，可稍后刷新'}}</p>
+        <p v-if="client.detail.stockReturnState === 'PENDING' || client.detail.stockReturnState === 'REVIEW'">后续处理：{{client.detail.stockReturnState === 'REVIEW' ? '后台正在核对，请勿重复操作' : '后台处理中，可稍后刷新'}}</p>
         <p class="orders-note">操作状态以服务器最新校验为准。模拟支付／退款不发生真实资金转移。</p>
         <template v-if="!client.merchantDetail">
           <el-button v-if="client.detail.canPay" :loading="client.busy" @click="confirmAction('pay')">模拟支付</el-button>

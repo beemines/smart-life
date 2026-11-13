@@ -1,0 +1,81 @@
+{
+  "results": [
+    {
+      "syncMetadataChecks": 0,
+      "threads": 8,
+      "scenario": "hot-local-0",
+      "wallMs": 119.2324,
+      "p95Ms": 13.9183,
+      "requests": 128,
+      "shopSelects": 0
+    },
+    {
+      "syncMetadataChecks": 1,
+      "threads": 16,
+      "scenario": "cold-one-shop-0",
+      "wallMs": 132.0954,
+      "p95Ms": 103.0237,
+      "requests": 64,
+      "shopSelects": 1
+    },
+    {
+      "syncMetadataChecks": 8,
+      "threads": 16,
+      "scenario": "concentrated-expiry-0",
+      "wallMs": 29.3994,
+      "p95Ms": 21.5879,
+      "requests": 128,
+      "shopSelects": 8
+    },
+    {
+      "syncMetadataChecks": 32,
+      "threads": 8,
+      "scenario": "injected-cache-read-failure-0",
+      "wallMs": 320.9653,
+      "p95Ms": 86.3095,
+      "requests": 32,
+      "shopSelects": 32
+    },
+    {
+      "syncMetadataChecks": 0,
+      "threads": 8,
+      "scenario": "hot-local-1",
+      "wallMs": 7.749,
+      "p95Ms": 1.4147,
+      "requests": 128,
+      "shopSelects": 0
+    },
+    {
+      "syncMetadataChecks": 1,
+      "threads": 16,
+      "scenario": "cold-one-shop-1",
+      "wallMs": 78.1574,
+      "p95Ms": 60.3841,
+      "requests": 64,
+      "shopSelects": 1
+    },
+    {
+      "syncMetadataChecks": 8,
+      "threads": 16,
+      "scenario": "concentrated-expiry-1",
+      "wallMs": 31.5429,
+      "p95Ms": 17.7723,
+      "requests": 128,
+      "shopSelects": 8
+    },
+    {
+      "syncMetadataChecks": 32,
+      "threads": 8,
+      "scenario": "injected-cache-read-failure-1",
+      "wallMs": 235.603,
+      "p95Ms": 103.9586,
+      "requests": 32,
+      "shopSelects": 32
+    }
+  ],
+  "note": "Direct ShopCache workload including actual Redis locks and SQL reads, excludes HTTP; read failure injected at cache-client boundary, Redis lock service remains available. No baseline speedup claim.",
+  "availableProcessors": 32,
+  "os": "Windows 11",
+  "maxHeapBytes": 8510242816,
+  "java": "21.0.6"
+}

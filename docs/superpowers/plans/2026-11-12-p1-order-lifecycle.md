@@ -1,6 +1,6 @@
 # P1 order lifecycle implementation plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:executing-plans. Execute inline with TDD; one independent whole-branch review after implementation.
+> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development. Backend Tasks1+2 form one coherent transaction unit with scoped review; root owns disjoint frontend/cache/release work. One independent whole-branch review follows implementation.
 
 **Goal:** Finish the ten reviewed P1 rows with customer/merchant lifecycle, durable inventory returns, deadlines and actual cache evidence.
 **Architecture:** Reuse order controller, JdbcTemplate transactions, existing permissions, Redis Lua, RocketMQ and info.html dialogs. Add focused lifecycle persistence/service/recovery and DTOs. Keep acceptance pipeline separate.
@@ -10,7 +10,7 @@
 ## Global constraints
 - Preserve one-user-one-voucher including cancelled/refunded; mock funds only; UTC deadlines and Asia/Shanghai input conversion.
 - Existing checkout on feature branch; keep IDEA paths and audit workspace. User already approved review scope and push; no redundant permission loop.
-- Only smart-life-upgrade synthetic test services. Native implementation, no per-task implementer agents.
+- Only smart-life-upgrade synthetic test services. One backend implementer owns transaction files; root owns frontend/cache/release files. No overlapping Maven runs or nested implementer agents.
 - Frontend/backend actual tests before main push; all final3CI green. No false checked todo or invented benchmarks.
 
 ## Review focus

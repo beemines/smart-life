@@ -47,4 +47,4 @@ SOURCE /absolute/path/to/smart-life/src/main/resources/db/migrations/2026-11-12-
 
 延迟消息只是提醒，接收方必须再次检查订单状态和数据库截止时间。持久扫描负责补发、超时关闭及后续返还恢复，不能只依赖某一条 MQ 消息。失败任务必须保留重试信息并避免阻塞其他订单。
 
-实际命令、测试结果、测量数据与前后截图在完成验收后记录到对应验证文档；没有实测的性能数字不得写成项目收益。
+实际命令、测试结果及前后截图见 [验证记录](validation/order-lifecycle.md)，缓存数据见 [测量报告](validation/cache-workload.md)。没有实测的性能数字不得写成项目收益。
