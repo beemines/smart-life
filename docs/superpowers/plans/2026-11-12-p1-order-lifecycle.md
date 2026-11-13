@@ -23,22 +23,22 @@
 ## Task1: snapshots, owner queries and lifecycle actions
 Files: additive SQL/fresh schema, Voucher/VoucherWrite/VoucherPersistence, VoucherOrderPersistence.create, new OrderLifecyclePersistence/Service, OrderView DTO, VoucherOrderController, OrderLifecycleIT.
 Interfaces: service.mine(status,beforeTime,beforeId,limit), detail(id), merchantDetail(id), pay(id), cancel(id), refund(id), redeem(id), capabilities(); response Result with data records. Record OrderView fields id,voucherId,shopId,shopName,title,payValue,actualValue,status,createTime,payTime,useTime,refundTime,payDeadline,useBeginTime,useEndTime,closeReason,stockReturnState,canPay,canCancel,canRefund,canRedeem. List data {items,nextTime,nextId,hasMore}. UTC ISO timestamps with Z. IDs strings. API GET /voucher-order/mine,/detail/{id},/merchant/{id},/capabilities; POST /{id}/pay,/cancel,/refund,/redeem.
-- [ ] Write HTTP behavior tests, observe missing-endpoint RED; implement migration, immutable snapshots, authenticated reads and SQL-row-serialized actions; GREEN focused and baseline.
-- [ ] Test status/owner/filter/cursor, snapshot edits, duplicate operations, races and deadline/use boundaries; preserve insert TX rollback; commit.
+- [x] Write HTTP behavior tests, observe missing-endpoint RED; implement migration, immutable snapshots, authenticated reads and SQL-row-serialized actions; GREEN focused and baseline.
+- [x] Test status/owner/filter/cursor, snapshot edits, duplicate operations, races and deadline/use boundaries; preserve insert TX rollback; commit.
 
 ## Task2: durable close/refund/stock return recovery
 Files: OrderLifecycleRecovery, lifecycle TX methods, OrderCloseMQ producer/consumer, order_stock_return.lua, new test worker and OrderLifecycleIT.
 Interfaces: persistence.capture(orderId) within existing create TX; service.afterCreated(id) after commit attempts close schedule; recovery.runBatch() calls schedulePending,closeDue,finishRefunds,syncReturns. Public testable service.recover() bounded, config SMARTLIFE_LIFECYCLE_ENABLED false fixtures/default true.
-- [ ] RED: no double SQL/Redis return; retained Redis eligibility; failed send/Redis, ack-loss/restart, early/late/duplicate close, poison cooldown.
-- [ ] Implement existing-stack delayed reminder and durable scans/returns; update original fixtures/migration without weakening assertions; full Java GREEN; commit.
+- [x] RED: no double SQL/Redis return; retained Redis eligibility; failed send/Redis, ack-loss/restart, early/late/duplicate close, poison cooldown.
+- [x] Implement existing-stack delayed reminder and durable scans/returns; update original fixtures/migration without weakening assertions; full Java GREEN; commit.
 
 ## Task3: existing-page UI
 Files: info.html, shop-detail.html, order lifecycle client js, frontend tests, assets checker.
-- [ ] RED actual JS handlers for paged list/filter/cursor, guarded actions/refresh/errors, exact string IDs and authorization route use.
-- [ ] Implement existing personal tabs/dialogs, explicit mock labels, merchant lookup/redeem, and shop panel link; frontend GREEN; commit.
+- [x] RED actual JS handlers for paged list/filter/cursor, guarded actions/refresh/errors, exact string IDs and authorization route use.
+- [x] Implement existing personal tabs/dialogs, explicit mock labels, merchant lookup/redeem, and shop panel link; frontend GREEN; commit.
 
 ## Task4: cache measurement, independent review and release
 Files: test-only CacheWorkloadIT or runner/report, docs/screenshots, docs/validation, CI, README/config/todo.
-- [ ] Measure hot/cold/expiry/contention/Redis-fault with synthetic workload and record hardware/setup/counts/P95, test correct final value, no invented before/after performance claim.
-- [ ] Full backend+frontend+Nginx; one fresh reviewer, important findings RED->GREEN; packaged app actual browser customer/merchant scenarios, before/after screenshots.
-- [ ] Push approved main, inspect exact-SHA all3CI, fix failures, update verified todo and final docs with their CI; record finish.
+- [x] Measure hot/cold/expiry/contention/Redis-fault with synthetic workload and record hardware/setup/counts/P95, test correct final value, no invented before/after performance claim.
+- [x] Full backend+frontend+Nginx; one fresh reviewer, important findings RED->GREEN; packaged app actual browser customer/merchant scenarios, before/after screenshots.
+- [x] Push approved main, inspect exact-SHA all3CI, fix failures, update verified todo and final docs with their CI; record finish.

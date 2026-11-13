@@ -60,3 +60,7 @@ npm run check:frontend
 支付期限默认 900 秒，未传券使用期时默认当前时间至 30 天后；领取期、支付期、使用期分别校验。一人一券包含取消／退款记录。没有真实支付、部分退款或取消后重领。历史快照无依据时禁止盲目操作。
 
 缓存测量见 [原始数据及方法](cache-workload.md)：直接调用服务、统计真实回源查询与调用耗时，不是 HTTP 容量压测；缓存读取故障注入不等于整台 Redis 断网。没有宣称改造前后提速比例或全 Broker 故障演练。
+
+## 发布验证
+
+代码提交 `347771869e48c2070948f82a0651847825ff7dc4` 的 Java21、Frontend and Nginx、API and MQ integration 三项均成功：[CI运行记录](https://github.com/beemines/smart-life/actions/runs/43359867800)。待办勾选基于该代码提交的本地与远端验证；文档后续提交也须检查对应 CI。
