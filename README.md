@@ -87,6 +87,7 @@ Lua 将服务端提供的活动状态、Redis 服务端时间、库存、重复�
 | RocketMQ Client | 5.5.1，使用经典 Producer / PushConsumer API |
 | Hutool / Lombok | 5.8.48 / Boot BOM 管理，工具与实体简化 |
 | Maven / JUnit 5 | 构建与测试 |
+| Apache POI | 6.0.0，XLSX 名单事件流读取 |
 
 依赖版本以 [pom.xml](pom.xml) 为准。
 
@@ -247,6 +248,8 @@ CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端实际处理函数�
 已实现订单 ID 重投识别、锁竞争重试、持锁至事务完成、确定业务拒绝记录及订单归属校验的 Redis 补偿，并增加持久受理、原 ID 重发、结果查询与有审计的超时恢复。历史预占归属无法验证或库存损坏时保留人工核对记录，不根据库存差额盲目补量。服务级缓存工作负载数据见 [测量记录](docs/validation/cache-workload.md)；HTTP 容量压测仍待完成，详见 [Roadmap](docs/roadmap.md)。
 
 逐项改造前后、验收场景及完成状态见 [todolist.md](todolist.md)。
+
+商户可在原个人页按名单批量生成待支付券订单，支持 XLSX 导入、逐行结果和可恢复失败重试。持久批次复用已有订单受理与 MQ 消费链路，真实落单后才计成功；一人一券规则保留，付款后使用。列表新增经实际查询计划验证的复合索引，未引入无证据的模板缓存或商品购物车结算。旧库两份迁移、操作流程见 [批量发券](docs/voucher-distribution.md)；完整 162 项 Java／37 项前端测试、真实页面截图和测量边界见 [验证记录](docs/validation/voucher-distribution.md)。CI 另将 `VoucherBatchIT,OrderListPlanIT` 纳入集成测试。
 
 ## 参与贡献
 

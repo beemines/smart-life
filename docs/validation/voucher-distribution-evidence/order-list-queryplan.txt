@@ -1,0 +1,16 @@
+SELECT o.*,l.snapshot_valid,l.shop_id,l.shop_name,l.title,l.pay_value,l.actual_value,l.pay_deadline,l.use_begin_time,l.use_end_time,l.close_reason,l.cancel_accepted,l.refund_accepted,COALESCE(r.state,'NONE') stock_return_state FROM tb_voucher_order o LEFT JOIN tb_order_lifecycle l ON l.order_id=o.id LEFT JOIN tb_order_stock_return r ON r.order_id=o.id  WHERE o.user_id=8447789649450668 AND (o.create_time<'2026-01-01' OR (o.create_time='2026-01-01' AND o.id<9223372036854775807)) ORDER BY o.create_time DESC,o.id DESC LIMIT 21
+[{EXPLAIN=-> Limit: 21 row(s)  (cost=3530 rows=21) (actual time=0.136..0.528 rows=21 loops=1)
+    -> Nested loop left join  (cost=3530 rows=5045) (actual time=0.116..0.506 rows=21 loops=1)
+        -> Nested loop left join  (cost=2577 rows=5045) (actual time=0.071..0.448 rows=21 loops=1)
+            -> Index range scan on o using idx_order_user_time over (user_id = 8447789649450668 AND create_time = '2026-01-01 00:00:00' AND 9223372036854775807 < id) OR (user_id = 8447789649450668 AND '2026-01-01 00:00:00' < create_time), with index condition: ((o.user_id = 8447789649450668) and ((o.create_time < TIMESTAMP'2026-01-01 00:00:00') or ((o.create_time = TIMESTAMP'2026-01-01 00:00:00') and (o.id < 9223372036854775807))))  (cost=1624 rows=5045) (actual time=0.0604..0.41 rows=21 loops=1)
+            -> Single-row index lookup on l using PRIMARY (order_id=o.id)  (cost=0.25 rows=1) (actual time=0.00159..0.00159 rows=0 loops=21)
+        -> Single-row index lookup on r using PRIMARY (order_id=o.id)  (cost=0.25 rows=1) (actual time=0.00261..0.00261 rows=0 loops=21)
+}]
+SELECT o.*,l.snapshot_valid,l.shop_id,l.shop_name,l.title,l.pay_value,l.actual_value,l.pay_deadline,l.use_begin_time,l.use_end_time,l.close_reason,l.cancel_accepted,l.refund_accepted,COALESCE(r.state,'NONE') stock_return_state FROM tb_voucher_order o LEFT JOIN tb_order_lifecycle l ON l.order_id=o.id LEFT JOIN tb_order_stock_return r ON r.order_id=o.id  WHERE o.user_id=8447789649450668 AND o.status=2 AND (o.create_time<'2026-01-01' OR (o.create_time='2026-01-01' AND o.id<9223372036854775807)) ORDER BY o.create_time DESC,o.id DESC LIMIT 21
+[{EXPLAIN=-> Limit: 21 row(s)  (cost=12 rows=10) (actual time=0.0165..0.0538 rows=10 loops=1)
+    -> Nested loop left join  (cost=12 rows=10) (actual time=0.0162..0.053 rows=10 loops=1)
+        -> Nested loop left join  (cost=8.51 rows=10) (actual time=0.0147..0.0471 rows=10 loops=1)
+            -> Index range scan on o using idx_order_user_status_time over (user_id = 8447789649450668 AND status = 2 AND create_time = '2026-01-01 00:00:00' AND 9223372036854775807 < id) OR (user_id = 8447789649450668 AND status = 2 AND '2026-01-01 00:00:00' < create_time), with index condition: ((o.`status` = 2) and (o.user_id = 8447789649450668) and ((o.create_time < TIMESTAMP'2026-01-01 00:00:00') or ((o.create_time = TIMESTAMP'2026-01-01 00:00:00') and (o.id < 9223372036854775807))))  (cost=5.01 rows=10) (actual time=0.00988..0.0329 rows=10 loops=1)
+            -> Single-row index lookup on l using PRIMARY (order_id=o.id)  (cost=0.26 rows=1) (actual time=0.00126..0.00126 rows=0 loops=10)
+        -> Single-row index lookup on r using PRIMARY (order_id=o.id)  (cost=0.26 rows=1) (actual time=459e-6..459e-6 rows=0 loops=10)
+}]

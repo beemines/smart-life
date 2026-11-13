@@ -22,6 +22,7 @@
 | `SMARTLIFE_BUSINESS_ZONE` | `Asia/Shanghai` | 券活动无时区日期的业务时区，领取区间为 `[begin,end)` |
 | `SMARTLIFE_SYNC_ENABLED` | `true` | 商户缓存与券首次发布的持久重试任务；仅集成夹具隔离时关闭 |
 | `SMARTLIFE_LIFECYCLE_ENABLED` | `true` | 订单超时关闭、退款和库存返还的持久恢复扫描 |
+| `SMARTLIFE_BATCH_ENABLED` | `true` | 批量发券明细恢复扫描；隔离测试关闭，正常运行保持开启 |
 | `SMARTLIFE_PAYMENT_WINDOW_SECONDS` | `900` | 正整数支付期限，订单创建时保存；不重写历史截止时间 |
 | `SMARTLIFE_UPLOAD_DIR` | `./uploads` | 图片根目录，相对于启动目录 |
 | `SMARTLIFE_LOG_LEVEL` | `debug` | 项目日志级别，模拟验证码在 DEBUG 日志中 |

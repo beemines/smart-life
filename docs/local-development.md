@@ -80,4 +80,6 @@ npm run test:frontend
 
 ## 订单生命周期回归
 
+后续批量发券完整 162 项回归命令见[批量发券验证](validation/voucher-distribution.md)。旧库还需执行[批量任务与列表索引迁移](voucher-distribution.md)，隔离测试另设 `SMARTLIFE_BATCH_ENABLED=false` 并加入 `VoucherBatchIT,OrderListPlanIT`；正常演示开启自动扫描。
+
 已有卷先执行 [生命周期迁移](order-lifecycle.md)，新库结构已包含新增字段和表。隔离集成测试另设 `SMARTLIFE_LIFECYCLE_ENABLED=false`，加入 `OrderLifecycleIT,CacheWorkloadIT`，停止连接同库的演示应用。本轮完整命令、149 项 Java／24 项前端结果、真实页面截图及测试边界见 [验证记录](validation/order-lifecycle.md)。正常启动不要关闭恢复扫描；使用显式授权的合成商户账号演示核销，支付与退款均为模拟。
