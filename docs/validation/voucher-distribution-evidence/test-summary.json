@@ -1,6 +1,6 @@
 {
   "counts": {
-    "tests": 162,
+    "tests": 179,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -127,14 +127,14 @@
     },
     {
       "name": "com.bee.smartlife.VoucherBatchIT",
-      "tests": 4,
+      "tests": 13,
       "failures": 0,
       "errors": 0,
       "skipped": 0
     },
     {
       "name": "com.bee.smartlife.VoucherBatchXlsxParserTest",
-      "tests": 8,
+      "tests": 16,
       "failures": 0,
       "errors": 0,
       "skipped": 0

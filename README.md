@@ -249,7 +249,7 @@ CI 在 JDK 21 上执行 `mvn clean verify`，另检查前端实际处理函数�
 
 逐项改造前后、验收场景及完成状态见 [todolist.md](todolist.md)。
 
-商户可在原个人页按名单批量生成待支付券订单，支持 XLSX 导入、逐行结果和可恢复失败重试。持久批次复用已有订单受理与 MQ 消费链路，真实落单后才计成功；一人一券规则保留，付款后使用。列表新增经实际查询计划验证的复合索引，未引入无证据的模板缓存或商品购物车结算。旧库两份迁移、操作流程见 [批量发券](docs/voucher-distribution.md)；完整 162 项 Java／37 项前端测试、真实页面截图和测量边界见 [验证记录](docs/validation/voucher-distribution.md)。CI 另将 `VoucherBatchIT,OrderListPlanIT` 纳入集成测试。
+商户可在原个人页按名单批量生成待支付券订单，支持 XLSX 导入、逐行结果和可恢复失败重试。持久批次复用已有订单受理与 MQ 消费链路，真实落单后才计成功；一人一券规则保留，付款后使用。列表新增经实际查询计划验证的复合索引，未引入无证据的模板缓存或商品购物车结算。旧库两份迁移、操作流程见 [批量发券](docs/voucher-distribution.md)；完整 179 项 Java／40 项前端测试、真实页面截图和测量边界见 [验证记录](docs/validation/voucher-distribution.md)。CI 另将 `VoucherBatchIT,OrderListPlanIT` 纳入集成测试。
 
 ## 参与贡献
 

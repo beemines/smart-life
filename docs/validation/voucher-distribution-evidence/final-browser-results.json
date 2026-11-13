@@ -1,0 +1,13 @@
+{
+  "voucherId": "9000062068737",
+  "tasks": 3,
+  "orders": 26,
+  "sqlStock": 74,
+  "redisStock": 74,
+  "recipientOrder": [
+    "659657051965752169",
+    "2",
+    "8000",
+    "10000"
+  ]
+}
