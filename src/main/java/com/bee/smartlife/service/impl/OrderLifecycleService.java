@@ -142,7 +142,8 @@ public class OrderLifecycleService {
         iso(row, "use_end_time"),
         (String) row.get("close_reason"),
         (String) row.get("stock_return_state"),
-        valid && owner && status == 1 && before(row, "pay_deadline", now),
+        valid && owner && status == 1 && before(row, "pay_deadline", now)
+            && before(row, "use_end_time", now),
         valid && owner && status == 1,
         valid && owner && status == 2 && before(row, "use_end_time", now),
         valid

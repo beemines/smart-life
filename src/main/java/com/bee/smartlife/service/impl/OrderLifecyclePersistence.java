@@ -124,7 +124,8 @@ public class OrderLifecyclePersistence {
     if (action.equals("redeem") && row.get("use_time") != null) return;
     switch (action) {
       case "pay" -> {
-        require(status == 1 && before(row, "pay_deadline", now), "订单不可支付或已超时");
+        require(status == 1 && before(row, "pay_deadline", now)
+            && before(row, "use_end_time", now), "订单不可支付、已超时或券已过期");
         jdbc.update("UPDATE tb_voucher_order SET status=2,pay_time=? WHERE id=?", now, id);
       }
       case "cancel", "timeout" -> {

@@ -10,14 +10,14 @@ Windows / Java 21.0.6，JVM 可见逻辑处理器 32，最大堆 7.93 GiB。本�
 
 | 场景／轮次 | 请求数 / 线程数 | 商户 SELECT | 同步状态 SQL | P95 ms |
 | --- | --- | --- | --- | --- |
-| hot-local-0 | 128 / 8 | 0 | 0 | 13.918 |
-| cold-one-shop-0 | 64 / 16 | 1 | 1 | 103.024 |
-| concentrated-expiry-0 | 128 / 16 | 8 | 8 | 21.588 |
-| injected-cache-read-failure-0 | 32 / 8 | 32 | 32 | 86.309 |
-| hot-local-1 | 128 / 8 | 0 | 0 | 1.415 |
-| cold-one-shop-1 | 64 / 16 | 1 | 1 | 60.384 |
-| concentrated-expiry-1 | 128 / 16 | 8 | 8 | 17.772 |
-| injected-cache-read-failure-1 | 32 / 8 | 32 | 32 | 103.959 |
+| hot-local-0 | 128 / 8 | 0 | 0 | 9.026 |
+| cold-one-shop-0 | 64 / 16 | 1 | 1 | 89.379 |
+| concentrated-expiry-0 | 128 / 16 | 8 | 8 | 15.636 |
+| injected-cache-read-failure-0 | 32 / 8 | 32 | 32 | 102.751 |
+| hot-local-1 | 128 / 8 | 0 | 0 | 4.783 |
+| cold-one-shop-1 | 64 / 16 | 1 | 1 | 53.447 |
+| concentrated-expiry-1 | 128 / 16 | 8 | 8 | 14.439 |
+| injected-cache-read-failure-1 | 32 / 8 | 32 | 32 | 79.391 |
 
 ## 解读与重跑
 

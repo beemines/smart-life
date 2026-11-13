@@ -260,6 +260,23 @@ class OrderLifecycleIT {
   }
 
   @Test
+  void expiredUseWindowCannotBePaidEvenBeforePaymentDeadline() {
+    sql("UPDATE tb_order_lifecycle SET use_end_time=UTC_TIMESTAMP(6) WHERE order_id=?");
+    assertThat(post("pay").getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(get("detail/" + id).getBody().path("data").path("canPay").asBoolean()).isFalse();
+    assertThat(status()).isEqualTo(1);
+    assertThat(jdbc.queryForObject("SELECT pay_time FROM tb_voucher_order WHERE id=?", java.time.LocalDateTime.class, id)).isNull();
+    assertThat(redis.opsForValue().get("seckill:stock:" + voucher)).isEqualTo("0");
+  }
+
+  @Test
+  void futureUseWindowAllowsPrepayment() {
+    sql("UPDATE tb_order_lifecycle SET use_begin_time=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 1 DAY),use_end_time=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 2 DAY) WHERE order_id=?");
+    assertThat(get("detail/" + id).getBody().path("data").path("canPay").asBoolean()).isTrue();
+    assertThat(post("pay").getBody().path("data").path("status").asInt()).isEqualTo(2);
+  }
+
+  @Test
   void useWindowStartInclusiveEndExclusive() {
     grant();
     lifecycle.pay(id);
@@ -462,7 +479,8 @@ class OrderLifecycleIT {
   void runChild(String phase, int exit) throws Exception {
     var log = java.nio.file.Path.of("target", "lifecycle-" + id + "-" + phase + ".log");
     var javaExe =
-        java.nio.file.Path.of(System.getProperty("java.home"), "bin", "java.exe").toString();
+        java.nio.file.Path.of(System.getProperty("java.home"), "bin",
+            System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
     var process =
         new ProcessBuilder(
                 javaExe,
