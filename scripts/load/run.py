@@ -202,7 +202,13 @@ def main():
                         responses=[{k:row[k] for k in ('userId','requestKey','outcome','orderId')} for row in data])
                     if last:
                         observed=last['snapshot']
-                        evidence['unresolved']=dict(pendingOrderIds=[row['orderId'] for row in observed['requests'] if row['state'] not in ('CREATED','REJECTED')],manualOrderIds=[row['orderId'] for row in observed['failures'] if row['compensation']!='done'],systemErrorResponses=[row for row in evidence['responses'] if row['outcome'] not in ('ACCEPTED','BUSINESS_REJECTED')])
+                        manual={row['orderId'] for row in observed['requests'] if row['state']=='REVIEW'}
+                        manual.update(row['orderId'] for row in observed['failures'] if row['compensation']=='manual')
+                        pending={row['orderId'] for row in observed['requests'] if row['state'] in ('PREPARING','PENDING')}
+                        pending.update(row['orderId'] for row in observed['failures'] if row['compensation']=='pending')
+                        # Manual review takes precedence across records; never suggest automatic
+                        # retry for an ID whose last observation also requires operator review.
+                        evidence['unresolved']=dict(pendingOrderIds=sorted(pending-manual),manualOrderIds=sorted(manual),systemErrorResponses=[row for row in evidence['responses'] if row['outcome'] not in ('ACCEPTED','BUSINESS_REJECTED')])
                         evidence['unresolved']['counts']={key:len(value) for key,value in evidence['unresolved'].items()}
                     write(args.output/f'orders-{r}-timeout.json',evidence)
                     if isinstance(error,subprocess.TimeoutExpired):raise subprocess.TimeoutExpired('dependency reconciliation',60) from None

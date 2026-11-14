@@ -6,7 +6,7 @@ Supported clean verify v5 passed 193 tests, zero failures/errors/skips (8m54s). 
 
 Actual Apache JMeter 5.6.3 results: [complete raw evidence](results/2026-11-14-final-b66f2ad-complete/environment.json). Reproduce with scripts/load/GUIDE.md. Offline checks: five tests passed.
 
-The committed measurements above used the earlier runner and remain unchanged. Subsequent review hardened failure gates for optimized Python, isolated the child JVM's environment/configuration, preserved last complete observations on drain failure, and covered PID-manifest write failure. The revised runner has 15 offline tests passing in both normal and `python -O` modes; these failure-path checks are not new performance measurements. Actual dependency hangs were not induced. Production Java and the measured JAR are unchanged.
+The committed measurements above used the earlier runner and remain unchanged. Subsequent review hardened failure gates for optimized Python, isolated the child JVM's environment/configuration, preserved last complete observations on drain failure, and covered PID-manifest write failure. The revised runner has 18 offline tests passing in both normal and `python -O` modes, including automatic compensation versus manual-review classification and deduplicated unresolved IDs; these failure-path checks are not new performance measurements. Actual dependency hangs were not induced. Production Java and the measured JAR are unchanged.
 
 | Profile | Round | Samples | RPS | p95 ms | System errors |
 | --- | --- | --- | --- | --- | --- |

@@ -65,7 +65,7 @@ class DependencyDeadlineTest(unittest.TestCase):
             self.assertTrue((output/'orders-1-timeout.json').is_file())
 
 class FailureGatesTest(unittest.TestCase):
-    def main_failure(self,mode):
+    def main_failure(self,mode,observed=None):
         with tempfile.TemporaryDirectory() as directory,ExitStack() as stack:
             base=Path(directory);jar=base/'app.jar';jar.touch()
             jmeter=base/'jmeter';(jmeter/'bin').mkdir(parents=True);(jmeter/'bin/ApacheJMeter.jar').touch()
@@ -75,7 +75,7 @@ class FailureGatesTest(unittest.TestCase):
             for name,value in [('command',Mock(side_effect=['source',''])),('guard',Mock()),('fixture',Mock(return_value=manifest)),('save',Mock()),('start_app',Mock(return_value=child)),('stop_app',Mock()),('cleanup',Mock()),('publish',Mock(return_value='1')),('jmeter',Mock(return_value=([dict(userId='1',requestKey='key',outcome='SYSTEM_ERROR',orderId='',token='secret')],{})))]:
                 stack.enter_context(patch.object(run,name,value))
             warmup=stack.enter_context(patch.object(run,'api',return_value={'success':mode!='warmup'}))
-            state=dict(requests=[dict(orderId='101',userId='1',requestKey='key',state='PREPARING')],failures=[dict(orderId='102',compensation='manual')])
+            state=observed if observed is not None else dict(requests=[dict(orderId='101',userId='1',requestKey='key',state='PREPARING')],failures=[dict(orderId='102',compensation='manual')])
             result=dict(passed=False,errors=['unresolved'],effectiveOrders=0)
             stack.enter_context(patch.object(run,'reconcile',return_value=result))
             stack.enter_context(patch.object(run.time,'sleep'))
@@ -94,10 +94,28 @@ class FailureGatesTest(unittest.TestCase):
                 self.assertEqual(evidence['responses'][0]['outcome'],'SYSTEM_ERROR')
                 if mode=='timeout':
                     self.assertEqual(evidence['lastCompleteObservation']['snapshot'],state)
-                    self.assertEqual(evidence['unresolved']['pendingOrderIds'],['101'])
-                    self.assertEqual(evidence['unresolved']['manualOrderIds'],['102'])
+                    if observed is None:
+                        self.assertEqual(evidence['unresolved']['pendingOrderIds'],['101'])
+                        self.assertEqual(evidence['unresolved']['manualOrderIds'],['102'])
                     self.assertEqual(evidence['unresolved']['systemErrorResponses'][0]['userId'],'1')
                 else:self.assertEqual(evidence['durableState'],'unavailable')
+                return evidence
+
+    def test_rejected_pending_compensation_is_pending_not_manual(self):
+        evidence=self.main_failure('timeout',dict(requests=[dict(orderId='101',state='REJECTED')],failures=[dict(orderId='101',compensation='pending')]))
+        self.assertEqual(evidence['unresolved']['pendingOrderIds'],['101'])
+        self.assertEqual(evidence['unresolved']['manualOrderIds'],[])
+
+    def test_review_without_failure_is_manual_not_pending(self):
+        evidence=self.main_failure('timeout',dict(requests=[dict(orderId='101',state='REVIEW')],failures=[]))
+        self.assertEqual(evidence['unresolved']['pendingOrderIds'],[])
+        self.assertEqual(evidence['unresolved']['manualOrderIds'],['101'])
+
+    def test_duplicate_records_count_once_and_manual_takes_precedence(self):
+        evidence=self.main_failure('timeout',dict(requests=[dict(orderId='101',state='PREPARING'),dict(orderId='101',state='PENDING'),dict(orderId='102',state='REVIEW')],failures=[dict(orderId='101',compensation='pending'),dict(orderId='101',compensation='pending'),dict(orderId='102',compensation='pending'),dict(orderId='102',compensation='manual'),dict(orderId='102',compensation='manual'),dict(orderId='103',compensation='done')]))
+        self.assertEqual(evidence['unresolved']['pendingOrderIds'],['101'])
+        self.assertEqual(evidence['unresolved']['manualOrderIds'],['102'])
+        self.assertEqual(evidence['unresolved']['counts'],dict(pendingOrderIds=1,manualOrderIds=1,systemErrorResponses=1))
 
     def test_failed_reconciliation_retains_fixtures(self):self.main_failure('failed')
     def test_warmup_runs_and_failure_retains_fixtures(self):self.main_failure('warmup')
