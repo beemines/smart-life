@@ -133,10 +133,12 @@ public class VoucherBatchService {
  public void recover(){
    jdbc.update("UPDATE tb_voucher_batch SET state='IMPORT_FAILED',error='导入中断，请使用新请求重新导入' WHERE state='IMPORTING' AND created_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 15 MINUTE)");
    var rows=jdbc.queryForList("SELECT r.task_id,r.source_row,r.order_id FROM tb_voucher_batch_row r JOIN tb_voucher_batch b ON b.id=r.task_id WHERE b.state='READY' AND r.state IN ('READY','PROCESSING') AND r.last_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND) AND (r.lease_until IS NULL OR r.lease_until<UTC_TIMESTAMP(6)) ORDER BY r.last_attempt_at,r.task_id,r.source_row LIMIT 100");
-   for(var row:rows){long task=((Number)row.get("task_id")).longValue();int number=((Number)row.get("source_row")).intValue();String token=UUID.randomUUID().toString();
-     if(jdbc.update("UPDATE tb_voucher_batch_row SET lease_token=?,lease_until=DATE_ADD(UTC_TIMESTAMP(6),INTERVAL 60 SECOND),last_attempt_at=UTC_TIMESTAMP(6),attempts=attempts+1,state='PROCESSING' WHERE task_id=? AND source_row=? AND state IN ('READY','PROCESSING') AND last_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND) AND (lease_until IS NULL OR lease_until<UTC_TIMESTAMP(6))",token,task,number)!=1)continue;
+   for(var row:rows)recoverRow(row);
+ }
+ private void recoverRow(Map<String,Object> row){
+     long task=((Number)row.get("task_id")).longValue();int number=((Number)row.get("source_row")).intValue();String token=UUID.randomUUID().toString();
+     if(jdbc.update("UPDATE tb_voucher_batch_row SET lease_token=?,lease_until=DATE_ADD(UTC_TIMESTAMP(6),INTERVAL 60 SECOND),last_attempt_at=UTC_TIMESTAMP(6),attempts=attempts+1,state='PROCESSING' WHERE task_id=? AND source_row=? AND state IN ('READY','PROCESSING') AND last_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND) AND (lease_until IS NULL OR lease_until<UTC_TIMESTAMP(6)) AND EXISTS(SELECT 1 FROM tb_voucher_batch b WHERE b.id=tb_voucher_batch_row.task_id AND b.state='READY')",token,task,number)!=1)return;
      try{process(task,number,token);}catch(Exception e){log.warn("voucher batch failure taskId={} sourceRow={} orderId={} stage=process-row errorType={}",task,number,row.get("order_id"),e.getClass().getName()); /* Retain the lease for bounded recovery. */}
-   }
  }
  private void process(long task,int number,String token){
    var r=jdbc.queryForMap("SELECT r.*,b.voucher_id,b.creator_id FROM tb_voucher_batch_row r JOIN tb_voucher_batch b ON b.id=r.task_id WHERE task_id=? AND source_row=?",task,number);

@@ -579,7 +579,8 @@ class OrderLifecycleIT {
   @Test
   void payCancelRaceHasOneWinnerAndReturnsStockOnlyOnCancel() throws Exception {
     assertThat(status()).isEqualTo(1);
-    assertRaceOutcomes(race("pay", "cancel"));
+    var outcomes=race("pay", "cancel");
+    assertRaceOutcomes(outcomes,status()==2?"pay":"cancel");
     assertThat(status()).isIn(2,4);
     assertRaceStock(status()==4);
   }
@@ -589,7 +590,8 @@ class OrderLifecycleIT {
     assertThat(post("pay").getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(status()).isEqualTo(2);
     grant();
-    assertRaceOutcomes(race("refund", "redeem"));
+    var outcomes=race("refund", "redeem");
+    assertRaceOutcomes(outcomes,status()==6?"refund":"redeem");
     assertThat(status()).isIn(3, 6);
     assertRaceStock(status()==6);
   }
@@ -604,13 +606,14 @@ class OrderLifecycleIT {
     var ready=new CountDownLatch(2);var start=new CountDownLatch(1);
     try {
       var pay=pool.submit(()->{ready.countDown();start.await();return post("pay");});
-      var timeout=pool.submit(()->{ready.countDown();start.await();lifecycle.recover();return true;});
+      var timeout=pool.submit(()->{ready.countDown();start.await();persistence.action(id,"timeout",true);return true;});
       assertThat(ready.await(5,TimeUnit.SECONDS)).isTrue();start.countDown();
       assertThat(pay.get(20,TimeUnit.SECONDS).getStatusCode()).isEqualTo(expired?HttpStatus.BAD_REQUEST:HttpStatus.OK);
       assertThat(timeout.get(20,TimeUnit.SECONDS)).isTrue();
       assertThat(status()).isEqualTo(expired?4:2);
       if(expired) assertThat(get("detail/"+id).getBody().path("data").path("closeReason").asText()).isEqualTo("TIMEOUT");
-      lifecycle.recover();assertRaceStock(expired);
+      context.getBean(OrderLifecycleRecovery.class).syncReturn(id);
+      context.getBean(OrderLifecycleRecovery.class).syncReturn(id);assertRaceStock(expired);
     } finally {start.countDown();pool.shutdownNow();}
   }
 
@@ -621,13 +624,16 @@ class OrderLifecycleIT {
     if(returned) assertThat(jdbc.queryForObject("SELECT state FROM tb_order_stock_return WHERE order_id=?",String.class,id)).isEqualTo("DONE");
   }
 
-  void assertRaceOutcomes(List<ResponseEntity<JsonNode>> responses) {
-    assertThat(responses.stream().map(ResponseEntity::getStatusCode).toList())
-        .containsExactlyInAnyOrder(HttpStatus.OK,HttpStatus.BAD_REQUEST);
-    for(var response:responses) assertThat(response.getBody().path("success").asBoolean()).isEqualTo(response.getStatusCode()==HttpStatus.OK);
+  void assertRaceOutcomes(Map<String,ResponseEntity<JsonNode>> responses,String winner) {
+    for(var entry:responses.entrySet()) {
+      boolean won=entry.getKey().equals(winner);
+      assertThat(entry.getValue().getStatusCode()).as("response to %s",entry.getKey()).isEqualTo(won?HttpStatus.OK:HttpStatus.BAD_REQUEST);
+      assertThat(entry.getValue().getBody().path("success").asBoolean()).isEqualTo(won);
+      if(won) assertThat(entry.getValue().getBody().path("data").path("status").asInt()).isEqualTo(status());
+    }
   }
 
-  List<ResponseEntity<JsonNode>> race(String a, String b) throws Exception {
+  Map<String,ResponseEntity<JsonNode>> race(String a, String b) throws Exception {
     var pool = Executors.newFixedThreadPool(2);
     var start = new CountDownLatch(1);
     var ready = new CountDownLatch(2);
@@ -646,8 +652,9 @@ class OrderLifecycleIT {
                   }
                 }));
       assertThat(ready.await(5,TimeUnit.SECONDS)).isTrue();start.countDown();
-      var responses=new ArrayList<ResponseEntity<JsonNode>>();
-      for (var f : fs) responses.add(f.get(20, TimeUnit.SECONDS));
+      var responses=new LinkedHashMap<String,ResponseEntity<JsonNode>>();
+      var actions=List.of(a,b);
+      for(int i=0;i<fs.size();i++) responses.put(actions.get(i),fs.get(i).get(20,TimeUnit.SECONDS));
       return responses;
     } finally {
       start.countDown();

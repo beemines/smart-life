@@ -32,7 +32,7 @@ class VoucherBatchIT {
    if(!persistentOutage) fault=fault.doCallRealMethod();
    fault.when(persistence).findRequest(order);
    try {
-    batches.recover();
+    recoverOwned(task,order);
     assertThat(f.row(task).get("state")).isEqualTo(persistentOutage?"PROCESSING":"FAILED");
     assertThat(f.row(task).get("retryable")).isEqualTo(!persistentOutage);
     assertThat(jdbc.queryForObject("SELECT lease_token IS NOT NULL FROM tb_voucher_batch_row WHERE task_id=?",Boolean.class,task)).isEqualTo(persistentOutage);
@@ -40,11 +40,27 @@ class VoucherBatchIT {
    } finally {org.mockito.Mockito.doCallRealMethod().when(persistence).findRequest(order);}
    if(!persistentOutage) batches.retry(task);
    jdbc.update("UPDATE tb_voucher_batch_row SET last_attempt_at='2000-01-01',lease_until='2000-01-01' WHERE task_id=?",task);
-   batches.recover();
+   recoverOwned(task,order);
    org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(20)).untilAsserted(()->assertThat(persistence.findOrder(order)).isNotNull());
-   jdbc.update("UPDATE tb_voucher_batch_row SET last_attempt_at='2000-01-01' WHERE task_id=?",task);batches.recover();
+   jdbc.update("UPDATE tb_voucher_batch_row SET last_attempt_at='2000-01-01' WHERE task_id=?",task);recoverOwned(task,order);
    assertThat(f.row(task).get("state")).isEqualTo("SUCCEEDED");
    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order WHERE id=?",Integer.class,order)).isEqualTo(1);
+  }
+ }
+ private void recoverOwned(long task,long order) {
+  org.springframework.test.util.ReflectionTestUtils.invokeMethod(batches,"recoverRow",Map.of("task_id",task,"source_row",1,"order_id",order));
+ }
+ @org.junit.jupiter.params.ParameterizedTest
+ @org.junit.jupiter.params.provider.ValueSource(strings={"IMPORTING","IMPORT_FAILED"})
+ void rowWorkerCannotClaimANonReadyParent(String parentState) {
+  try(var f=new BatchReviewFixture(jdbc,redis,batches)) {
+   long task=f.submit(),order=f.order(task);f.revoke(); // Prevent dispatch even in the broken guard case.
+   jdbc.update("UPDATE tb_voucher_batch SET state=? WHERE id=?",parentState,task);
+   recoverOwned(task,order);
+   assertThat(f.row(task).get("state")).isEqualTo("READY");
+   assertThat(jdbc.queryForObject("SELECT attempts FROM tb_voucher_batch_row WHERE task_id=?",Integer.class,task)).isZero();
+   assertThat(persistence.findRequest(order)).isNull();
+   assertThat(redis.opsForValue().get("seckill:stock:"+f.voucher)).isEqualTo("10");
   }
  }
  @Test void revokedCreatorCannotAcceptANewRecipientIntent(){

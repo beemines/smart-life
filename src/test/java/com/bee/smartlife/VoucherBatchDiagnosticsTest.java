@@ -31,9 +31,10 @@ class VoucherBatchDiagnosticsTest {
   var capture=new ListAppender<ILoggingEvent>();capture.start();logger.addAppender(capture);
   try {
    service.recover();
-   assertThat(capture.list).anySatisfy(event->{
+   assertThat(capture.list).hasSize(1).allSatisfy(event->{
     assertThat(event.getLevel()).isEqualTo(Level.WARN);
     assertThat(event.getFormattedMessage()).contains("taskId=42","sourceRow=7","orderId=99","stage=","errorType=java.lang.IllegalStateException");
+    assertThat(event.getFormattedMessage()).contains("stage="+(failsBeforeRowRead?"process-row":"dispatch-or-recover"));
     assertThat(event.getFormattedMessage()).doesNotContain("secret-token","full-user-payload");
     assertThat(event.getThrowableProxy()).isNull();
    });
