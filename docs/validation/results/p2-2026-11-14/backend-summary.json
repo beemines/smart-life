@@ -1,0 +1,191 @@
+[
+  {
+    "file": "TEST-com.bee.smartlife.CacheWorkloadIT.xml",
+    "name": "com.bee.smartlife.CacheWorkloadIT",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "17.238"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.config.RedissonConfigTest.xml",
+    "name": "com.bee.smartlife.config.RedissonConfigTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.017"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.HttpOrderEvidenceTest.xml",
+    "name": "com.bee.smartlife.HttpOrderEvidenceTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.04"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.mq.VoucherOrderMQConsumerTest.xml",
+    "name": "com.bee.smartlife.mq.VoucherOrderMQConsumerTest",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.46"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.OrderConsumptionIT.xml",
+    "name": "com.bee.smartlife.OrderConsumptionIT",
+    "tests": "27",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "28.848"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.OrderLifecycleIT.xml",
+    "name": "com.bee.smartlife.OrderLifecycleIT",
+    "tests": "25",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "97.898"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.OrderListPlanIT.xml",
+    "name": "com.bee.smartlife.OrderListPlanIT",
+    "tests": "1",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "42.091"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.OrderRequestRecoveryIT.xml",
+    "name": "com.bee.smartlife.OrderRequestRecoveryIT",
+    "tests": "21",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "108.689"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.OrderSafetyIT.xml",
+    "name": "com.bee.smartlife.OrderSafetyIT",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "6.263"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.P1BoundaryIT.xml",
+    "name": "com.bee.smartlife.P1BoundaryIT",
+    "tests": "16",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "3.468"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.P1VoucherIT.xml",
+    "name": "com.bee.smartlife.P1VoucherIT",
+    "tests": "16",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "101.01"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.service.impl.ImageUploadValidatorTest.xml",
+    "name": "com.bee.smartlife.service.impl.ImageUploadValidatorTest",
+    "tests": "7",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.12"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.service.impl.VoucherOrderPersistenceTest.xml",
+    "name": "com.bee.smartlife.service.impl.VoucherOrderPersistenceTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.569"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.ShopCacheIT.xml",
+    "name": "com.bee.smartlife.ShopCacheIT",
+    "tests": "6",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "11.093"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.StackUpgradeIT.xml",
+    "name": "com.bee.smartlife.StackUpgradeIT",
+    "tests": "4",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "4.798"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.utils.RedisIdWorkerIT.xml",
+    "name": "com.bee.smartlife.utils.RedisIdWorkerIT",
+    "tests": "3",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "9.72"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.utils.RedisIdWorkerTest.xml",
+    "name": "com.bee.smartlife.utils.RedisIdWorkerTest",
+    "tests": "13",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.334"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.utils.RefreshTokenInterceptorTest.xml",
+    "name": "com.bee.smartlife.utils.RefreshTokenInterceptorTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.124"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.VoucherBatchDiagnosticsTest.xml",
+    "name": "com.bee.smartlife.VoucherBatchDiagnosticsTest",
+    "tests": "2",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "0.11"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.VoucherBatchIT.xml",
+    "name": "com.bee.smartlife.VoucherBatchIT",
+    "tests": "17",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "48.494"
+  },
+  {
+    "file": "TEST-com.bee.smartlife.VoucherBatchXlsxParserTest.xml",
+    "name": "com.bee.smartlife.VoucherBatchXlsxParserTest",
+    "tests": "16",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "9.086"
+  }
+]

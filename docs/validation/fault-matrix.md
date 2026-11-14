@@ -1,6 +1,6 @@
 # 订单故障与恢复验证矩阵
 
-本表整理现有实际代码与测试，避免把“没有汇总”写成“没有实现”。最终本轮测试结果在统一验证后补充。测试仅使用独立 MySQL/Redis/RocketMQ 和合成数据，不对业务库运行。
+本表整理现有实际代码与测试，避免把“没有汇总”写成“没有实现”。本轮完整结果见 [P2 验证记录](p2-evidence.md)。测试仅使用独立 MySQL/Redis/RocketMQ 和合成数据，不对业务库运行。
 
 ## 机制说明
 
@@ -34,6 +34,19 @@
 测试代码：[消费](../../src/test/java/com/bee/smartlife/OrderConsumptionIT.java)、[受理恢复](../../src/test/java/com/bee/smartlife/OrderRequestRecoveryIT.java)、[生命周期](../../src/test/java/com/bee/smartlife/OrderLifecycleIT.java)、[首次发布](../../src/test/java/com/bee/smartlife/P1VoucherIT.java)、[批量任务](../../src/test/java/com/bee/smartlife/VoucherBatchIT.java)。
 
 ## 排查与恢复原则
+
+本轮补充的独立验证：
+
+| 场景 | 用例 | 核对方式 |
+| --- | --- | --- |
+| 不同用户争抢有限库存 | `OrderConsumptionIT.hundredDistinctHttpUsersCompeteForTenThroughRealMq` | 100 个真实 HTTP 请求、不同用户、库存 10，真实 MQ 消费；逐条绑定调用用户、请求键、HTTP 订单 ID、持久受理与 SQL 订单，不只对数量。共享 45 秒请求期限，连接/读取超时分别为 3/15 秒。 |
+| 同用户并发请求 | `OrderConsumptionIT.sameUserConcurrentHttpRequestsCreateOnlyOneOrderThroughRealMq` | 20 个不同请求键只有一单；临时锁竞争沿既有恢复入口核对，失败资格和预占归属也检查。 |
+| 支付与取消 | `OrderLifecycleIT.payCancelRaceHasOneWinnerAndReturnsStockOnlyOnCancel` | 从未支付开始，屏障起跑，动作对应的响应与最终状态一致；只在取消胜出时返库存。 |
+| 退款与核销 | `OrderLifecycleIT.refundRedeemRaceStartsPaidAndHasOneWinner` | 明确从已支付开始，逐动作检查胜负，库存与唯一返还记录一致。 |
+| 支付与超时关闭 | `OrderLifecycleIT.payTimeoutRaceUsesDatabaseDeadlineAndReturnsStockOnce` | 分别构造截止前/截止后，使用数据库期限判断；只恢复指定订单，避免全局扫描干扰其他夹具。 |
+| 批量异常定位 | `VoucherBatchDiagnosticsTest.processingFailuresLogIdentityAndTypeWithoutLeakingPayload` | 两个异常边界各自只输出一条 WARN，包含任务、原始行、已知订单和错误类型，不输出异常正文、堆栈与负载；租约留给有界恢复。 |
+
+HTTP 验证在工作线程结束且持久终态排空后才清理自己的夹具；异常未收敛时保留数据用于调查。最终压测另保存整批预期请求清单和逐轮核对文件，见 [运行说明](../../scripts/load/GUIDE.md)。上述用例不能证明任意资源故障、所有时间交错或生产容量均已覆盖。
 
 1. 从请求标识／订单 ID 查询受理记录、真实订单与失败终态；批量请求增加任务 ID、原始行号。
 2. 新鲜在途请求先等待，未知发送结果保留原 ID，不能根据一次超时释放资格或再建订单。

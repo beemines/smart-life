@@ -50,7 +50,7 @@ flowchart LR
 | 重复消费与重复领取如何区分？ | 同订单 ID 是传输重投，不同订单 ID 但同用户/券是领取规则冲突 | [消费业务](../src/main/java/com/bee/smartlife/service/impl/VoucherOrderServiceImpl.java) |
 | 为什么取消后不能再领？ | 当前明确选择终身一人一券，返库存与释放领取资格是不同规则 | [库存返还](../src/main/java/com/bee/smartlife/service/impl/OrderStockReturn.java) |
 | 为什么列表缓存不能决定核销权限？ | 列表仅展示，授权可能被撤销；实际操作必须检查当前权限 | [列表](../src/main/java/com/bee/smartlife/service/impl/OrderLifecycleService.java)、[操作事务](../src/main/java/com/bee/smartlife/service/impl/OrderLifecyclePersistence.java) |
-| 怎么证明没有把处理中当成功？ | 保存原请求清单，核对受理终态、真实订单与失败/返还记录；pending/manual 单列 | 最终结果核对工具与原始报告 |
+| 怎么证明没有把处理中当成功？ | 保存原请求清单，核对受理终态、真实订单与失败/返还记录；pending/manual 单列 | [核对工具](../scripts/load/reconcile.py)、[运行说明](../scripts/load/GUIDE.md) |
 | 为什么不加微服务、分片和模板缓存？ | 尚无瓶颈证据；先用已测索引、回源协调和有界任务解决现有问题 | 查询计划、缓存测量、待办 |
 
 ## 已有证据入口
@@ -61,4 +61,7 @@ flowchart LR
 - [列表权限](validation/order-list-permissions.md)：20→1 查询次数、逐商户授权、撤权操作拒绝。
 - [缓存功能负载](validation/cache-workload.md)：服务级调用与回源次数，明确不是 HTTP 容量压测。
 
-本章新的并发、HTTP 压测与统一核对证据在实际完成后补入。这里不把已有测试数量永久写成最新总数；统一回归和最终提交 CI 以本轮验证记录为准。
+- [本轮验证记录](validation/p2-evidence.md)：独立生命周期竞争、真实 HTTP 库存争抢、评分展示和批量异常日志。
+- [可复跑的 JMeter 计划与核对口径](../scripts/load/GUIDE.md)：短时本机测量，售罄拒绝单列，逐轮检查真实终态。
+
+这里不把历史测试数量永久写成最新总数；统一回归和最终提交 CI 以本轮验证记录为准。课程或他人项目的数据不能作为本项目指标。当前支付、退款为模拟动作，暂无生产用户和真实资金流量。
