@@ -22,7 +22,31 @@ class VoucherBatchIT {
  @BeforeEach void migrate() throws Exception {try(var c=jdbc.getDataSource().getConnection()){org.springframework.jdbc.datasource.init.ScriptUtils.executeSqlScript(c,new org.springframework.core.io.ClassPathResource("db/migrations/2026-11-13-voucher-batches.sql"));}}
  @Autowired TestRestTemplate http;
  @Autowired StringRedisTemplate redis;
- @Autowired com.bee.smartlife.service.impl.VoucherOrderPersistence persistence;
+ @org.springframework.test.context.bean.override.mockito.MockitoSpyBean com.bee.smartlife.service.impl.VoucherOrderPersistence persistence;
+ @org.junit.jupiter.params.ParameterizedTest
+ @org.junit.jupiter.params.provider.ValueSource(booleans={false,true})
+ void diagnosticFailurePreservesRetryableRowsAndExpiredLeaseRecovery(boolean persistentOutage) throws Exception {
+  try(var f=new BatchReviewFixture(jdbc,redis,batches)) {
+   long task=f.submit(),order=f.order(task);
+   var fault=org.mockito.Mockito.doThrow(new org.springframework.dao.DataAccessResourceFailureException("injected storage outage"));
+   if(!persistentOutage) fault=fault.doCallRealMethod();
+   fault.when(persistence).findRequest(order);
+   try {
+    batches.recover();
+    assertThat(f.row(task).get("state")).isEqualTo(persistentOutage?"PROCESSING":"FAILED");
+    assertThat(f.row(task).get("retryable")).isEqualTo(!persistentOutage);
+    assertThat(jdbc.queryForObject("SELECT lease_token IS NOT NULL FROM tb_voucher_batch_row WHERE task_id=?",Boolean.class,task)).isEqualTo(persistentOutage);
+    assertThat(jdbc.queryForObject("SELECT attempts FROM tb_voucher_batch_row WHERE task_id=?",Integer.class,task)).isEqualTo(1);
+   } finally {org.mockito.Mockito.doCallRealMethod().when(persistence).findRequest(order);}
+   if(!persistentOutage) batches.retry(task);
+   jdbc.update("UPDATE tb_voucher_batch_row SET last_attempt_at='2000-01-01',lease_until='2000-01-01' WHERE task_id=?",task);
+   batches.recover();
+   org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(20)).untilAsserted(()->assertThat(persistence.findOrder(order)).isNotNull());
+   jdbc.update("UPDATE tb_voucher_batch_row SET last_attempt_at='2000-01-01' WHERE task_id=?",task);batches.recover();
+   assertThat(f.row(task).get("state")).isEqualTo("SUCCEEDED");
+   assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order WHERE id=?",Integer.class,order)).isEqualTo(1);
+  }
+ }
  @Test void revokedCreatorCannotAcceptANewRecipientIntent(){
   try(var f=new BatchReviewFixture(jdbc,redis,batches)){long task=f.submit(),order=f.order(task);f.revoke();batches.recover();assertThat(f.row(task).get("state")).isEqualTo("FAILED");assertThat(f.row(task).get("retryable")).isEqualTo(false);assertThat(persistence.findRequest(order)).isNull();assertThat(redis.opsForValue().get("seckill:stock:"+f.voucher)).isEqualTo("10");}
  }

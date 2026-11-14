@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 /** Bounded durable work queue; database leases never span external calls. */
+@lombok.extern.slf4j.Slf4j
 @Service
 @RequiredArgsConstructor
 public class VoucherBatchService {
@@ -131,10 +132,10 @@ public class VoucherBatchService {
  @Scheduled(fixedDelayString="${smartlife.batches.interval-ms:10000}") public void scheduled(){if(enabled)recover();}
  public void recover(){
    jdbc.update("UPDATE tb_voucher_batch SET state='IMPORT_FAILED',error='导入中断，请使用新请求重新导入' WHERE state='IMPORTING' AND created_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 15 MINUTE)");
-   var rows=jdbc.queryForList("SELECT r.task_id,r.source_row FROM tb_voucher_batch_row r JOIN tb_voucher_batch b ON b.id=r.task_id WHERE b.state='READY' AND r.state IN ('READY','PROCESSING') AND r.last_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND) AND (r.lease_until IS NULL OR r.lease_until<UTC_TIMESTAMP(6)) ORDER BY r.last_attempt_at,r.task_id,r.source_row LIMIT 100");
+   var rows=jdbc.queryForList("SELECT r.task_id,r.source_row,r.order_id FROM tb_voucher_batch_row r JOIN tb_voucher_batch b ON b.id=r.task_id WHERE b.state='READY' AND r.state IN ('READY','PROCESSING') AND r.last_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND) AND (r.lease_until IS NULL OR r.lease_until<UTC_TIMESTAMP(6)) ORDER BY r.last_attempt_at,r.task_id,r.source_row LIMIT 100");
    for(var row:rows){long task=((Number)row.get("task_id")).longValue();int number=((Number)row.get("source_row")).intValue();String token=UUID.randomUUID().toString();
      if(jdbc.update("UPDATE tb_voucher_batch_row SET lease_token=?,lease_until=DATE_ADD(UTC_TIMESTAMP(6),INTERVAL 60 SECOND),last_attempt_at=UTC_TIMESTAMP(6),attempts=attempts+1,state='PROCESSING' WHERE task_id=? AND source_row=? AND state IN ('READY','PROCESSING') AND last_attempt_at<DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 30 SECOND) AND (lease_until IS NULL OR lease_until<UTC_TIMESTAMP(6))",token,task,number)!=1)continue;
-     try{process(task,number,token);}catch(Exception e){/* A database outage leaves the lease recoverable, never loses the identity. */}
+     try{process(task,number,token);}catch(Exception e){log.warn("voucher batch failure taskId={} sourceRow={} orderId={} stage=process-row errorType={}",task,number,row.get("order_id"),e.getClass().getName()); /* Retain the lease for bounded recovery. */}
    }
  }
  private void process(long task,int number,String token){
@@ -154,7 +155,7 @@ public class VoucherBatchService {
        if(!rule.available()||now<rule.beginSecond()||now>=rule.endSecond()){finish(task,number,token,"FAILED",false,"优惠券不可领取或不在领取时间");return;}
        orders.orderForRecipient(voucher,user,order,r.get("request_key").toString());
      }else if("PREPARING".equals(request.getState())||"PENDING".equals(request.getState()))orders.recoverOrder(order,LocalDateTime.now().minusSeconds(30));
-   }catch(Exception e){error="暂时无法处理，请稍后重试";}
+   }catch(Exception e){log.warn("voucher batch failure taskId={} sourceRow={} orderId={} stage=dispatch-or-recover errorType={}",task,number,order,e.getClass().getName());error="暂时无法处理，请稍后重试";}
    var latest=snapshot(order);var accepted=latest.request();
    if(conflicting(latest,user,voucher,r.get("request_key").toString())){finish(task,number,token,"FAILED",false,"订单记录冲突，请人工核对");return;}
    if(accepted==null){state="FAILED";retry=true;}

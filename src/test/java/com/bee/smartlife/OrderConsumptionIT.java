@@ -64,6 +64,7 @@ class OrderConsumptionIT {
     private static final AtomicLong IDS = new AtomicLong(ThreadLocalRandom.current()
             .nextLong(3_000_000_000_000L, 4_000_000_000_000L));
     @Autowired IVoucherOrderService orders;
+    @Autowired org.springframework.boot.test.web.client.TestRestTemplate http;
     @Autowired JdbcTemplate jdbc;
     @Autowired RedissonClient redisson;
     @Autowired StringRedisTemplate redis;
@@ -75,6 +76,85 @@ class OrderConsumptionIT {
     private long voucherId;
     private long userId;
     private final List<Long> ownedVouchers = new ArrayList<>();
+
+    @Test
+    void hundredDistinctHttpUsersCompeteForTenThroughRealMq() throws Exception {
+        assertHttpContention(100,100,10);
+    }
+
+    @Test
+    void sameUserConcurrentHttpRequestsCreateOnlyOneOrderThroughRealMq() throws Exception {
+        assertHttpContention(20,1,1);
+    }
+
+    private void assertHttpContention(int requests,int distinctUsers,int expectedOrders) throws Exception {
+        // No producer/consumer substitution: POST -> Redis reservation -> broker -> SQL consumer.
+        var tokens=new ArrayList<String>();var users=new ArrayList<Long>();
+        var accepted=new ArrayList<Long>();var outcomes=new ArrayList<String>();
+        var pool=Executors.newFixedThreadPool(requests);
+        var ready=new CountDownLatch(requests);var start=new CountDownLatch(1);
+        redis.opsForValue().set("seckill:stock:"+voucherId,"10");
+        try {
+            for(int i=0;i<distinctUsers;i++) {
+                long user=IDS.incrementAndGet();String token=UUID.randomUUID().toString();
+                jdbc.update("INSERT INTO tb_user(id,phone,nick_name) VALUES (?,?,'http contention fixture')",user,"h"+(user%1000000000));
+                users.add(user);tokens.add(token);
+                redis.opsForHash().putAll("login:token:"+token,java.util.Map.of("id",Long.toString(user),"nickName","contention fixture"));
+            }
+            var futures=new ArrayList<java.util.concurrent.Future<org.springframework.http.ResponseEntity<com.fasterxml.jackson.databind.JsonNode>>>();
+            for(int i=0;i<requests;i++) {
+                String token=tokens.get(i%distinctUsers);
+                futures.add(pool.submit(()->{
+                    ready.countDown();assertThat(start.await(10,TimeUnit.SECONDS)).isTrue();
+                    var headers=new org.springframework.http.HttpHeaders();headers.set("authorization",token);
+                    headers.set("Idempotency-Key",UUID.randomUUID().toString());
+                    return http.exchange("/voucher-order/seckill/"+voucherId,org.springframework.http.HttpMethod.POST,
+                        new org.springframework.http.HttpEntity<>(headers),com.fasterxml.jackson.databind.JsonNode.class);
+                }));
+            }
+            assertThat(ready.await(10,TimeUnit.SECONDS)).isTrue();start.countDown();
+            for(var future:futures) {
+                var response=future.get(45,TimeUnit.SECONDS);
+                assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
+                var body=response.getBody();assertThat(body).isNotNull();
+                if(body.path("success").asBoolean()) {long order=body.path("data").asLong();assertThat(order).isPositive();accepted.add(order);outcomes.add("ACCEPTED,"+order);}
+                else {assertThat(body.path("errorMsg").asText()).isIn("库存不足","不能重复下单");outcomes.add("BUSINESS_REJECTED");}
+            }
+            java.nio.file.Files.write(java.nio.file.Path.of("target","http-contention-"+voucherId+"-accepted.csv"),outcomes);
+            await().atMost(Duration.ofSeconds(30)).untilAsserted(()->{
+                // Schedulers are disabled in this suite. Drive the same durable recovery entry
+                // point for nonblocking user-lock losers; accepted HTTP is not order success.
+                if(distinctUsers==1 && orderCount()==1)
+                    for(long pending:jdbc.queryForList("SELECT order_id FROM tb_voucher_order_request WHERE voucher_id=? AND state='PREPARING'",Long.class,voucherId))
+                        orders.recoverOrder(pending,java.time.LocalDateTime.now().plusSeconds(1));
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order_request WHERE voucher_id=? AND state IN ('CREATED','REJECTED')",Integer.class,voucherId)).isEqualTo(requests);
+            });
+            assertThat(accepted).doesNotHaveDuplicates();
+            if(distinctUsers==requests) assertThat(accepted).hasSize(expectedOrders);
+            else assertThat(accepted.size()).isBetween(expectedOrders,requests);
+            assertThat(orderCount()).isEqualTo(expectedOrders);
+            assertThat(jdbc.queryForObject("SELECT COUNT(DISTINCT user_id) FROM tb_voucher_order WHERE voucher_id=?",Integer.class,voucherId)).isEqualTo(expectedOrders);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order_request WHERE voucher_id=? AND state='CREATED'",Integer.class,voucherId)).isEqualTo(expectedOrders);
+            assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order_request WHERE voucher_id=? AND state='REJECTED' AND reason IN ('REJECTED_OUT_OF_STOCK','REJECTED_ALREADY_PURCHASED')",Integer.class,voucherId)).isEqualTo(requests-expectedOrders);
+            for(long order:accepted) {
+                String state=jdbc.queryForObject("SELECT state FROM tb_voucher_order_request WHERE order_id=?",String.class,order);
+                assertThat(state).isIn("CREATED","REJECTED");
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order WHERE id=? AND voucher_id=? AND status=1",Integer.class,order,voucherId)).isEqualTo(state.equals("CREATED")?1:0);
+            }
+            assertThat(stock()).isEqualTo(10-expectedOrders).isNotNegative();
+            assertThat(redis.opsForValue().get("seckill:stock:"+voucherId)).isEqualTo(Integer.toString(10-expectedOrders));
+            assertThat(redis.opsForSet().size("seckill:order:"+voucherId)).isEqualTo((long)expectedOrders);
+            assertThat(redis.opsForHash().size("seckill:reservation:"+voucherId)).isEqualTo((long)expectedOrders);
+            java.nio.file.Files.write(java.nio.file.Path.of("target","http-contention-"+voucherId+"-terminal.csv"),
+                jdbc.queryForList("SELECT order_id,user_id,state,reason FROM tb_voucher_order_request WHERE voucher_id=? ORDER BY order_id",voucherId).stream().map(Object::toString).toList());
+        } finally {
+            start.countDown();pool.shutdownNow();pool.awaitTermination(50,TimeUnit.SECONDS);
+            for(String table:List.of("tb_order_stock_return","tb_order_lifecycle"))
+                jdbc.update("DELETE r FROM "+table+" r JOIN tb_voucher_order o ON o.id=r.order_id WHERE o.voucher_id=?",voucherId);
+            for(long user:users) jdbc.update("DELETE FROM tb_user WHERE id=?",user);
+            for(String token:tokens) redis.delete("login:token:"+token);
+        }
+    }
 
     @AfterAll
     static void stopTheSpiedBrokerListener(@Autowired VoucherOrderMQConsumer consumer) {

@@ -577,34 +577,80 @@ class OrderLifecycleIT {
   }
 
   @Test
-  void lifecycleRacesAreSerialized() throws Exception {
-    race("pay", "cancel");
-    assertThat(status()).isIn(2, 4);
-    if (status() == 4) return;
-    grant();
-    race("refund", "redeem");
-    assertThat(status()).isIn(3, 6);
+  void payCancelRaceHasOneWinnerAndReturnsStockOnlyOnCancel() throws Exception {
+    assertThat(status()).isEqualTo(1);
+    assertRaceOutcomes(race("pay", "cancel"));
+    assertThat(status()).isIn(2,4);
+    assertRaceStock(status()==4);
   }
 
-  void race(String a, String b) throws Exception {
+  @Test
+  void refundRedeemRaceStartsPaidAndHasOneWinner() throws Exception {
+    assertThat(post("pay").getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(status()).isEqualTo(2);
+    grant();
+    assertRaceOutcomes(race("refund", "redeem"));
+    assertThat(status()).isIn(3, 6);
+    assertRaceStock(status()==6);
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(booleans={false,true})
+  void payTimeoutRaceUsesDatabaseDeadlineAndReturnsStockOnce(boolean expired) throws Exception {
+    assertThat(status()).isEqualTo(1);
+    sql(expired ? "UPDATE tb_order_lifecycle SET pay_deadline=DATE_SUB(UTC_TIMESTAMP(6),INTERVAL 1 SECOND) WHERE order_id=?"
+        : "UPDATE tb_order_lifecycle SET pay_deadline=DATE_ADD(UTC_TIMESTAMP(6),INTERVAL 1 HOUR) WHERE order_id=?");
+    var pool=Executors.newFixedThreadPool(2);
+    var ready=new CountDownLatch(2);var start=new CountDownLatch(1);
+    try {
+      var pay=pool.submit(()->{ready.countDown();start.await();return post("pay");});
+      var timeout=pool.submit(()->{ready.countDown();start.await();lifecycle.recover();return true;});
+      assertThat(ready.await(5,TimeUnit.SECONDS)).isTrue();start.countDown();
+      assertThat(pay.get(20,TimeUnit.SECONDS).getStatusCode()).isEqualTo(expired?HttpStatus.BAD_REQUEST:HttpStatus.OK);
+      assertThat(timeout.get(20,TimeUnit.SECONDS)).isTrue();
+      assertThat(status()).isEqualTo(expired?4:2);
+      if(expired) assertThat(get("detail/"+id).getBody().path("data").path("closeReason").asText()).isEqualTo("TIMEOUT");
+      lifecycle.recover();assertRaceStock(expired);
+    } finally {start.countDown();pool.shutdownNow();}
+  }
+
+  void assertRaceStock(boolean returned) {
+    assertThat(jdbc.queryForObject("SELECT stock FROM tb_seckill_voucher WHERE voucher_id=?",Integer.class,voucher)).isEqualTo(returned?1:0);
+    assertThat(redis.opsForValue().get("seckill:stock:"+voucher)).isEqualTo(returned?"1":"0");
+    assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_order_stock_return WHERE order_id=?",Integer.class,id)).isEqualTo(returned?1:0);
+    if(returned) assertThat(jdbc.queryForObject("SELECT state FROM tb_order_stock_return WHERE order_id=?",String.class,id)).isEqualTo("DONE");
+  }
+
+  void assertRaceOutcomes(List<ResponseEntity<JsonNode>> responses) {
+    assertThat(responses.stream().map(ResponseEntity::getStatusCode).toList())
+        .containsExactlyInAnyOrder(HttpStatus.OK,HttpStatus.BAD_REQUEST);
+    for(var response:responses) assertThat(response.getBody().path("success").asBoolean()).isEqualTo(response.getStatusCode()==HttpStatus.OK);
+  }
+
+  List<ResponseEntity<JsonNode>> race(String a, String b) throws Exception {
     var pool = Executors.newFixedThreadPool(2);
     var start = new CountDownLatch(1);
+    var ready = new CountDownLatch(2);
     try {
-      var fs = new ArrayList<Future<?>>();
+      var fs = new ArrayList<Future<ResponseEntity<JsonNode>>>();
       for (String action : List.of(a, b))
         fs.add(
             pool.submit(
                 () -> {
                   try {
+                    ready.countDown();
                     start.await();
-                    post(action);
+                    return post(action);
                   } catch (Exception e) {
                     throw new RuntimeException(e);
                   }
                 }));
-      start.countDown();
-      for (var f : fs) f.get(20, TimeUnit.SECONDS);
+      assertThat(ready.await(5,TimeUnit.SECONDS)).isTrue();start.countDown();
+      var responses=new ArrayList<ResponseEntity<JsonNode>>();
+      for (var f : fs) responses.add(f.get(20, TimeUnit.SECONDS));
+      return responses;
     } finally {
+      start.countDown();
       pool.shutdownNow();
     }
   }
