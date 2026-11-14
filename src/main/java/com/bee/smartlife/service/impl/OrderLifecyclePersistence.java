@@ -72,6 +72,20 @@ public class OrderLifecyclePersistence {
                 shop));
   }
 
+  /** Request-local grant read for the bounded current page; never cache across requests. */
+  public Set<Long> manageableShops(long user, Set<Long> shops) {
+    if (shops.isEmpty()) return Set.of();
+    if (shops.size() > 50) throw new IllegalArgumentException("page shop limit exceeded");
+    var args = new ArrayList<Object>();
+    args.add(user);
+    args.addAll(shops);
+    String placeholders = String.join(",", Collections.nCopies(shops.size(), "?"));
+    return Set.copyOf(jdbc.queryForList(
+        "SELECT shop_id FROM tb_shop_permission WHERE user_id=? AND"
+            + " ((role='ADMIN' AND shop_id=0) OR (role='OWNER' AND shop_id IN ("
+            + placeholders + ")))" , Long.class, args.toArray()));
+  }
+
   public static long number(Map<String, Object> row, String key) {
     return ((Number) row.get(key)).longValue();
   }

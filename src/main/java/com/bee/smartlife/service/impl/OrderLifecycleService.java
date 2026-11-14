@@ -64,7 +64,16 @@ public class OrderLifecycleService {
     boolean more = rows.size() > size;
     if (more) rows = rows.subList(0, size);
     LocalDateTime now = persistence.now();
-    var items = rows.stream().map(row -> view(row, user, now)).toList();
+    var shops = new HashSet<Long>();
+    for (var row : rows) {
+      if (redeemable(row, now) && row.get("shop_id") != null) {
+        shops.add(number(row, "shop_id"));
+      }
+    }
+    var grants = persistence.manageableShops(user, shops);
+    var items = rows.stream().map(row -> view(row, user, now,
+        row.get("shop_id") != null
+            && (grants.contains(0L) || grants.contains(number(row, "shop_id"))))).toList();
     var data = new LinkedHashMap<String, Object>();
     data.put("items", items);
     data.put("hasMore", more);
@@ -122,6 +131,19 @@ public class OrderLifecycleService {
   }
 
   private OrderView view(Map<String, Object> row, long user, LocalDateTime now) {
+    return view(row, user, now, redeemable(row, now)
+        && persistence.merchant(user,
+            row.get("shop_id") == null ? null : number(row, "shop_id")));
+  }
+
+  private boolean redeemable(Map<String, Object> row, LocalDateTime now) {
+    return valid(row) && number(row, "status") == 2
+        && !now.isBefore(time(row, "use_begin_time"))
+        && before(row, "use_end_time", now);
+  }
+
+  private OrderView view(Map<String, Object> row, long user, LocalDateTime now,
+      boolean canManageShop) {
     int status = (int) number(row, "status");
     boolean valid = valid(row), owner = user == number(row, "user_id");
     return new OrderView(
@@ -146,12 +168,7 @@ public class OrderLifecycleService {
             && before(row, "use_end_time", now),
         valid && owner && status == 1,
         valid && owner && status == 2 && before(row, "use_end_time", now),
-        valid
-            && status == 2
-            && !now.isBefore(time(row, "use_begin_time"))
-            && before(row, "use_end_time", now)
-            && persistence.merchant(
-                user, row.get("shop_id") == null ? null : number(row, "shop_id")));
+        redeemable(row, now) && canManageShop);
   }
 
   private String iso(Map<String, Object> row, String key) {

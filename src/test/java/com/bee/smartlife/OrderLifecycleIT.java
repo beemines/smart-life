@@ -1,6 +1,7 @@
 package com.bee.smartlife;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import com.bee.smartlife.dto.UserDTO;
 import com.bee.smartlife.entity.VoucherOrder;
@@ -34,7 +35,7 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 class OrderLifecycleIT {
   @Autowired TestRestTemplate http;
   @Autowired StringRedisTemplate redis;
-  @Autowired JdbcTemplate jdbc;
+  @org.springframework.test.context.bean.override.mockito.MockitoSpyBean JdbcTemplate jdbc;
   @Autowired VoucherOrderPersistence orders;
   @Autowired OrderLifecyclePersistence persistence;
   @Autowired OrderLifecycleService lifecycle;
@@ -142,6 +143,62 @@ class OrderLifecycleIT {
     assertThat(data.path("items").isArray()).isTrue();
     assertThat(data.path("items").get(0).path("id").asText()).isEqualTo(Long.toString(id));
     assertThat(data.path("items").get(0).path("createTime").asText()).endsWith("Z");
+  }
+
+  @Test
+  void listLoadsGrantsOnceAndRevocationStillBlocksRedemption() {
+    clearInvocations(jdbc);
+    assertThat(get("mine?limit=50").getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(grantReads()).isZero(); // Pending-only pages need no redemption grants.
+    long otherShop = IDS.incrementAndGet();
+    var extraIds = new ArrayList<Long>();
+    try {
+      jdbc.update("INSERT INTO tb_shop(id,name,type_id,images,address,x,y,sold,comments,score) SELECT ?,name,type_id,images,address,x,y,sold,comments,score FROM tb_shop WHERE id=?",otherShop,shop);
+      sql("UPDATE tb_voucher_order SET status=2,pay_time=UTC_TIMESTAMP(6) WHERE id=?");
+      for(int n=1;n<20;n++) {
+        long extra=IDS.incrementAndGet();extraIds.add(extra);
+        jdbc.update("INSERT INTO tb_voucher_order(id,user_id,voucher_id,status,create_time,pay_time) VALUES (?,?,?,2,UTC_TIMESTAMP(6),UTC_TIMESTAMP(6))",extra,user,voucher+n);
+        jdbc.update("INSERT INTO tb_order_lifecycle(order_id,snapshot_valid,shop_id,shop_name,title,pay_value,actual_value,pay_deadline,use_begin_time,use_end_time) SELECT ?,snapshot_valid,?,shop_name,title,pay_value,actual_value,pay_deadline,use_begin_time,use_end_time FROM tb_order_lifecycle WHERE order_id=?",extra,n%2==0?shop:otherShop,id);
+      }
+      assertListGrants(0); // Ordinary user cannot redeem either shop's orders.
+      jdbc.update("INSERT INTO tb_shop_permission(user_id,shop_id,role) VALUES (?,?,'OWNER')",user,shop);
+      assertListGrants(10); // Ownership must not leak to the second shop.
+      jdbc.update("DELETE FROM tb_shop_permission WHERE user_id=?",user);
+      jdbc.update("INSERT INTO tb_shop_permission(user_id,shop_id,role) VALUES (?,0,'ADMIN')",user);
+      assertListGrants(20);
+      jdbc.update("DELETE FROM tb_shop_permission WHERE user_id=?",user);
+      // The browser can still show an old enabled button. Action checks current grants.
+      assertThat(post("redeem").getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+      assertThat(status()).isEqualTo(2);
+      assertListGrants(0); // No cross-request grant cache after revocation.
+    } finally {
+      for(long extra:extraIds) {
+        jdbc.update("DELETE FROM tb_order_lifecycle WHERE order_id=?",extra);
+        jdbc.update("DELETE FROM tb_voucher_order WHERE id=? AND user_id=?",extra,user);
+      }
+      jdbc.update("DELETE FROM tb_shop WHERE id=?",otherShop);
+    }
+  }
+
+  private long grantReads() {
+    return mockingDetails(jdbc).getInvocations().stream()
+        .filter(call -> Set.of("queryForObject","queryForList").contains(call.getMethod().getName())
+            && call.getMethod().getParameterTypes().length==3
+            && call.getMethod().getParameterTypes()[1]==Class.class
+            && call.getArguments().length>0 && call.getArgument(0) instanceof String sql
+            && sql.contains("tb_shop_permission"))
+        .count();
+  }
+
+  private void assertListGrants(long expectedRedeemable) {
+    clearInvocations(jdbc);
+    var response=get("mine?limit=50");
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    var items=response.getBody().path("data").path("items");
+    assertThat(items.size()).isEqualTo(20);
+    assertThat(java.util.stream.StreamSupport.stream(items.spliterator(),false)
+        .filter(item->item.path("canRedeem").asBoolean()).count()).isEqualTo(expectedRedeemable);
+    assertThat(grantReads()).as("one grant SQL per page, independent of row count").isEqualTo(1);
   }
 
   @Test
