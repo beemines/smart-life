@@ -152,31 +152,36 @@ class OrderLifecycleIT {
     assertThat(grantReads()).isZero(); // Pending-only pages need no redemption grants.
     long otherShop = IDS.incrementAndGet();
     var extraIds = new ArrayList<Long>();
+    var extraSnapshots = new ArrayList<Long>();
+    boolean shopInserted = false;
     try {
       jdbc.update("INSERT INTO tb_shop(id,name,type_id,images,address,x,y,sold,comments,score) SELECT ?,name,type_id,images,address,x,y,sold,comments,score FROM tb_shop WHERE id=?",otherShop,shop);
+      shopInserted = true;
       sql("UPDATE tb_voucher_order SET status=2,pay_time=UTC_TIMESTAMP(6) WHERE id=?");
       for(int n=1;n<20;n++) {
-        long extra=IDS.incrementAndGet();extraIds.add(extra);
+        long extra=IDS.incrementAndGet();
         jdbc.update("INSERT INTO tb_voucher_order(id,user_id,voucher_id,status,create_time,pay_time) VALUES (?,?,?,2,UTC_TIMESTAMP(6),UTC_TIMESTAMP(6))",extra,user,voucher+n);
+        extraIds.add(extra);
         jdbc.update("INSERT INTO tb_order_lifecycle(order_id,snapshot_valid,shop_id,shop_name,title,pay_value,actual_value,pay_deadline,use_begin_time,use_end_time) SELECT ?,snapshot_valid,?,shop_name,title,pay_value,actual_value,pay_deadline,use_begin_time,use_end_time FROM tb_order_lifecycle WHERE order_id=?",extra,n%2==0?shop:otherShop,id);
+        extraSnapshots.add(extra);
       }
-      assertListGrants(0); // Ordinary user cannot redeem either shop's orders.
+      assertListGrants(0,Set.of()); // Ordinary user cannot redeem either shop's orders.
       jdbc.update("INSERT INTO tb_shop_permission(user_id,shop_id,role) VALUES (?,?,'OWNER')",user,shop);
-      assertListGrants(10); // Ownership must not leak to the second shop.
+      assertListGrants(10,Set.of(shop)); // Ownership must not leak to the second shop.
       jdbc.update("DELETE FROM tb_shop_permission WHERE user_id=?",user);
       jdbc.update("INSERT INTO tb_shop_permission(user_id,shop_id,role) VALUES (?,0,'ADMIN')",user);
-      assertListGrants(20);
+      assertListGrants(20,Set.of(shop,otherShop));
       jdbc.update("DELETE FROM tb_shop_permission WHERE user_id=?",user);
       // The browser can still show an old enabled button. Action checks current grants.
       assertThat(post("redeem").getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
       assertThat(status()).isEqualTo(2);
-      assertListGrants(0); // No cross-request grant cache after revocation.
+      assertListGrants(0,Set.of()); // No cross-request grant cache after revocation.
     } finally {
+      for(long extra:extraSnapshots) jdbc.update("DELETE FROM tb_order_lifecycle WHERE order_id=?",extra);
       for(long extra:extraIds) {
-        jdbc.update("DELETE FROM tb_order_lifecycle WHERE order_id=?",extra);
         jdbc.update("DELETE FROM tb_voucher_order WHERE id=? AND user_id=?",extra,user);
       }
-      jdbc.update("DELETE FROM tb_shop WHERE id=?",otherShop);
+      if(shopInserted) jdbc.update("DELETE FROM tb_shop WHERE id=?",otherShop);
     }
   }
 
@@ -190,12 +195,17 @@ class OrderLifecycleIT {
         .count();
   }
 
-  private void assertListGrants(long expectedRedeemable) {
+  private void assertListGrants(long expectedRedeemable, Set<Long> expectedShops) {
     clearInvocations(jdbc);
     var response=get("mine?limit=50");
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     var items=response.getBody().path("data").path("items");
     assertThat(items.size()).isEqualTo(20);
+    for(var item:items) {
+      long snapshotShop=Long.parseLong(item.path("shopId").asText());
+      assertThat(item.path("canRedeem").asBoolean()).as("grant for snapshot shop %s",snapshotShop)
+          .isEqualTo(expectedShops.contains(snapshotShop));
+    }
     assertThat(java.util.stream.StreamSupport.stream(items.spliterator(),false)
         .filter(item->item.path("canRedeem").asBoolean()).count()).isEqualTo(expectedRedeemable);
     assertThat(grantReads()).as("one grant SQL per page, independent of row count").isEqualTo(1);
