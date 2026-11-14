@@ -12,11 +12,15 @@ mvn '-Dtest=*Test,StackUpgradeIT,OrderSafetyIT,RedisIdWorkerIT,OrderConsumptionI
 
 该范围包含有边界的真实依赖回归；历史手工批量实验不作为默认自动化测试。故障类型、具体用例和结论边界见 [故障矩阵](fault-matrix.md)。
 
-2026-11-14 本轮源码的完整 `clean verify`：**193 项，0 失败、0 错误、0 跳过，BUILD SUCCESS，8 分 54 秒**，逐类汇总见 [JSON](results/p2-2026-11-14/backend-summary.json)。首次复跑因 Docker Desktop 与 Redis 停止而连接失败，恢复原容器并健康检查后重新全跑；没有将失败或被中断的运行计为通过。生成 JAR 的 SHA-256 为 `1e5411dade81dec0f61231ab693bdfbacec2ce7bb5d295871853020a4fb0c4af`。
+2026-11-14 最终测试夹具／身份回归修改前的历史 v5 完整 `clean verify`：**193 项，0 失败、0 错误、0 跳过，BUILD SUCCESS，8 分 54 秒**，逐类汇总见 [JSON](results/p2-2026-11-14/backend-summary.json)。首次复跑因 Docker Desktop 与 Redis 停止而连接失败，恢复原容器并健康检查后重新全跑；没有将失败或被中断的运行计为通过。生成 JAR 的 SHA-256 为 `1e5411dade81dec0f61231ab693bdfbacec2ce7bb5d295871853020a4fb0c4af`。
 
 HTTP 测试原始关联清单：同用户 [调用](results/p2-2026-11-14/http-contention-9000062069012-accepted.csv)／[终态](results/p2-2026-11-14/http-contention-9000062069012-terminal.csv)，不同用户 [调用](results/p2-2026-11-14/http-contention-9000062069024-accepted.csv)／[终态](results/p2-2026-11-14/http-contention-9000062069024-terminal.csv)。文件只含合成标识，不保存认证信息。
 
 新增 HTTP 并发核对将每个调用用户、请求键、响应订单 ID 与持久受理、SQL 订单及 Redis 预占绑定，防止“数量正确但用户对应错误”的假通过。生命周期竞争分别构造未支付、已支付和支付截止前后起始状态，逐动作断言响应与最终状态一致。
+
+最终审查后，HTTP 测试的合成认证哈希在创建时设置 15 分钟 TTL，并立即检查剩余期限。专项复跑暴露原测试假设：不同用户也会争抢活动预占锁，其 3 秒等待失败可留下 PREPARING。测试现与同用户场景一样，在首单真实 MQ 落库后仅恢复本券的 PREPARING，保留原 30 秒排空期限和全部身份、库存、10 单创建／90 个终态拒绝断言。HTTP 受理不等于创建，独立汇总受理数、同步业务拒绝数、最终创建数与终态拒绝数；新增正向身份核对用例覆盖受理后终态拒绝。先前完整 193 项结果属于修改前测试版本，并未重跑全量；最终源码仍需远端 CI 全绿。
+
+修改后的专项验证：`mvn --batch-mode --no-transfer-progress '-Dtest=HttpOrderEvidenceTest,OrderConsumptionIT#hundredDistinctHttpUsersCompeteForTenThroughRealMq+sameUserConcurrentHttpRequestsCreateOnlyOneOrderThroughRealMq' test`，**5 项，0 失败／错误／跳过，BUILD SUCCESS，1 分 04 秒**。两项 HTTP 场景分别为 20 个受理、1 单创建、19 个终态拒绝，以及 10 个受理、90 个同步业务拒绝、10 单创建、90 个终态拒绝。修改前两次专项运行分别卡在 96／100 和 98／100 个终态，均未记为通过，其日志、夹具和未完成标识私下保留。
 
 ## 压测与最终结果
 
@@ -24,7 +28,7 @@ HTTP 测试原始关联清单：同用户 [调用](results/p2-2026-11-14/http-co
 
 压测专用进程关闭周期扫描，避免操作其他保留夹具；真实 HTTP、预占、MQ 和订单消费链路仍执行。该测量不包含登录、短信、支付或恢复扫描开销，不能推导生产容量、前后优化倍数或完整用户交易吞吐。
 
-[本轮测量报告](../performance/2026-11-14-local-http.md)保存三轮九组原始 JTL、硬件/依赖与哈希信息。每轮争抢为 100 请求、10 单落库、90 售罄拒绝、0 系统错误，两处库存均为 0。离线核对工具的 7 项测试包含大整数、漏请求、矛盾终态、系统错误和依赖超时后的自有进程关闭。真实负载未模拟依赖挂起，该失败路径由离线故障注入验证。
+[本轮测量报告](../performance/2026-11-14-local-http.md)保存三轮九组原始 JTL、硬件/依赖与哈希信息。每轮争抢为 100 请求、10 单落库、90 售罄拒绝、0 系统错误，两处库存均为 0。测量使用先前版本的 runner，原始结果保持不变。审查修复后的离线核对工具共 15 项测试，在普通 Python 和 `python -O` 下均通过，包含大整数、漏请求、矛盾终态、系统错误、优化模式失败保留夹具及热查询预热、环境变量注入隔离、PID 清单写入失败关闭自有进程、依赖超时保留最后完整快照及未完成订单标识。真实负载未模拟依赖挂起，该失败路径由离线故障注入验证；这些检查不是新的性能测量。
 
 ## 评分展示与前端
 

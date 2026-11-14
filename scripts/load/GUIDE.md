@@ -6,6 +6,7 @@ From the repository root, with the local upgrade stack already running and its s
 
 ```powershell
 python -m unittest discover -s scripts/load -v
+python -O -m unittest discover -s scripts/load -v
 python scripts/load/run.py --jmeter D:/shixi/smart-life/.superpowers/tools/apache-jmeter-5.6.3 --jar target/smart-life-0.0.1-SNAPSHOT.jar --output docs/performance/results/NEW-UNIQUE-RUN
 ```
 
@@ -31,4 +32,6 @@ Cleanup follows successful reconciliation of **all** rounds, after stopping the 
 
 These are short single-machine measurements with injector, application and dependencies sharing resources. They provide reproducible current-profile evidence, not production capacity, saturation, before/after improvement or a latency SLO. For revised scripts or a new JAR, use a new output directory and report the new hashes/source revision.
 
-Dependency commands (Docker/SQL/Redis and metadata) have a 30-second subprocess timeout. Reconciliation shares its remaining monotonic 60-second budget across snapshot calls; timeout records a redacted orders-N-timeout.json, propagates to owned-app shutdown and retains fixtures. Killing a stalled local Docker CLI does not guarantee cancellation inside a container; inspect retained ownership evidence before recovery.
+The dedicated JVM receives only a small allowlist of Windows OS environment variables plus the pinned fixture settings. Inherited Spring settings, profiles, Java options and other application configuration are excluded. It runs from the private run directory and loads only the JAR's classpath application.yaml; readiness has a 90-second monotonic budget and HTTP probes use at most two seconds. PID manifest persistence is inside owned-child shutdown handling. Operational gates and hot-shop warmup execute in both normal and optimized Python.
+
+Dependency commands (Docker/SQL/Redis and metadata) have a 30-second subprocess timeout. Reconciliation shares its remaining monotonic 60-second budget across snapshot calls; timeout records a redacted orders-N-timeout.json, propagates to owned-app shutdown and retains fixtures. If a later observation fails, the evidence retains the last complete snapshot, its UTC observation time and classification, pending/manual order IDs, system-error response identities and counts. If no observation completed, durable state is explicitly unavailable while expected user/key identities and redacted HTTP outcomes are preserved. Exception commands, stderr and message strings are excluded. Killing a stalled local Docker CLI does not guarantee cancellation inside a container; inspect retained ownership evidence before recovery.

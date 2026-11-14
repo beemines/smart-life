@@ -104,6 +104,8 @@ class OrderConsumptionIT {
                 jdbc.update("INSERT INTO tb_user(id,phone,nick_name) VALUES (?,?,'http contention fixture')",user,"h"+(user%1000000000));
                 users.add(user);tokens.add(token);
                 redis.opsForHash().putAll("login:token:"+token,java.util.Map.of("id",Long.toString(user),"nickName","contention fixture"));
+                assertThat(redis.expire("login:token:"+token,Duration.ofMinutes(15))).isTrue();
+                assertThat(redis.getExpire("login:token:"+token)).as("synthetic session must expire even if setup later fails").isPositive().isLessThanOrEqualTo(900L);
             }
             var futures=new ArrayList<java.util.concurrent.Future<HttpOrderEvidence.Attempt>>();
             for(int i=0;i<requests;i++) {
@@ -130,9 +132,9 @@ class OrderConsumptionIT {
             for(var attempt:attempts)httpRows.add(HttpOrderEvidence.csv(attempt.caller(),attempt.user(),attempt.key(),attempt.acceptedId(),attempt.error()));
             java.nio.file.Files.write(java.nio.file.Path.of("target","http-contention-"+voucherId+"-accepted.csv"),httpRows);
             await().atMost(Duration.ofSeconds(30)).untilAsserted(()->{
-                // Schedulers are disabled: only same-user lock losers need explicit recovery.
-                // The first order must already have arrived through the real broker.
-                if(distinctUsers==1 && orderCount()==1)
+                // Schedulers are disabled. Both user-lock and shared activity-lock losers
+                // can remain PREPARING; recover only this fixture after real MQ progress.
+                if(orderCount()>0)
                     for(long pending:jdbc.queryForList("SELECT order_id FROM tb_voucher_order_request WHERE voucher_id=? AND state='PREPARING'",Long.class,voucherId))
                         orders.recoverOrder(pending,java.time.LocalDateTime.now().plusSeconds(1));
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order_request WHERE voucher_id=? AND state IN ('CREATED','REJECTED')",Integer.class,voucherId)).isEqualTo(requests);
@@ -147,7 +149,13 @@ class OrderConsumptionIT {
             var created=outcomes.stream().filter(row->row.state().equals("CREATED")).toList();
             assertThat(created).hasSize(expectedOrders);
             assertThat(outcomes.stream().filter(row->row.state().equals("REJECTED")).count()).isEqualTo(requests-expectedOrders);
-            if(distinctUsers==requests)assertThat(attempts.stream().filter(row->row.acceptedId()!=null).count()).isEqualTo(expectedOrders);
+            long acceptedCount=attempts.stream().filter(row->row.acceptedId()!=null).count();
+            // ACCEPTED acknowledges a durable intent, including PREPARING retries that
+            // may later be rejected. SQL CREATED identities define effective orders.
+            assertThat(acceptedCount).isBetween((long)expectedOrders,(long)requests);
+            java.nio.file.Files.writeString(java.nio.file.Path.of("target","http-contention-"+voucherId+"-summary.json"),
+                "{\"requests\":"+requests+",\"httpAccepted\":"+acceptedCount+",\"httpBusinessRejected\":"+(requests-acceptedCount)
+                    +",\"effectiveCreated\":"+created.size()+",\"terminalRejected\":"+(requests-created.size())+"}");
             for(var row:outcomes)if(row.state().equals("REJECTED"))assertThat(row.reason()).isIn("REJECTED_OUT_OF_STOCK","REJECTED_ALREADY_PURCHASED");
             var orderRows=jdbc.queryForList("SELECT id,user_id,voucher_id,status FROM tb_voucher_order WHERE voucher_id=?",voucherId);
             assertThat(orderRows.stream().map(row->((Number)row.get("id")).longValue()).toList()).containsExactlyInAnyOrderElementsOf(created.stream().map(HttpOrderEvidence.Outcome::order).toList());

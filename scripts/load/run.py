@@ -34,17 +34,18 @@ def redis_pipeline(commands):
         payload+=b'*'+str(len(fields)).encode()+b'\r\n'
         for field in fields:payload+=b'$'+str(len(field)).encode()+b'\r\n'+field+b'\r\n'
     result=subprocess.run([DOCKER,'exec','-i',REDIS,'redis-cli','--pipe'],input=payload,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True,timeout=dependency_timeout())
-    assert b'errors: 0' in result.stdout,result.stdout
+    if b'errors: 0' not in result.stdout:raise RuntimeError('Redis fixture pipeline reported errors')
 
 def guard():
     for name,port in [(MYSQL,'13306'),(REDIS,'16379'),('smart-life-upgrade-nameserver-1','19876')]:
         info=json.loads(command([DOCKER,'inspect',name]))[0]
         bindings=info['NetworkSettings']['Ports']
-        assert any(x.get('HostPort')==port for rows in bindings.values() if rows for x in rows),(name,port)
-def api(path,payload=None,token=None):
+        if not any(x.get('HostPort')==port for rows in bindings.values() if rows for x in rows):
+            raise RuntimeError('Unexpected local container port: '+name)
+def api(path,payload=None,token=None,timeout=20):
     headers={'Content-Type':'application/json'}
     if token:headers['authorization']=token
-    with urlopen(Request(BASE+path,data=None if payload is None else json.dumps(payload).encode(),headers=headers),timeout=20) as r:return json.load(r)
+    with urlopen(Request(BASE+path,data=None if payload is None else json.dumps(payload).encode(),headers=headers),timeout=timeout) as r:return json.load(r)
 def write(path,value):path.write_text(json.dumps(value,indent=2,ensure_ascii=False),encoding='utf-8')
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def save(m):write(Path(m['private'])/'manifest.json',m)
@@ -87,26 +88,31 @@ def app_resources(pid):
     return json.loads(raw)
 
 def start_app(m,jar):
-    env=os.environ.copy();env.update(SMARTLIFE_SERVER_ADDRESS='127.0.0.1',SMARTLIFE_DB_HOST='127.0.0.1',SMARTLIFE_DB_USER='root',SMARTLIFE_DB_NAME='smartlife',SMARTLIFE_REDIS_HOST='127.0.0.1',SMARTLIFE_REDIS_PASSWORD='',SMARTLIFE_REDIS_DATABASE='0',SMARTLIFE_REDIS_SSL='false',SMARTLIFE_ORDER_CONSUMER_ENABLED='true',SMARTLIFE_ORDER_RECOVERY_ENABLED='false',SMARTLIFE_LIFECYCLE_ENABLED='false',SMARTLIFE_SYNC_ENABLED='false',SMARTLIFE_BATCH_ENABLED='false',SMARTLIFE_DB_PORT='13306',SMARTLIFE_DB_PASSWORD='local-test-only',SMARTLIFE_REDIS_PORT='16379',SMARTLIFE_MQ_NAME_SERVER='127.0.0.1:19876',SMARTLIFE_SERVER_PORT='18187',SMARTLIFE_MQ_TOPIC='smartlife-load-'+m['run'],SMARTLIFE_MQ_CONSUMER_GROUP='smartlife-load-'+m['run'],SMARTLIFE_LOG_LEVEL='info')
+    # Minimal OS environment: no inherited Spring/config/profile/JVM injection.
+    allowed={'SYSTEMROOT','WINDIR','TEMP','TMP','USERPROFILE','APPDATA','LOCALAPPDATA','PROGRAMDATA','OS','SYSTEMDRIVE'}
+    env={k:v for k,v in os.environ.items() if k.upper() in allowed}
+    env.update(SMARTLIFE_SERVER_ADDRESS='127.0.0.1',SMARTLIFE_DB_HOST='127.0.0.1',SMARTLIFE_DB_USER='root',SMARTLIFE_DB_NAME='smartlife',SMARTLIFE_DB_SSL_MODE='DISABLED',SMARTLIFE_REDIS_HOST='127.0.0.1',SMARTLIFE_REDIS_PASSWORD='',SMARTLIFE_REDIS_DATABASE='0',SMARTLIFE_REDIS_SSL='false',SMARTLIFE_ORDER_CONSUMER_ENABLED='true',SMARTLIFE_ORDER_RECOVERY_ENABLED='false',SMARTLIFE_LIFECYCLE_ENABLED='false',SMARTLIFE_SYNC_ENABLED='false',SMARTLIFE_BATCH_ENABLED='false',SMARTLIFE_DB_PORT='13306',SMARTLIFE_DB_PASSWORD='local-test-only',SMARTLIFE_REDIS_PORT='16379',SMARTLIFE_MQ_NAME_SERVER='127.0.0.1:19876',SMARTLIFE_SERVER_PORT='18187',SMARTLIFE_MQ_TOPIC='smartlife-load-'+m['run'],SMARTLIFE_MQ_CONSUMER_GROUP='smartlife-load-'+m['run'],SMARTLIFE_LOG_LEVEL='info')
     private=Path(m['private']);shutil.copy2(jar,private/'app.jar')
-    with (private/'app.log').open('w') as out:
-        p=subprocess.Popen([JAVA,'-jar',str(private/'app.jar')],cwd=ROOT,env=env,stdout=out,stderr=out,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-    m['pid']=p.pid;save(m)
+    p=None
     try:
-        for _ in range(90):
+        with (private/'app.log').open('w') as out:
+            p=subprocess.Popen([JAVA,'-jar',str(private/'app.jar'),'--spring.config.location=classpath:/application.yaml','--spring.profiles.active='],cwd=private,env=env,stdout=out,stderr=out,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+        m['pid']=p.pid;save(m)
+        deadline=time.monotonic()+90
+        while time.monotonic()<deadline:
             if p.poll() is not None:raise RuntimeError('Dedicated app exited; inspect private app.log')
             try:
-                if api('/shop-type/list')['success']:return p
+                if api('/shop-type/list',timeout=min(2,max(.001,deadline-time.monotonic())))['success']:return p
             except Exception:pass
-            time.sleep(1)
+            time.sleep(min(1,max(0,deadline-time.monotonic())))
         raise RuntimeError('Dedicated app did not become ready')
     except BaseException:
-        stop_app(p)
+        if p is not None:stop_app(p)
         raise
 
 def publish(m):
     result=api('/voucher/seckill',dict(shopId=m['shopIds'][0],title='Local load synthetic',subTitle='Paid voucher',rules='Synthetic measurement only',payValue=8000,actualValue=10000,stock=10,beginTime='2026-01-01T00:00:00',endTime='2030-01-01T00:00:00'),m['tokens'][0])
-    assert result['success'],result
+    if not result['success']:raise RuntimeError('Fixture voucher publication failed; inspect private evidence')
     v=str(result['data']);m['vouchers'].append(v);save(m);return v
 
 def jmeter(m,jhome,public,profile,roundno,voucher=None):
@@ -126,15 +132,15 @@ def jmeter(m,jhome,public,profile,roundno,voucher=None):
     resource_seconds=time.monotonic()-resource_started
     resource_after=app_resources(m['pid'])
     data=list(csv.DictReader((public/(name+'.jtl')).open(encoding='utf-8-sig')))
-    assert data,'JMeter did not produce samples; inspect private log'
+    if not data:raise RuntimeError('JMeter did not produce samples; inspect private log')
     elapsed=sorted(int(d['elapsed']) for d in data)
     seconds=(max(int(d['timeStamp'])+int(d['elapsed']) for d in data)-min(int(d['timeStamp']) for d in data))/1000
     result=dict(profile=profile,round=roundno,samples=len(data),errors=sum(d['success']!='true' for d in data),seconds=seconds,rps=len(data)/seconds,p50=elapsed[(len(elapsed)-1)*50//100],p95=elapsed[(len(elapsed)-1)*95//100],p99=elapsed[(len(elapsed)-1)*99//100],parameters={k:v for k,v in params.items() if k!='csv'},command=['java','-Xms256m','-Xmx512m','-jar','<JMETER>/bin/ApacheJMeter.jar','-n','-t','scripts/load/workload.jmx','-q','scripts/load/results.properties','-i','scripts/load/log4j2.xml','-l',name+'.jtl','-j','<PRIVATE>/'+name+'.log']+[f'-J{k}={"<PRIVATE>/"+name+".csv" if k=="csv" else v}' for k,v in params.items()])
     result['appResources']=dict(before=resource_before,after=resource_after,measurementWallSeconds=resource_seconds,averageCpuCores=(resource_after['CPU']-resource_before['CPU'])/resource_seconds,method='Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling')
     write(public/(name+'-summary.json'),result)
     if profile=='orders':return data,result
-    assert len(data)==300 if profile=='cold' else len(data)>0
-    assert result['errors']==0,result
+    if profile=='cold' and len(data)!=300:raise RuntimeError('Cold workload sample count mismatch')
+    if result['errors']!=0:raise RuntimeError('Query workload sampler failures; inspect redacted summary')
     return data,result
 
 def snapshot(m,voucher,responses,roundno,deadline=None):
@@ -169,9 +175,9 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--jmeter',type=Path,required=True);parser.add_argument('--jar',type=Path,required=True);parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     with socket.socket() as probe:probe.bind(('127.0.0.1',18187))
-    assert args.jar.is_file() and (args.jmeter/'bin/ApacheJMeter.jar').is_file(),'JAR/JMeter missing'
+    if not (args.jar.is_file() and (args.jmeter/'bin/ApacheJMeter.jar').is_file()):raise RuntimeError('JAR/JMeter missing')
     source_sha=command(['git','rev-parse','HEAD'],cwd=ROOT)
-    assert not command(['git','diff','--name-only','--','src/main'],cwd=ROOT),'Commit app source before measuring the packaged JAR'
+    if command(['git','diff','--name-only','--','src/main'],cwd=ROOT):raise RuntimeError('Commit app source before measuring the packaged JAR')
     guard()
     args.output.mkdir(parents=True,exist_ok=False)
     run=time.strftime('%Y%m%d%H%M%S')+'-'+uuid.uuid4().hex[:6]
@@ -182,21 +188,31 @@ def main():
         summaries=[]
         for r in range(1,4):
             # One unmeasured request primes the single hot shop; cold shops have never been requested.
-            assert api('/shop/'+m['shopIds'][0])['success']
+            if not api('/shop/'+m['shopIds'][0])['success']:raise RuntimeError('Hot shop warmup failed')
             for profile in ['hot','cold']:
                 _,summary=jmeter(m,args.jmeter,args.output,profile,r);summaries.append(summary)
             v=publish(m);data,summary=jmeter(m,args.jmeter,args.output,'orders',r,v);summaries.append(summary)
-            deadline=time.monotonic()+60
+            deadline=time.monotonic()+60;last=None
             while True:
                 try:state=snapshot(m,v,data,r,deadline=deadline)
-                except subprocess.TimeoutExpired:
-                    write(args.output/f'orders-{r}-timeout.json',dict(round=r,passed=False,reason='dependency timeout during reconciliation',fixturesRetained=True))
-                    raise
+                except Exception as error:
+                    # Exception strings/commands may contain credentials; only expose a fixed class.
+                    evidence=dict(round=r,voucherId=v,passed=False,reason='dependency failure during reconciliation',errorType=type(error).__name__[:80],fixturesRetained=True,durableState='last complete observation' if last else 'unavailable',lastCompleteObservation=last,
+                        expectedResponses=[dict(userId=m['userIds'][i],requestKey=f'{m["run"]}_r{r}_u{i}') for i in range(1,101)],
+                        responses=[{k:row[k] for k in ('userId','requestKey','outcome','orderId')} for row in data])
+                    if last:
+                        observed=last['snapshot']
+                        evidence['unresolved']=dict(pendingOrderIds=[row['orderId'] for row in observed['requests'] if row['state'] not in ('CREATED','REJECTED')],manualOrderIds=[row['orderId'] for row in observed['failures'] if row['compensation']!='done'],systemErrorResponses=[row for row in evidence['responses'] if row['outcome'] not in ('ACCEPTED','BUSINESS_REJECTED')])
+                        evidence['unresolved']['counts']={key:len(value) for key,value in evidence['unresolved'].items()}
+                    write(args.output/f'orders-{r}-timeout.json',evidence)
+                    if isinstance(error,subprocess.TimeoutExpired):raise subprocess.TimeoutExpired('dependency reconciliation',60) from None
+                    raise RuntimeError('Reconciliation dependency failed; inspect redacted timeout evidence') from None
                 result=reconcile(state)
+                last=dict(observedAtUtc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),snapshot=state,classification=result)
                 if result['passed'] or time.monotonic()>=deadline:break
-                time.sleep(1)
+                time.sleep(min(1,max(0,deadline-time.monotonic())))
             write(args.output/f'orders-{r}-reconciliation.json',dict(voucherId=v,**result,snapshot=state))
-            assert result['passed'],result
+            if not result['passed']:raise RuntimeError('Reconciliation failed; fixtures retained')
         environment=dict(
             run=run,gitSha=m['sourceGitSha'],jarSha256=sha(args.jar),
             planSha256=sha(ROOT/'scripts/load/workload.jmx'),
