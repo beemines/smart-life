@@ -87,9 +87,18 @@ class OrderConsumptionIT {
         assertHttpContention(20,1,1);
     }
 
+    @Test
+    void allHttpIntentsDeferredBeforeFirstPublishStillDrainThroughRealMq() throws Exception {
+        assertHttpContention(20,1,1,true);
+    }
+
     private final java.util.Set<Long> retainedVouchers=new java.util.HashSet<>();
 
     private void assertHttpContention(int requests,int distinctUsers,int expectedOrders) throws Exception {
+        assertHttpContention(requests,distinctUsers,expectedOrders,false);
+    }
+
+    private void assertHttpContention(int requests,int distinctUsers,int expectedOrders,boolean deferAll) throws Exception {
         var tokens=new ArrayList<String>();var users=new ArrayList<Long>();
         var attempts=new ArrayList<HttpOrderEvidence.Attempt>();
         var client=new org.springframework.boot.test.web.client.TestRestTemplate(new org.springframework.boot.web.client.RestTemplateBuilder()
@@ -97,6 +106,7 @@ class OrderConsumptionIT {
         var pool=Executors.newFixedThreadPool(requests);
         var ready=new CountDownLatch(requests);var start=new CountDownLatch(1);
         boolean drained=false;
+        org.redisson.api.RLock heldUserLock=null;
         redis.opsForValue().set("seckill:stock:"+voucherId,"10");
         try {
             for(int i=0;i<distinctUsers;i++) {
@@ -106,6 +116,9 @@ class OrderConsumptionIT {
                 redis.opsForHash().putAll("login:token:"+token,java.util.Map.of("id",Long.toString(user),"nickName","contention fixture"));
                 assertThat(redis.expire("login:token:"+token,Duration.ofMinutes(15))).isTrue();
                 assertThat(redis.getExpire("login:token:"+token)).as("synthetic session must expire even if setup later fails").isPositive().isLessThanOrEqualTo(900L);
+            }
+            if(deferAll) {
+                heldUserLock=redisson.getLock("lock:order:"+users.getFirst());heldUserLock.lock();
             }
             var futures=new ArrayList<java.util.concurrent.Future<HttpOrderEvidence.Attempt>>();
             for(int i=0;i<requests;i++) {
@@ -128,15 +141,26 @@ class OrderConsumptionIT {
                 long remaining=deadline-System.nanoTime();if(remaining<=0)throw new java.util.concurrent.TimeoutException("shared HTTP deadline exceeded");
                 attempts.add(future.get(remaining,TimeUnit.NANOSECONDS));
             }
+            if(heldUserLock!=null) {
+                assertThat(orderCount()).isZero();
+                assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order_request WHERE voucher_id=? AND state='PREPARING'",Integer.class,voucherId)).isEqualTo(requests);
+                heldUserLock.unlock();heldUserLock=null;
+            }
             var httpRows=new ArrayList<String>();httpRows.add("caller,user_id,request_key,accepted_order_id,business_error");
             for(var attempt:attempts)httpRows.add(HttpOrderEvidence.csv(attempt.caller(),attempt.user(),attempt.key(),attempt.acceptedId(),attempt.error()));
             java.nio.file.Files.write(java.nio.file.Path.of("target","http-contention-"+voucherId+"-accepted.csv"),httpRows);
+            // A PREPARING intent may be the first publisher for a fresh topic.
+            // Recovery publishes through the real producer; it never inserts an order here.
+            recoverPreparingHttpIntents();
+            var live=(DefaultMQPushConsumer)Objects.requireNonNull(ReflectionTestUtils.getField(consumer,"consumer"));
+            String topic=(String)Objects.requireNonNull(ReflectionTestUtils.getField(consumer,"topic"));
+            // Infrastructure assignment has its own bound, as in the broker retry test.
+            // The unchanged business drain budget starts only after a target-topic queue is assigned.
+            await().atMost(Duration.ofSeconds(45)).until(()->live.getDefaultMQPushConsumerImpl()
+                .getRebalanceImpl().getProcessQueueTable().entrySet().stream()
+                .anyMatch(entry->!entry.getValue().isDropped() && topic.equals(entry.getKey().getTopic())));
             await().atMost(Duration.ofSeconds(30)).untilAsserted(()->{
-                // Schedulers are disabled. Both user-lock and shared activity-lock losers
-                // can remain PREPARING; recover only this fixture after real MQ progress.
-                if(orderCount()>0)
-                    for(long pending:jdbc.queryForList("SELECT order_id FROM tb_voucher_order_request WHERE voucher_id=? AND state='PREPARING'",Long.class,voucherId))
-                        orders.recoverOrder(pending,java.time.LocalDateTime.now().plusSeconds(1));
+                recoverPreparingHttpIntents();
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order_request WHERE voucher_id=? AND state IN ('CREATED','REJECTED')",Integer.class,voucherId)).isEqualTo(requests);
             });
             drained=true;
@@ -172,6 +196,7 @@ class OrderConsumptionIT {
             assertThat(redis.opsForSet().members("seckill:order:"+voucherId)).containsExactlyInAnyOrderElementsOf(created.stream().map(row->Long.toString(row.user())).toList());
             assertThat(redis.opsForHash().entries("seckill:reservation:"+voucherId)).isEqualTo(expectedReservations);
         } finally {
+            if(heldUserLock!=null && heldUserLock.isHeldByCurrentThread())heldUserLock.unlock();
             start.countDown();pool.shutdownNow();
             boolean stopped=pool.awaitTermination(20,TimeUnit.SECONDS);
             if(!stopped || !drained) {
@@ -182,6 +207,15 @@ class OrderConsumptionIT {
                 for(String table:List.of("tb_order_stock_return","tb_order_lifecycle"))jdbc.update("DELETE r FROM "+table+" r JOIN tb_voucher_order o ON o.id=r.order_id WHERE o.voucher_id=?",voucherId);
                 for(long user:users)jdbc.update("DELETE FROM tb_user WHERE id=?",user);
                 for(String token:tokens)redis.delete("login:token:"+token);
+            }
+        }
+    }
+
+    private void recoverPreparingHttpIntents() {
+        for(long pending:jdbc.queryForList("SELECT order_id FROM tb_voucher_order_request WHERE voucher_id=? AND state='PREPARING'",Long.class,voucherId)) {
+            try {orders.recoverOrder(pending,java.time.LocalDateTime.now().plusSeconds(1));}
+            catch(com.bee.smartlife.service.impl.OrderRetryException retry) {
+                // A real consumer can hold this user's lock; retry on the next bounded poll.
             }
         }
     }

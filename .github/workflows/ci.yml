@@ -105,6 +105,9 @@ jobs:
             target/batch-memory-*.log
             target/order-list-queryplan.txt
             target/cache-workload.json
+            target/http-contention-*.csv
+            target/http-contention-*-summary.json
+            target/http-contention-*-retained.txt
             service-logs.txt
       - name: Stop isolated test services
         if: always()

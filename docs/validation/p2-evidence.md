@@ -22,6 +22,8 @@ HTTP 测试原始关联清单：同用户 [调用](results/p2-2026-11-14/http-co
 
 修改后的专项验证：`mvn --batch-mode --no-transfer-progress '-Dtest=HttpOrderEvidenceTest,OrderConsumptionIT#hundredDistinctHttpUsersCompeteForTenThroughRealMq+sameUserConcurrentHttpRequestsCreateOnlyOneOrderThroughRealMq' test`，**5 项，0 失败／错误／跳过，BUILD SUCCESS，1 分 04 秒**。两项 HTTP 场景分别为 20 个受理、1 单创建、19 个终态拒绝，以及 10 个受理、90 个同步业务拒绝、10 单创建、90 个终态拒绝。修改前两次专项运行分别卡在 96／100 和 98／100 个终态，均未记为通过，其日志、夹具和未完成标识私下保留。
 
+2026-11-15 的 CI 修复验证：此前 main 提交的 CI 同用户场景在 30 秒内为 0／20 个终态，日志显示首单在 HTTP 调用后约 30.9 秒才被消费，未将该次 CI 记为通过。测试现先对本券 PREPARING 受理执行现有恢复发布，再单独等待最多 45 秒的真实消费者目标 topic 队列分配，随后使用原 30 秒业务排空期限；恢复不再依赖已有订单。新增持有本用户锁至全部 HTTP 请求结束的确定性回归，先断言 20 个 PREPARING、0 单，再释放锁并经真实 MQ 排空；旧逻辑该用例失败，修复后通过。完整 `mvn --batch-mode --no-transfer-progress '-Dtest=OrderConsumptionIT,HttpOrderEvidenceTest' test`：**31 项，0 失败／错误／跳过，BUILD SUCCESS，1 分 06 秒**。该结果是覆盖类复跑，最终完整提交仍需远端三个 CI job 全绿；历史测量和 193 项全量记录保持原日期和版本。CI 另保存不含认证信息的 HTTP 调用／终态 CSV、分类汇总和保留夹具标识。
+
 ## 压测与最终结果
 
 执行入口见 [JMeter 使用说明](../../scripts/load/GUIDE.md)。三个重复轮次分别测量热查询、首次冷查询及 100 用户争抢 10 份库存；售罄拒绝与系统错误分开统计。逐轮原始 JTL、环境信息和最终数据库/Redis 核对文件随测量报告保存。
