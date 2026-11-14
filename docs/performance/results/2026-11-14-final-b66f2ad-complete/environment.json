@@ -1,0 +1,589 @@
+{
+  "run": "20261114230146-7c2109",
+  "gitSha": "b66f2ad3ce12876d4ee55aed281f5503be17ff62",
+  "jarSha256": "1e5411dade81dec0f61231ab693bdfbacec2ce7bb5d295871853020a4fb0c4af",
+  "planSha256": "5bb90fd5a6d5a4fbfea78a7e6f3a66005e85714fc342214060dad3644ca64fee",
+  "propertiesSha256": "eb78546558b04b48b9b9cd09300c604b618af31fa68e1f0c1cc3e367708c4f51",
+  "jmeter": "_    ____   _    ____ _   _ _____       _ __  __ _____ _____ _____ ____\n   / \\  |  _ \\ / \\  / ___| | | | ____|     | |  \\/  | ____|_   _| ____|  _ \\\n  / _ \\ | |_) / _ \\| |   | |_| |  _|    _  | | |\\/| |  _|   | | |  _| | |_) |\n / ___ \\|  __/ ___ \\ |___|  _  | |___  | |_| | |  | | |___  | | | |___|  _ <\n/_/   \\_\\_| /_/   \\_\\____|_| |_|_____|  \\___/|_|  |_|_____| |_| |_____|_| \\_\\ 5.6.3\n\nCopyright (c) 1999-2024 The Apache Software Foundation",
+  "java": "java version \"21.0.6\" 2025-01-21 LTS\r\nJava(TM) SE Runtime Environment (build 21.0.6+8-LTS-188)\r\nJava HotSpot(TM) 64-Bit Server VM (build 21.0.6+8-LTS-188, mixed mode, sharing)\r\n",
+  "os": "Windows-11-10.0.26200-SP0",
+  "logicalCpus": 32,
+  "hardware": {
+    "Model": "82WM",
+    "NumberOfLogicalProcessors": 32,
+    "TotalPhysicalMemory": 34024747008
+  },
+  "cpu": {
+    "Name": "AMD Ryzen 9 7945HX with Radeon Graphics        "
+  },
+  "containerImages": {
+    "smart-life-upgrade-mysql-1": "mysql:8.4",
+    "smart-life-upgrade-redis-1": "redis:8.4-alpine",
+    "smart-life-upgrade-nameserver-1": "apache/rocketmq:5.5.0",
+    "smart-life-upgrade-broker-1": "apache/rocketmq:5.5.0"
+  },
+  "coLocated": true,
+  "backgroundScanners": {
+    "batch": false,
+    "lifecycle": false,
+    "orderRecovery": false,
+    "cacheSync": false
+  },
+  "fixture": {
+    "shops": 901,
+    "authenticatedUsers": 100,
+    "rounds": 3,
+    "initialStockEach": 10
+  },
+  "summaries": [
+    {
+      "profile": "hot",
+      "round": 1,
+      "samples": 21795,
+      "errors": 0,
+      "seconds": 9.789,
+      "rps": 2226.4787005822864,
+      "p50": 2,
+      "p95": 4,
+      "p99": 6,
+      "parameters": {
+        "profile": "hot",
+        "threads": 10,
+        "ramp": 1,
+        "loops": -1,
+        "duration": 10,
+        "path": "/shop",
+        "method": "GET"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "hot-1.jtl",
+        "-j",
+        "<PRIVATE>/hot-1.log",
+        "-Jprofile=hot",
+        "-Jcsv=<PRIVATE>/hot-1.csv",
+        "-Jthreads=10",
+        "-Jramp=1",
+        "-Jloops=-1",
+        "-Jduration=10",
+        "-Jpath=/shop",
+        "-Jmethod=GET"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 63.828125,
+          "WorkingSet64": 636350464,
+          "PeakWorkingSet64": 740642816
+        },
+        "after": {
+          "CPU": 138.15625,
+          "WorkingSet64": 748068864,
+          "PeakWorkingSet64": 788115456
+        },
+        "measurementWallSeconds": 13.582312899990939,
+        "averageCpuCores": 5.472420312158292,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    },
+    {
+      "profile": "cold",
+      "round": 1,
+      "samples": 300,
+      "errors": 0,
+      "seconds": 2.871,
+      "rps": 104.4932079414838,
+      "p50": 37,
+      "p95": 44,
+      "p99": 52,
+      "parameters": {
+        "profile": "cold",
+        "threads": 10,
+        "ramp": 1,
+        "loops": 30,
+        "duration": 30,
+        "path": "/shop",
+        "method": "GET"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "cold-1.jtl",
+        "-j",
+        "<PRIVATE>/cold-1.log",
+        "-Jprofile=cold",
+        "-Jcsv=<PRIVATE>/cold-1.csv",
+        "-Jthreads=10",
+        "-Jramp=1",
+        "-Jloops=30",
+        "-Jduration=30",
+        "-Jpath=/shop",
+        "-Jmethod=GET"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 138.28125,
+          "WorkingSet64": 678342656,
+          "PeakWorkingSet64": 788115456
+        },
+        "after": {
+          "CPU": 148.421875,
+          "WorkingSet64": 792023040,
+          "PeakWorkingSet64": 795848704
+        },
+        "measurementWallSeconds": 7.22527289998834,
+        "averageCpuCores": 1.4034937005654644,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    },
+    {
+      "profile": "orders",
+      "round": 1,
+      "samples": 100,
+      "errors": 0,
+      "seconds": 4.116,
+      "rps": 24.295432458697768,
+      "p50": 2636,
+      "p95": 3840,
+      "p99": 4016,
+      "parameters": {
+        "profile": "orders",
+        "threads": 100,
+        "ramp": 1,
+        "loops": 1,
+        "duration": 30,
+        "path": "/voucher-order/seckill",
+        "method": "POST"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "orders-1.jtl",
+        "-j",
+        "<PRIVATE>/orders-1.log",
+        "-Jprofile=orders",
+        "-Jcsv=<PRIVATE>/orders-1.csv",
+        "-Jthreads=100",
+        "-Jramp=1",
+        "-Jloops=1",
+        "-Jduration=30",
+        "-Jpath=/voucher-order/seckill",
+        "-Jmethod=POST"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 149.015625,
+          "WorkingSet64": 722763776,
+          "PeakWorkingSet64": 795848704
+        },
+        "after": {
+          "CPU": 174,
+          "WorkingSet64": 749826048,
+          "PeakWorkingSet64": 862298112
+        },
+        "measurementWallSeconds": 9.697467699996196,
+        "averageCpuCores": 2.576381357785786,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    },
+    {
+      "profile": "hot",
+      "round": 2,
+      "samples": 30815,
+      "errors": 0,
+      "seconds": 9.707,
+      "rps": 3174.5132378695785,
+      "p50": 1,
+      "p95": 2,
+      "p99": 3,
+      "parameters": {
+        "profile": "hot",
+        "threads": 10,
+        "ramp": 1,
+        "loops": -1,
+        "duration": 10,
+        "path": "/shop",
+        "method": "GET"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "hot-2.jtl",
+        "-j",
+        "<PRIVATE>/hot-2.log",
+        "-Jprofile=hot",
+        "-Jcsv=<PRIVATE>/hot-2.csv",
+        "-Jthreads=10",
+        "-Jramp=1",
+        "-Jloops=-1",
+        "-Jduration=10",
+        "-Jpath=/shop",
+        "-Jmethod=GET"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 177.953125,
+          "WorkingSet64": 840085504,
+          "PeakWorkingSet64": 862298112
+        },
+        "after": {
+          "CPU": 219.1875,
+          "WorkingSet64": 786370560,
+          "PeakWorkingSet64": 887443456
+        },
+        "measurementWallSeconds": 14.206951600004686,
+        "averageCpuCores": 2.9024083533857046,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    },
+    {
+      "profile": "cold",
+      "round": 2,
+      "samples": 300,
+      "errors": 0,
+      "seconds": 3.031,
+      "rps": 98.97723523589573,
+      "p50": 37,
+      "p95": 46,
+      "p99": 49,
+      "parameters": {
+        "profile": "cold",
+        "threads": 10,
+        "ramp": 1,
+        "loops": 30,
+        "duration": 30,
+        "path": "/shop",
+        "method": "GET"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "cold-2.jtl",
+        "-j",
+        "<PRIVATE>/cold-2.log",
+        "-Jprofile=cold",
+        "-Jcsv=<PRIVATE>/cold-2.csv",
+        "-Jthreads=10",
+        "-Jramp=1",
+        "-Jloops=30",
+        "-Jduration=30",
+        "-Jpath=/shop",
+        "-Jmethod=GET"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 219.1875,
+          "WorkingSet64": 786468864,
+          "PeakWorkingSet64": 887443456
+        },
+        "after": {
+          "CPU": 227.234375,
+          "WorkingSet64": 888569856,
+          "PeakWorkingSet64": 890109952
+        },
+        "measurementWallSeconds": 7.090862700017169,
+        "averageCpuCores": 1.1348231294875468,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    },
+    {
+      "profile": "orders",
+      "round": 2,
+      "samples": 100,
+      "errors": 0,
+      "seconds": 3.504,
+      "rps": 28.538812785388128,
+      "p50": 2104,
+      "p95": 3039,
+      "p99": 3206,
+      "parameters": {
+        "profile": "orders",
+        "threads": 100,
+        "ramp": 1,
+        "loops": 1,
+        "duration": 30,
+        "path": "/voucher-order/seckill",
+        "method": "POST"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "orders-2.jtl",
+        "-j",
+        "<PRIVATE>/orders-2.log",
+        "-Jprofile=orders",
+        "-Jcsv=<PRIVATE>/orders-2.csv",
+        "-Jthreads=100",
+        "-Jramp=1",
+        "-Jloops=1",
+        "-Jduration=30",
+        "-Jpath=/voucher-order/seckill",
+        "-Jmethod=POST"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 227.3125,
+          "WorkingSet64": 888672256,
+          "PeakWorkingSet64": 890109952
+        },
+        "after": {
+          "CPU": 244.296875,
+          "WorkingSet64": 915836928,
+          "PeakWorkingSet64": 924762112
+        },
+        "measurementWallSeconds": 8.764009399979841,
+        "averageCpuCores": 1.937968596888893,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    },
+    {
+      "profile": "hot",
+      "round": 3,
+      "samples": 35817,
+      "errors": 0,
+      "seconds": 9.788,
+      "rps": 3659.276665304454,
+      "p50": 1,
+      "p95": 2,
+      "p99": 2,
+      "parameters": {
+        "profile": "hot",
+        "threads": 10,
+        "ramp": 1,
+        "loops": -1,
+        "duration": 10,
+        "path": "/shop",
+        "method": "GET"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "hot-3.jtl",
+        "-j",
+        "<PRIVATE>/hot-3.log",
+        "-Jprofile=hot",
+        "-Jcsv=<PRIVATE>/hot-3.csv",
+        "-Jthreads=10",
+        "-Jramp=1",
+        "-Jloops=-1",
+        "-Jduration=10",
+        "-Jpath=/shop",
+        "-Jmethod=GET"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 244.453125,
+          "WorkingSet64": 915791872,
+          "PeakWorkingSet64": 924762112
+        },
+        "after": {
+          "CPU": 270,
+          "WorkingSet64": 916832256,
+          "PeakWorkingSet64": 924762112
+        },
+        "measurementWallSeconds": 14.00058409999474,
+        "averageCpuCores": 1.8247006565968629,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    },
+    {
+      "profile": "cold",
+      "round": 3,
+      "samples": 300,
+      "errors": 0,
+      "seconds": 3.16,
+      "rps": 94.9367088607595,
+      "p50": 35,
+      "p95": 44,
+      "p99": 55,
+      "parameters": {
+        "profile": "cold",
+        "threads": 10,
+        "ramp": 1,
+        "loops": 30,
+        "duration": 30,
+        "path": "/shop",
+        "method": "GET"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "cold-3.jtl",
+        "-j",
+        "<PRIVATE>/cold-3.log",
+        "-Jprofile=cold",
+        "-Jcsv=<PRIVATE>/cold-3.csv",
+        "-Jthreads=10",
+        "-Jramp=1",
+        "-Jloops=30",
+        "-Jduration=30",
+        "-Jpath=/shop",
+        "-Jmethod=GET"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 270.21875,
+          "WorkingSet64": 916934656,
+          "PeakWorkingSet64": 924762112
+        },
+        "after": {
+          "CPU": 277.21875,
+          "WorkingSet64": 917528576,
+          "PeakWorkingSet64": 924762112
+        },
+        "measurementWallSeconds": 7.368271099985577,
+        "averageCpuCores": 0.950019333573883,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    },
+    {
+      "profile": "orders",
+      "round": 3,
+      "samples": 100,
+      "errors": 0,
+      "seconds": 3.43,
+      "rps": 29.154518950437318,
+      "p50": 2089,
+      "p95": 2773,
+      "p99": 3020,
+      "parameters": {
+        "profile": "orders",
+        "threads": 100,
+        "ramp": 1,
+        "loops": 1,
+        "duration": 30,
+        "path": "/voucher-order/seckill",
+        "method": "POST"
+      },
+      "command": [
+        "java",
+        "-Xms256m",
+        "-Xmx512m",
+        "-jar",
+        "<JMETER>/bin/ApacheJMeter.jar",
+        "-n",
+        "-t",
+        "scripts/load/workload.jmx",
+        "-q",
+        "scripts/load/results.properties",
+        "-i",
+        "scripts/load/log4j2.xml",
+        "-l",
+        "orders-3.jtl",
+        "-j",
+        "<PRIVATE>/orders-3.log",
+        "-Jprofile=orders",
+        "-Jcsv=<PRIVATE>/orders-3.csv",
+        "-Jthreads=100",
+        "-Jramp=1",
+        "-Jloops=1",
+        "-Jduration=30",
+        "-Jpath=/voucher-order/seckill",
+        "-Jmethod=POST"
+      ],
+      "appResources": {
+        "before": {
+          "CPU": 277.296875,
+          "WorkingSet64": 917602304,
+          "PeakWorkingSet64": 924762112
+        },
+        "after": {
+          "CPU": 293.0625,
+          "WorkingSet64": 918626304,
+          "PeakWorkingSet64": 926679040
+        },
+        "measurementWallSeconds": 8.616396400000667,
+        "averageCpuCores": 1.8297237346228383,
+        "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+      }
+    }
+  ]
+}

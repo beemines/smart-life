@@ -1,0 +1,2318 @@
+{
+  "voucherId": "9000068202548",
+  "passed": true,
+  "errors": [],
+  "accepted": 10,
+  "businessRejected": 90,
+  "effectiveOrders": 10,
+  "sqlStock": 0,
+  "redisStock": 0,
+  "snapshot": {
+    "initial": 10,
+    "expectedOrders": 10,
+    "expectedResponses": [
+      {
+        "userId": "8307529545001",
+        "requestKey": "20261114230146-7c2109_r1_u1"
+      },
+      {
+        "userId": "8307529545002",
+        "requestKey": "20261114230146-7c2109_r1_u2"
+      },
+      {
+        "userId": "8307529545003",
+        "requestKey": "20261114230146-7c2109_r1_u3"
+      },
+      {
+        "userId": "8307529545004",
+        "requestKey": "20261114230146-7c2109_r1_u4"
+      },
+      {
+        "userId": "8307529545005",
+        "requestKey": "20261114230146-7c2109_r1_u5"
+      },
+      {
+        "userId": "8307529545006",
+        "requestKey": "20261114230146-7c2109_r1_u6"
+      },
+      {
+        "userId": "8307529545007",
+        "requestKey": "20261114230146-7c2109_r1_u7"
+      },
+      {
+        "userId": "8307529545008",
+        "requestKey": "20261114230146-7c2109_r1_u8"
+      },
+      {
+        "userId": "8307529545009",
+        "requestKey": "20261114230146-7c2109_r1_u9"
+      },
+      {
+        "userId": "8307529545010",
+        "requestKey": "20261114230146-7c2109_r1_u10"
+      },
+      {
+        "userId": "8307529545011",
+        "requestKey": "20261114230146-7c2109_r1_u11"
+      },
+      {
+        "userId": "8307529545012",
+        "requestKey": "20261114230146-7c2109_r1_u12"
+      },
+      {
+        "userId": "8307529545013",
+        "requestKey": "20261114230146-7c2109_r1_u13"
+      },
+      {
+        "userId": "8307529545014",
+        "requestKey": "20261114230146-7c2109_r1_u14"
+      },
+      {
+        "userId": "8307529545015",
+        "requestKey": "20261114230146-7c2109_r1_u15"
+      },
+      {
+        "userId": "8307529545016",
+        "requestKey": "20261114230146-7c2109_r1_u16"
+      },
+      {
+        "userId": "8307529545017",
+        "requestKey": "20261114230146-7c2109_r1_u17"
+      },
+      {
+        "userId": "8307529545018",
+        "requestKey": "20261114230146-7c2109_r1_u18"
+      },
+      {
+        "userId": "8307529545019",
+        "requestKey": "20261114230146-7c2109_r1_u19"
+      },
+      {
+        "userId": "8307529545020",
+        "requestKey": "20261114230146-7c2109_r1_u20"
+      },
+      {
+        "userId": "8307529545021",
+        "requestKey": "20261114230146-7c2109_r1_u21"
+      },
+      {
+        "userId": "8307529545022",
+        "requestKey": "20261114230146-7c2109_r1_u22"
+      },
+      {
+        "userId": "8307529545023",
+        "requestKey": "20261114230146-7c2109_r1_u23"
+      },
+      {
+        "userId": "8307529545024",
+        "requestKey": "20261114230146-7c2109_r1_u24"
+      },
+      {
+        "userId": "8307529545025",
+        "requestKey": "20261114230146-7c2109_r1_u25"
+      },
+      {
+        "userId": "8307529545026",
+        "requestKey": "20261114230146-7c2109_r1_u26"
+      },
+      {
+        "userId": "8307529545027",
+        "requestKey": "20261114230146-7c2109_r1_u27"
+      },
+      {
+        "userId": "8307529545028",
+        "requestKey": "20261114230146-7c2109_r1_u28"
+      },
+      {
+        "userId": "8307529545029",
+        "requestKey": "20261114230146-7c2109_r1_u29"
+      },
+      {
+        "userId": "8307529545030",
+        "requestKey": "20261114230146-7c2109_r1_u30"
+      },
+      {
+        "userId": "8307529545031",
+        "requestKey": "20261114230146-7c2109_r1_u31"
+      },
+      {
+        "userId": "8307529545032",
+        "requestKey": "20261114230146-7c2109_r1_u32"
+      },
+      {
+        "userId": "8307529545033",
+        "requestKey": "20261114230146-7c2109_r1_u33"
+      },
+      {
+        "userId": "8307529545034",
+        "requestKey": "20261114230146-7c2109_r1_u34"
+      },
+      {
+        "userId": "8307529545035",
+        "requestKey": "20261114230146-7c2109_r1_u35"
+      },
+      {
+        "userId": "8307529545036",
+        "requestKey": "20261114230146-7c2109_r1_u36"
+      },
+      {
+        "userId": "8307529545037",
+        "requestKey": "20261114230146-7c2109_r1_u37"
+      },
+      {
+        "userId": "8307529545038",
+        "requestKey": "20261114230146-7c2109_r1_u38"
+      },
+      {
+        "userId": "8307529545039",
+        "requestKey": "20261114230146-7c2109_r1_u39"
+      },
+      {
+        "userId": "8307529545040",
+        "requestKey": "20261114230146-7c2109_r1_u40"
+      },
+      {
+        "userId": "8307529545041",
+        "requestKey": "20261114230146-7c2109_r1_u41"
+      },
+      {
+        "userId": "8307529545042",
+        "requestKey": "20261114230146-7c2109_r1_u42"
+      },
+      {
+        "userId": "8307529545043",
+        "requestKey": "20261114230146-7c2109_r1_u43"
+      },
+      {
+        "userId": "8307529545044",
+        "requestKey": "20261114230146-7c2109_r1_u44"
+      },
+      {
+        "userId": "8307529545045",
+        "requestKey": "20261114230146-7c2109_r1_u45"
+      },
+      {
+        "userId": "8307529545046",
+        "requestKey": "20261114230146-7c2109_r1_u46"
+      },
+      {
+        "userId": "8307529545047",
+        "requestKey": "20261114230146-7c2109_r1_u47"
+      },
+      {
+        "userId": "8307529545048",
+        "requestKey": "20261114230146-7c2109_r1_u48"
+      },
+      {
+        "userId": "8307529545049",
+        "requestKey": "20261114230146-7c2109_r1_u49"
+      },
+      {
+        "userId": "8307529545050",
+        "requestKey": "20261114230146-7c2109_r1_u50"
+      },
+      {
+        "userId": "8307529545051",
+        "requestKey": "20261114230146-7c2109_r1_u51"
+      },
+      {
+        "userId": "8307529545052",
+        "requestKey": "20261114230146-7c2109_r1_u52"
+      },
+      {
+        "userId": "8307529545053",
+        "requestKey": "20261114230146-7c2109_r1_u53"
+      },
+      {
+        "userId": "8307529545054",
+        "requestKey": "20261114230146-7c2109_r1_u54"
+      },
+      {
+        "userId": "8307529545055",
+        "requestKey": "20261114230146-7c2109_r1_u55"
+      },
+      {
+        "userId": "8307529545056",
+        "requestKey": "20261114230146-7c2109_r1_u56"
+      },
+      {
+        "userId": "8307529545057",
+        "requestKey": "20261114230146-7c2109_r1_u57"
+      },
+      {
+        "userId": "8307529545058",
+        "requestKey": "20261114230146-7c2109_r1_u58"
+      },
+      {
+        "userId": "8307529545059",
+        "requestKey": "20261114230146-7c2109_r1_u59"
+      },
+      {
+        "userId": "8307529545060",
+        "requestKey": "20261114230146-7c2109_r1_u60"
+      },
+      {
+        "userId": "8307529545061",
+        "requestKey": "20261114230146-7c2109_r1_u61"
+      },
+      {
+        "userId": "8307529545062",
+        "requestKey": "20261114230146-7c2109_r1_u62"
+      },
+      {
+        "userId": "8307529545063",
+        "requestKey": "20261114230146-7c2109_r1_u63"
+      },
+      {
+        "userId": "8307529545064",
+        "requestKey": "20261114230146-7c2109_r1_u64"
+      },
+      {
+        "userId": "8307529545065",
+        "requestKey": "20261114230146-7c2109_r1_u65"
+      },
+      {
+        "userId": "8307529545066",
+        "requestKey": "20261114230146-7c2109_r1_u66"
+      },
+      {
+        "userId": "8307529545067",
+        "requestKey": "20261114230146-7c2109_r1_u67"
+      },
+      {
+        "userId": "8307529545068",
+        "requestKey": "20261114230146-7c2109_r1_u68"
+      },
+      {
+        "userId": "8307529545069",
+        "requestKey": "20261114230146-7c2109_r1_u69"
+      },
+      {
+        "userId": "8307529545070",
+        "requestKey": "20261114230146-7c2109_r1_u70"
+      },
+      {
+        "userId": "8307529545071",
+        "requestKey": "20261114230146-7c2109_r1_u71"
+      },
+      {
+        "userId": "8307529545072",
+        "requestKey": "20261114230146-7c2109_r1_u72"
+      },
+      {
+        "userId": "8307529545073",
+        "requestKey": "20261114230146-7c2109_r1_u73"
+      },
+      {
+        "userId": "8307529545074",
+        "requestKey": "20261114230146-7c2109_r1_u74"
+      },
+      {
+        "userId": "8307529545075",
+        "requestKey": "20261114230146-7c2109_r1_u75"
+      },
+      {
+        "userId": "8307529545076",
+        "requestKey": "20261114230146-7c2109_r1_u76"
+      },
+      {
+        "userId": "8307529545077",
+        "requestKey": "20261114230146-7c2109_r1_u77"
+      },
+      {
+        "userId": "8307529545078",
+        "requestKey": "20261114230146-7c2109_r1_u78"
+      },
+      {
+        "userId": "8307529545079",
+        "requestKey": "20261114230146-7c2109_r1_u79"
+      },
+      {
+        "userId": "8307529545080",
+        "requestKey": "20261114230146-7c2109_r1_u80"
+      },
+      {
+        "userId": "8307529545081",
+        "requestKey": "20261114230146-7c2109_r1_u81"
+      },
+      {
+        "userId": "8307529545082",
+        "requestKey": "20261114230146-7c2109_r1_u82"
+      },
+      {
+        "userId": "8307529545083",
+        "requestKey": "20261114230146-7c2109_r1_u83"
+      },
+      {
+        "userId": "8307529545084",
+        "requestKey": "20261114230146-7c2109_r1_u84"
+      },
+      {
+        "userId": "8307529545085",
+        "requestKey": "20261114230146-7c2109_r1_u85"
+      },
+      {
+        "userId": "8307529545086",
+        "requestKey": "20261114230146-7c2109_r1_u86"
+      },
+      {
+        "userId": "8307529545087",
+        "requestKey": "20261114230146-7c2109_r1_u87"
+      },
+      {
+        "userId": "8307529545088",
+        "requestKey": "20261114230146-7c2109_r1_u88"
+      },
+      {
+        "userId": "8307529545089",
+        "requestKey": "20261114230146-7c2109_r1_u89"
+      },
+      {
+        "userId": "8307529545090",
+        "requestKey": "20261114230146-7c2109_r1_u90"
+      },
+      {
+        "userId": "8307529545091",
+        "requestKey": "20261114230146-7c2109_r1_u91"
+      },
+      {
+        "userId": "8307529545092",
+        "requestKey": "20261114230146-7c2109_r1_u92"
+      },
+      {
+        "userId": "8307529545093",
+        "requestKey": "20261114230146-7c2109_r1_u93"
+      },
+      {
+        "userId": "8307529545094",
+        "requestKey": "20261114230146-7c2109_r1_u94"
+      },
+      {
+        "userId": "8307529545095",
+        "requestKey": "20261114230146-7c2109_r1_u95"
+      },
+      {
+        "userId": "8307529545096",
+        "requestKey": "20261114230146-7c2109_r1_u96"
+      },
+      {
+        "userId": "8307529545097",
+        "requestKey": "20261114230146-7c2109_r1_u97"
+      },
+      {
+        "userId": "8307529545098",
+        "requestKey": "20261114230146-7c2109_r1_u98"
+      },
+      {
+        "userId": "8307529545099",
+        "requestKey": "20261114230146-7c2109_r1_u99"
+      },
+      {
+        "userId": "8307529545100",
+        "requestKey": "20261114230146-7c2109_r1_u100"
+      }
+    ],
+    "responses": [
+      {
+        "userId": "8307529545030",
+        "requestKey": "20261114230146-7c2109_r1_u30",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534547"
+      },
+      {
+        "userId": "8307529545017",
+        "requestKey": "20261114230146-7c2109_r1_u17",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534579"
+      },
+      {
+        "userId": "8307529545001",
+        "requestKey": "20261114230146-7c2109_r1_u1",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545021",
+        "requestKey": "20261114230146-7c2109_r1_u21",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545085",
+        "requestKey": "20261114230146-7c2109_r1_u85",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545093",
+        "requestKey": "20261114230146-7c2109_r1_u93",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545097",
+        "requestKey": "20261114230146-7c2109_r1_u97",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545077",
+        "requestKey": "20261114230146-7c2109_r1_u77",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545008",
+        "requestKey": "20261114230146-7c2109_r1_u8",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545071",
+        "requestKey": "20261114230146-7c2109_r1_u71",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545056",
+        "requestKey": "20261114230146-7c2109_r1_u56",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545068",
+        "requestKey": "20261114230146-7c2109_r1_u68",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545038",
+        "requestKey": "20261114230146-7c2109_r1_u38",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545015",
+        "requestKey": "20261114230146-7c2109_r1_u15",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545034",
+        "requestKey": "20261114230146-7c2109_r1_u34",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545023",
+        "requestKey": "20261114230146-7c2109_r1_u23",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545059",
+        "requestKey": "20261114230146-7c2109_r1_u59",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545046",
+        "requestKey": "20261114230146-7c2109_r1_u46",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545062",
+        "requestKey": "20261114230146-7c2109_r1_u62",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545051",
+        "requestKey": "20261114230146-7c2109_r1_u51",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545094",
+        "requestKey": "20261114230146-7c2109_r1_u94",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545079",
+        "requestKey": "20261114230146-7c2109_r1_u79",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545047",
+        "requestKey": "20261114230146-7c2109_r1_u47",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545087",
+        "requestKey": "20261114230146-7c2109_r1_u87",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545014",
+        "requestKey": "20261114230146-7c2109_r1_u14",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545074",
+        "requestKey": "20261114230146-7c2109_r1_u74",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545028",
+        "requestKey": "20261114230146-7c2109_r1_u28",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545089",
+        "requestKey": "20261114230146-7c2109_r1_u89",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545027",
+        "requestKey": "20261114230146-7c2109_r1_u27",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545066",
+        "requestKey": "20261114230146-7c2109_r1_u66",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545029",
+        "requestKey": "20261114230146-7c2109_r1_u29",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545084",
+        "requestKey": "20261114230146-7c2109_r1_u84",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545031",
+        "requestKey": "20261114230146-7c2109_r1_u31",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545022",
+        "requestKey": "20261114230146-7c2109_r1_u22",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545043",
+        "requestKey": "20261114230146-7c2109_r1_u43",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545082",
+        "requestKey": "20261114230146-7c2109_r1_u82",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545092",
+        "requestKey": "20261114230146-7c2109_r1_u92",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545039",
+        "requestKey": "20261114230146-7c2109_r1_u39",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545075",
+        "requestKey": "20261114230146-7c2109_r1_u75",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545018",
+        "requestKey": "20261114230146-7c2109_r1_u18",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545086",
+        "requestKey": "20261114230146-7c2109_r1_u86",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545073",
+        "requestKey": "20261114230146-7c2109_r1_u73",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545081",
+        "requestKey": "20261114230146-7c2109_r1_u81",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545026",
+        "requestKey": "20261114230146-7c2109_r1_u26",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545044",
+        "requestKey": "20261114230146-7c2109_r1_u44",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545076",
+        "requestKey": "20261114230146-7c2109_r1_u76",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545010",
+        "requestKey": "20261114230146-7c2109_r1_u10",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545078",
+        "requestKey": "20261114230146-7c2109_r1_u78",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545100",
+        "requestKey": "20261114230146-7c2109_r1_u100",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545042",
+        "requestKey": "20261114230146-7c2109_r1_u42",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545095",
+        "requestKey": "20261114230146-7c2109_r1_u95",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545055",
+        "requestKey": "20261114230146-7c2109_r1_u55",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545025",
+        "requestKey": "20261114230146-7c2109_r1_u25",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545060",
+        "requestKey": "20261114230146-7c2109_r1_u60",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545070",
+        "requestKey": "20261114230146-7c2109_r1_u70",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545003",
+        "requestKey": "20261114230146-7c2109_r1_u3",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545033",
+        "requestKey": "20261114230146-7c2109_r1_u33",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545045",
+        "requestKey": "20261114230146-7c2109_r1_u45",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534585"
+      },
+      {
+        "userId": "8307529545063",
+        "requestKey": "20261114230146-7c2109_r1_u63",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545049",
+        "requestKey": "20261114230146-7c2109_r1_u49",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545065",
+        "requestKey": "20261114230146-7c2109_r1_u65",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545002",
+        "requestKey": "20261114230146-7c2109_r1_u2",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545007",
+        "requestKey": "20261114230146-7c2109_r1_u7",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545019",
+        "requestKey": "20261114230146-7c2109_r1_u19",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545040",
+        "requestKey": "20261114230146-7c2109_r1_u40",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545069",
+        "requestKey": "20261114230146-7c2109_r1_u69",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545013",
+        "requestKey": "20261114230146-7c2109_r1_u13",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545083",
+        "requestKey": "20261114230146-7c2109_r1_u83",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545091",
+        "requestKey": "20261114230146-7c2109_r1_u91",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545036",
+        "requestKey": "20261114230146-7c2109_r1_u36",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545058",
+        "requestKey": "20261114230146-7c2109_r1_u58",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545061",
+        "requestKey": "20261114230146-7c2109_r1_u61",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545032",
+        "requestKey": "20261114230146-7c2109_r1_u32",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545067",
+        "requestKey": "20261114230146-7c2109_r1_u67",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534611"
+      },
+      {
+        "userId": "8307529545090",
+        "requestKey": "20261114230146-7c2109_r1_u90",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545088",
+        "requestKey": "20261114230146-7c2109_r1_u88",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545080",
+        "requestKey": "20261114230146-7c2109_r1_u80",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534624"
+      },
+      {
+        "userId": "8307529545052",
+        "requestKey": "20261114230146-7c2109_r1_u52",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545009",
+        "requestKey": "20261114230146-7c2109_r1_u9",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534556"
+      },
+      {
+        "userId": "8307529545072",
+        "requestKey": "20261114230146-7c2109_r1_u72",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545016",
+        "requestKey": "20261114230146-7c2109_r1_u16",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545053",
+        "requestKey": "20261114230146-7c2109_r1_u53",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545012",
+        "requestKey": "20261114230146-7c2109_r1_u12",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545024",
+        "requestKey": "20261114230146-7c2109_r1_u24",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545035",
+        "requestKey": "20261114230146-7c2109_r1_u35",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545037",
+        "requestKey": "20261114230146-7c2109_r1_u37",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545011",
+        "requestKey": "20261114230146-7c2109_r1_u11",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545096",
+        "requestKey": "20261114230146-7c2109_r1_u96",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534639"
+      },
+      {
+        "userId": "8307529545048",
+        "requestKey": "20261114230146-7c2109_r1_u48",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545006",
+        "requestKey": "20261114230146-7c2109_r1_u6",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545004",
+        "requestKey": "20261114230146-7c2109_r1_u4",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545050",
+        "requestKey": "20261114230146-7c2109_r1_u50",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545064",
+        "requestKey": "20261114230146-7c2109_r1_u64",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534608"
+      },
+      {
+        "userId": "8307529545005",
+        "requestKey": "20261114230146-7c2109_r1_u5",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545054",
+        "requestKey": "20261114230146-7c2109_r1_u54",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545098",
+        "requestKey": "20261114230146-7c2109_r1_u98",
+        "outcome": "ACCEPTED",
+        "orderId": "660022046876501938"
+      },
+      {
+        "userId": "8307529545099",
+        "requestKey": "20261114230146-7c2109_r1_u99",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545020",
+        "requestKey": "20261114230146-7c2109_r1_u20",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545057",
+        "requestKey": "20261114230146-7c2109_r1_u57",
+        "outcome": "BUSINESS_REJECTED",
+        "orderId": ""
+      },
+      {
+        "userId": "8307529545041",
+        "requestKey": "20261114230146-7c2109_r1_u41",
+        "outcome": "ACCEPTED",
+        "orderId": "660022042581534546"
+      }
+    ],
+    "orders": [
+      {
+        "orderId": "660022042581534546",
+        "userId": "8307529545041",
+        "status": "1"
+      },
+      {
+        "orderId": "660022042581534547",
+        "userId": "8307529545030",
+        "status": "1"
+      },
+      {
+        "orderId": "660022042581534556",
+        "userId": "8307529545009",
+        "status": "1"
+      },
+      {
+        "orderId": "660022042581534579",
+        "userId": "8307529545017",
+        "status": "1"
+      },
+      {
+        "orderId": "660022042581534585",
+        "userId": "8307529545045",
+        "status": "1"
+      },
+      {
+        "orderId": "660022042581534608",
+        "userId": "8307529545064",
+        "status": "1"
+      },
+      {
+        "orderId": "660022042581534611",
+        "userId": "8307529545067",
+        "status": "1"
+      },
+      {
+        "orderId": "660022042581534624",
+        "userId": "8307529545080",
+        "status": "1"
+      },
+      {
+        "orderId": "660022042581534639",
+        "userId": "8307529545096",
+        "status": "1"
+      },
+      {
+        "orderId": "660022046876501938",
+        "userId": "8307529545098",
+        "status": "1"
+      }
+    ],
+    "requests": [
+      {
+        "orderId": "660022042581534545",
+        "userId": "8307529545026",
+        "requestKey": "20261114230146-7c2109_r1_u26",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534546",
+        "userId": "8307529545041",
+        "requestKey": "20261114230146-7c2109_r1_u41",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534547",
+        "userId": "8307529545030",
+        "requestKey": "20261114230146-7c2109_r1_u30",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534548",
+        "userId": "8307529545047",
+        "requestKey": "20261114230146-7c2109_r1_u47",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534549",
+        "userId": "8307529545015",
+        "requestKey": "20261114230146-7c2109_r1_u15",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534550",
+        "userId": "8307529545032",
+        "requestKey": "20261114230146-7c2109_r1_u32",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534551",
+        "userId": "8307529545016",
+        "requestKey": "20261114230146-7c2109_r1_u16",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534552",
+        "userId": "8307529545008",
+        "requestKey": "20261114230146-7c2109_r1_u8",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534553",
+        "userId": "8307529545001",
+        "requestKey": "20261114230146-7c2109_r1_u1",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534554",
+        "userId": "8307529545039",
+        "requestKey": "20261114230146-7c2109_r1_u39",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534555",
+        "userId": "8307529545035",
+        "requestKey": "20261114230146-7c2109_r1_u35",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534556",
+        "userId": "8307529545009",
+        "requestKey": "20261114230146-7c2109_r1_u9",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534557",
+        "userId": "8307529545013",
+        "requestKey": "20261114230146-7c2109_r1_u13",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534558",
+        "userId": "8307529545024",
+        "requestKey": "20261114230146-7c2109_r1_u24",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534559",
+        "userId": "8307529545012",
+        "requestKey": "20261114230146-7c2109_r1_u12",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534560",
+        "userId": "8307529545023",
+        "requestKey": "20261114230146-7c2109_r1_u23",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534561",
+        "userId": "8307529545034",
+        "requestKey": "20261114230146-7c2109_r1_u34",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534562",
+        "userId": "8307529545036",
+        "requestKey": "20261114230146-7c2109_r1_u36",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534563",
+        "userId": "8307529545007",
+        "requestKey": "20261114230146-7c2109_r1_u7",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534564",
+        "userId": "8307529545049",
+        "requestKey": "20261114230146-7c2109_r1_u49",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534565",
+        "userId": "8307529545050",
+        "requestKey": "20261114230146-7c2109_r1_u50",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534566",
+        "userId": "8307529545046",
+        "requestKey": "20261114230146-7c2109_r1_u46",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534567",
+        "userId": "8307529545011",
+        "requestKey": "20261114230146-7c2109_r1_u11",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534568",
+        "userId": "8307529545054",
+        "requestKey": "20261114230146-7c2109_r1_u54",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534569",
+        "userId": "8307529545040",
+        "requestKey": "20261114230146-7c2109_r1_u40",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534570",
+        "userId": "8307529545005",
+        "requestKey": "20261114230146-7c2109_r1_u5",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534571",
+        "userId": "8307529545037",
+        "requestKey": "20261114230146-7c2109_r1_u37",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534572",
+        "userId": "8307529545048",
+        "requestKey": "20261114230146-7c2109_r1_u48",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534573",
+        "userId": "8307529545021",
+        "requestKey": "20261114230146-7c2109_r1_u21",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534574",
+        "userId": "8307529545038",
+        "requestKey": "20261114230146-7c2109_r1_u38",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534575",
+        "userId": "8307529545002",
+        "requestKey": "20261114230146-7c2109_r1_u2",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534576",
+        "userId": "8307529545004",
+        "requestKey": "20261114230146-7c2109_r1_u4",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534577",
+        "userId": "8307529545006",
+        "requestKey": "20261114230146-7c2109_r1_u6",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534578",
+        "userId": "8307529545022",
+        "requestKey": "20261114230146-7c2109_r1_u22",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534579",
+        "userId": "8307529545017",
+        "requestKey": "20261114230146-7c2109_r1_u17",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534580",
+        "userId": "8307529545029",
+        "requestKey": "20261114230146-7c2109_r1_u29",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534581",
+        "userId": "8307529545028",
+        "requestKey": "20261114230146-7c2109_r1_u28",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534582",
+        "userId": "8307529545052",
+        "requestKey": "20261114230146-7c2109_r1_u52",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534583",
+        "userId": "8307529545018",
+        "requestKey": "20261114230146-7c2109_r1_u18",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534584",
+        "userId": "8307529545033",
+        "requestKey": "20261114230146-7c2109_r1_u33",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534585",
+        "userId": "8307529545045",
+        "requestKey": "20261114230146-7c2109_r1_u45",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534586",
+        "userId": "8307529545042",
+        "requestKey": "20261114230146-7c2109_r1_u42",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534587",
+        "userId": "8307529545051",
+        "requestKey": "20261114230146-7c2109_r1_u51",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534588",
+        "userId": "8307529545053",
+        "requestKey": "20261114230146-7c2109_r1_u53",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534589",
+        "userId": "8307529545020",
+        "requestKey": "20261114230146-7c2109_r1_u20",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534590",
+        "userId": "8307529545031",
+        "requestKey": "20261114230146-7c2109_r1_u31",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534591",
+        "userId": "8307529545044",
+        "requestKey": "20261114230146-7c2109_r1_u44",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534592",
+        "userId": "8307529545019",
+        "requestKey": "20261114230146-7c2109_r1_u19",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534593",
+        "userId": "8307529545014",
+        "requestKey": "20261114230146-7c2109_r1_u14",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534594",
+        "userId": "8307529545003",
+        "requestKey": "20261114230146-7c2109_r1_u3",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534595",
+        "userId": "8307529545025",
+        "requestKey": "20261114230146-7c2109_r1_u25",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534596",
+        "userId": "8307529545010",
+        "requestKey": "20261114230146-7c2109_r1_u10",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534597",
+        "userId": "8307529545027",
+        "requestKey": "20261114230146-7c2109_r1_u27",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534598",
+        "userId": "8307529545043",
+        "requestKey": "20261114230146-7c2109_r1_u43",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534599",
+        "userId": "8307529545055",
+        "requestKey": "20261114230146-7c2109_r1_u55",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534600",
+        "userId": "8307529545056",
+        "requestKey": "20261114230146-7c2109_r1_u56",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534601",
+        "userId": "8307529545057",
+        "requestKey": "20261114230146-7c2109_r1_u57",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534602",
+        "userId": "8307529545058",
+        "requestKey": "20261114230146-7c2109_r1_u58",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534603",
+        "userId": "8307529545059",
+        "requestKey": "20261114230146-7c2109_r1_u59",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534604",
+        "userId": "8307529545060",
+        "requestKey": "20261114230146-7c2109_r1_u60",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534605",
+        "userId": "8307529545061",
+        "requestKey": "20261114230146-7c2109_r1_u61",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534606",
+        "userId": "8307529545062",
+        "requestKey": "20261114230146-7c2109_r1_u62",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534607",
+        "userId": "8307529545065",
+        "requestKey": "20261114230146-7c2109_r1_u65",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534608",
+        "userId": "8307529545064",
+        "requestKey": "20261114230146-7c2109_r1_u64",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534609",
+        "userId": "8307529545063",
+        "requestKey": "20261114230146-7c2109_r1_u63",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534610",
+        "userId": "8307529545066",
+        "requestKey": "20261114230146-7c2109_r1_u66",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534611",
+        "userId": "8307529545067",
+        "requestKey": "20261114230146-7c2109_r1_u67",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534612",
+        "userId": "8307529545068",
+        "requestKey": "20261114230146-7c2109_r1_u68",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534613",
+        "userId": "8307529545069",
+        "requestKey": "20261114230146-7c2109_r1_u69",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534614",
+        "userId": "8307529545070",
+        "requestKey": "20261114230146-7c2109_r1_u70",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534615",
+        "userId": "8307529545071",
+        "requestKey": "20261114230146-7c2109_r1_u71",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534616",
+        "userId": "8307529545072",
+        "requestKey": "20261114230146-7c2109_r1_u72",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534617",
+        "userId": "8307529545073",
+        "requestKey": "20261114230146-7c2109_r1_u73",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534618",
+        "userId": "8307529545074",
+        "requestKey": "20261114230146-7c2109_r1_u74",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534619",
+        "userId": "8307529545075",
+        "requestKey": "20261114230146-7c2109_r1_u75",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534620",
+        "userId": "8307529545076",
+        "requestKey": "20261114230146-7c2109_r1_u76",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534621",
+        "userId": "8307529545077",
+        "requestKey": "20261114230146-7c2109_r1_u77",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534622",
+        "userId": "8307529545079",
+        "requestKey": "20261114230146-7c2109_r1_u79",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534623",
+        "userId": "8307529545078",
+        "requestKey": "20261114230146-7c2109_r1_u78",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534624",
+        "userId": "8307529545080",
+        "requestKey": "20261114230146-7c2109_r1_u80",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534625",
+        "userId": "8307529545081",
+        "requestKey": "20261114230146-7c2109_r1_u81",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534626",
+        "userId": "8307529545082",
+        "requestKey": "20261114230146-7c2109_r1_u82",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534627",
+        "userId": "8307529545083",
+        "requestKey": "20261114230146-7c2109_r1_u83",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534628",
+        "userId": "8307529545085",
+        "requestKey": "20261114230146-7c2109_r1_u85",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534629",
+        "userId": "8307529545084",
+        "requestKey": "20261114230146-7c2109_r1_u84",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534630",
+        "userId": "8307529545087",
+        "requestKey": "20261114230146-7c2109_r1_u87",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534631",
+        "userId": "8307529545086",
+        "requestKey": "20261114230146-7c2109_r1_u86",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534632",
+        "userId": "8307529545088",
+        "requestKey": "20261114230146-7c2109_r1_u88",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534633",
+        "userId": "8307529545090",
+        "requestKey": "20261114230146-7c2109_r1_u90",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534634",
+        "userId": "8307529545089",
+        "requestKey": "20261114230146-7c2109_r1_u89",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534635",
+        "userId": "8307529545091",
+        "requestKey": "20261114230146-7c2109_r1_u91",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534636",
+        "userId": "8307529545093",
+        "requestKey": "20261114230146-7c2109_r1_u93",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534637",
+        "userId": "8307529545092",
+        "requestKey": "20261114230146-7c2109_r1_u92",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534638",
+        "userId": "8307529545094",
+        "requestKey": "20261114230146-7c2109_r1_u94",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534639",
+        "userId": "8307529545096",
+        "requestKey": "20261114230146-7c2109_r1_u96",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022042581534640",
+        "userId": "8307529545095",
+        "requestKey": "20261114230146-7c2109_r1_u95",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022042581534641",
+        "userId": "8307529545097",
+        "requestKey": "20261114230146-7c2109_r1_u97",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022046876501938",
+        "userId": "8307529545098",
+        "requestKey": "20261114230146-7c2109_r1_u98",
+        "state": "CREATED",
+        "reason": "NULL"
+      },
+      {
+        "orderId": "660022046876501939",
+        "userId": "8307529545099",
+        "requestKey": "20261114230146-7c2109_r1_u99",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      },
+      {
+        "orderId": "660022046876501940",
+        "userId": "8307529545100",
+        "requestKey": "20261114230146-7c2109_r1_u100",
+        "state": "REJECTED",
+        "reason": "REJECTED_OUT_OF_STOCK"
+      }
+    ],
+    "failures": [
+      {
+        "orderId": "660022042581534545",
+        "userId": "8307529545026",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534548",
+        "userId": "8307529545047",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534549",
+        "userId": "8307529545015",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534550",
+        "userId": "8307529545032",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534551",
+        "userId": "8307529545016",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534552",
+        "userId": "8307529545008",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534553",
+        "userId": "8307529545001",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534554",
+        "userId": "8307529545039",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534555",
+        "userId": "8307529545035",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534557",
+        "userId": "8307529545013",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534558",
+        "userId": "8307529545024",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534559",
+        "userId": "8307529545012",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534560",
+        "userId": "8307529545023",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534561",
+        "userId": "8307529545034",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534562",
+        "userId": "8307529545036",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534563",
+        "userId": "8307529545007",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534564",
+        "userId": "8307529545049",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534565",
+        "userId": "8307529545050",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534566",
+        "userId": "8307529545046",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534567",
+        "userId": "8307529545011",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534568",
+        "userId": "8307529545054",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534569",
+        "userId": "8307529545040",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534570",
+        "userId": "8307529545005",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534571",
+        "userId": "8307529545037",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534572",
+        "userId": "8307529545048",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534573",
+        "userId": "8307529545021",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534574",
+        "userId": "8307529545038",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534575",
+        "userId": "8307529545002",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534576",
+        "userId": "8307529545004",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534577",
+        "userId": "8307529545006",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534578",
+        "userId": "8307529545022",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534580",
+        "userId": "8307529545029",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534581",
+        "userId": "8307529545028",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534582",
+        "userId": "8307529545052",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534583",
+        "userId": "8307529545018",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534584",
+        "userId": "8307529545033",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534586",
+        "userId": "8307529545042",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534587",
+        "userId": "8307529545051",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534588",
+        "userId": "8307529545053",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534589",
+        "userId": "8307529545020",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534590",
+        "userId": "8307529545031",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534591",
+        "userId": "8307529545044",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534592",
+        "userId": "8307529545019",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534593",
+        "userId": "8307529545014",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534594",
+        "userId": "8307529545003",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534595",
+        "userId": "8307529545025",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534596",
+        "userId": "8307529545010",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534597",
+        "userId": "8307529545027",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534598",
+        "userId": "8307529545043",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534599",
+        "userId": "8307529545055",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534600",
+        "userId": "8307529545056",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534601",
+        "userId": "8307529545057",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534602",
+        "userId": "8307529545058",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534603",
+        "userId": "8307529545059",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534604",
+        "userId": "8307529545060",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534605",
+        "userId": "8307529545061",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534606",
+        "userId": "8307529545062",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534607",
+        "userId": "8307529545065",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534609",
+        "userId": "8307529545063",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534610",
+        "userId": "8307529545066",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534612",
+        "userId": "8307529545068",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534613",
+        "userId": "8307529545069",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534614",
+        "userId": "8307529545070",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534615",
+        "userId": "8307529545071",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534616",
+        "userId": "8307529545072",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534617",
+        "userId": "8307529545073",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534618",
+        "userId": "8307529545074",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534619",
+        "userId": "8307529545075",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534620",
+        "userId": "8307529545076",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534621",
+        "userId": "8307529545077",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534622",
+        "userId": "8307529545079",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534623",
+        "userId": "8307529545078",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534625",
+        "userId": "8307529545081",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534626",
+        "userId": "8307529545082",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534627",
+        "userId": "8307529545083",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534628",
+        "userId": "8307529545085",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534629",
+        "userId": "8307529545084",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534630",
+        "userId": "8307529545087",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534631",
+        "userId": "8307529545086",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534632",
+        "userId": "8307529545088",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534633",
+        "userId": "8307529545090",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534634",
+        "userId": "8307529545089",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534635",
+        "userId": "8307529545091",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534636",
+        "userId": "8307529545093",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534637",
+        "userId": "8307529545092",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534638",
+        "userId": "8307529545094",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534640",
+        "userId": "8307529545095",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022042581534641",
+        "userId": "8307529545097",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022046876501939",
+        "userId": "8307529545099",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      },
+      {
+        "orderId": "660022046876501940",
+        "userId": "8307529545100",
+        "reason": "REJECTED_OUT_OF_STOCK",
+        "compensation": "done"
+      }
+    ],
+    "returns": [],
+    "recoveries": [],
+    "sqlStock": 0,
+    "redisStock": 0
+  }
+}

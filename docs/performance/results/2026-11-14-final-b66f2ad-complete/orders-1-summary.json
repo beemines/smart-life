@@ -1,0 +1,61 @@
+{
+  "profile": "orders",
+  "round": 1,
+  "samples": 100,
+  "errors": 0,
+  "seconds": 4.116,
+  "rps": 24.295432458697768,
+  "p50": 2636,
+  "p95": 3840,
+  "p99": 4016,
+  "parameters": {
+    "profile": "orders",
+    "threads": 100,
+    "ramp": 1,
+    "loops": 1,
+    "duration": 30,
+    "path": "/voucher-order/seckill",
+    "method": "POST"
+  },
+  "command": [
+    "java",
+    "-Xms256m",
+    "-Xmx512m",
+    "-jar",
+    "<JMETER>/bin/ApacheJMeter.jar",
+    "-n",
+    "-t",
+    "scripts/load/workload.jmx",
+    "-q",
+    "scripts/load/results.properties",
+    "-i",
+    "scripts/load/log4j2.xml",
+    "-l",
+    "orders-1.jtl",
+    "-j",
+    "<PRIVATE>/orders-1.log",
+    "-Jprofile=orders",
+    "-Jcsv=<PRIVATE>/orders-1.csv",
+    "-Jthreads=100",
+    "-Jramp=1",
+    "-Jloops=1",
+    "-Jduration=30",
+    "-Jpath=/voucher-order/seckill",
+    "-Jmethod=POST"
+  ],
+  "appResources": {
+    "before": {
+      "CPU": 149.015625,
+      "WorkingSet64": 722763776,
+      "PeakWorkingSet64": 795848704
+    },
+    "after": {
+      "CPU": 174,
+      "WorkingSet64": 749826048,
+      "PeakWorkingSet64": 862298112
+    },
+    "measurementWallSeconds": 9.697467699996196,
+    "averageCpuCores": 2.576381357785786,
+    "method": "Windows Get-Process CPU seconds and working-set boundary samples; includes JMeter startup/shutdown, not continuous sampling"
+  }
+}
