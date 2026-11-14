@@ -1,4 +1,5 @@
 """Bounded, synthetic localhost HTTP evidence. Python stdlib only; see GUIDE.md."""
+from contextvars import ContextVar
 import argparse,csv,hashlib,json,os,platform,secrets,shutil,socket,subprocess,time,uuid
 from pathlib import Path
 from urllib.request import Request,urlopen
@@ -11,10 +12,19 @@ JAVA='D:/JDK/jdk21/bin/java.exe'
 BASE='http://127.0.0.1:18187'
 MYSQL='smart-life-upgrade-mysql-1'; REDIS='smart-life-upgrade-redis-1'
 
+DEPENDENCY_DEADLINE=ContextVar('dependency_deadline',default=None)
+
+def dependency_timeout():
+    deadline=DEPENDENCY_DEADLINE.get()
+    remaining=30 if deadline is None else deadline-time.monotonic()
+    if remaining<=0:raise subprocess.TimeoutExpired('dependency drain budget',0)
+    return min(30,remaining)
+
 def command(args,**kwargs):
+    kwargs.setdefault('timeout',dependency_timeout())
     return subprocess.check_output(args,stderr=subprocess.DEVNULL,**kwargs).decode('utf-8').strip()
 def sql(q):
-    result=subprocess.run([DOCKER,'exec','-i',MYSQL,'mysql','-uroot','-plocal-test-only','--default-character-set=utf8mb4','-N','-B','smartlife'],input=q.encode('utf-8'),stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
+    result=subprocess.run([DOCKER,'exec','-i',MYSQL,'mysql','-uroot','-plocal-test-only','--default-character-set=utf8mb4','-N','-B','smartlife'],input=q.encode('utf-8'),stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True,timeout=dependency_timeout())
     return result.stdout.decode('utf-8').strip()
 def redis(*args):return command([DOCKER,'exec',REDIS,'redis-cli','--raw',*map(str,args)])
 def redis_pipeline(commands):
@@ -23,7 +33,7 @@ def redis_pipeline(commands):
         fields=[str(a).encode() for a in args]
         payload+=b'*'+str(len(fields)).encode()+b'\r\n'
         for field in fields:payload+=b'$'+str(len(field)).encode()+b'\r\n'+field+b'\r\n'
-    result=subprocess.run([DOCKER,'exec','-i',REDIS,'redis-cli','--pipe'],input=payload,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True)
+    result=subprocess.run([DOCKER,'exec','-i',REDIS,'redis-cli','--pipe'],input=payload,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=True,timeout=dependency_timeout())
     assert b'errors: 0' in result.stdout,result.stdout
 
 def guard():
@@ -127,7 +137,12 @@ def jmeter(m,jhome,public,profile,roundno,voucher=None):
     assert result['errors']==0,result
     return data,result
 
-def snapshot(m,voucher,responses,roundno):
+def snapshot(m,voucher,responses,roundno,deadline=None):
+    token=DEPENDENCY_DEADLINE.set(deadline)
+    try:return snapshot_values(m,voucher,responses,roundno)
+    finally:DEPENDENCY_DEADLINE.reset(token)
+
+def snapshot_values(m,voucher,responses,roundno):
     return dict(initial=10,expectedOrders=10,expectedResponses=[dict(userId=m['userIds'][i],requestKey=f'{m["run"]}_r{roundno}_u{i}') for i in range(1,101)],responses=[{k:r[k] for k in ('userId','requestKey','outcome','orderId')} for r in responses],
       orders=rows(f'SELECT id,user_id,status FROM tb_voucher_order WHERE voucher_id={voucher}',['orderId','userId','status']),
       requests=rows(f'SELECT order_id,user_id,request_key,state,reason FROM tb_voucher_order_request WHERE voucher_id={voucher}',['orderId','userId','requestKey','state','reason']),
@@ -173,7 +188,11 @@ def main():
             v=publish(m);data,summary=jmeter(m,args.jmeter,args.output,'orders',r,v);summaries.append(summary)
             deadline=time.monotonic()+60
             while True:
-                state=snapshot(m,v,data,r);result=reconcile(state)
+                try:state=snapshot(m,v,data,r,deadline=deadline)
+                except subprocess.TimeoutExpired:
+                    write(args.output/f'orders-{r}-timeout.json',dict(round=r,passed=False,reason='dependency timeout during reconciliation',fixturesRetained=True))
+                    raise
+                result=reconcile(state)
                 if result['passed'] or time.monotonic()>=deadline:break
                 time.sleep(1)
             write(args.output/f'orders-{r}-reconciliation.json',dict(voucherId=v,**result,snapshot=state))
@@ -185,7 +204,7 @@ def main():
             jmeter=command([JAVA,'-jar',str(args.jmeter/'bin/ApacheJMeter.jar'),
                 '-i',str(ROOT/'scripts/load/log4j2.xml'),'-j',str(Path(m['private'])/'version.log'),'-v']),
             java=subprocess.run([JAVA,'-version'],stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,check=True).stdout.decode('utf-8',errors='replace'),
+                stderr=subprocess.STDOUT,check=True,timeout=30).stdout.decode('utf-8',errors='replace'),
             os=platform.platform(),logicalCpus=os.cpu_count(),
             hardware=json.loads(command(['powershell','-NoProfile','-Command',
                 "Get-CimInstance Win32_ComputerSystem | Select-Object Model,NumberOfLogicalProcessors,TotalPhysicalMemory | ConvertTo-Json"])),
