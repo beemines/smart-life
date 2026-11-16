@@ -35,6 +35,12 @@ mvn --batch-mode --no-transfer-progress -Dtest=StackUpgradeIT,OrderSafetyIT,Redi
 
 保留既有全局RuntimeException的HTTP200/`success=false`返回契约；故障注入验证失败正文和实际事务回滚，未为了测试改动所有旧接口的HTTP状态。
 
+### 远端首次失败与MQ等待预算修正（2026-11-16）
+
+首个提交`c4eb263`的[CI](https://github.com/beemines/smart-life/actions/runs/43806325658)中，67项单元/前端/Nginx通过，168项集成中原有`allHttpIntentsDeferredBeforeFirstPublishStillDrainThroughRealMq`超时，其余167项通过。真实日志定位到订单`660606626285223959`：04:51:06.166Z因用户锁竞争返回重试，04:51:45.643Z以`delivery=1 result=CREATED`完成，间隔39.477秒；原断言仅等30秒，观察到19/20终态就超时，消息没有丢失。
+
+经典[Push Consumer重试](https://rocketmq.apache.org/docs/4.x/consumer/02push/)有Broker延迟，重试主题路由发现还会带来额外等待；不以“首次延迟10秒”等同端到端必在10秒完成。此用例保持45秒主题分配等待，业务排空改为与现有负载核对器一致的60秒有界预算。继续通过真实生产者/消费者恢复PREPARING，全部20条必须达到终态，原身份、只有一份订单、库存/资格核对及超时保留证据断言全部保留；没有跳过测试、直接插单或将PENDING视为完成，也没有修改生产重试策略。修正后本地28项消费回归全部通过，独立审查确认两个时间戳及不变的业务断言、结论通过；最终交付仍以最新提交远端全套CI为验收门槛。
+
 ## 实际页面与数据库核对
 
 使用专用SQL合成顾客/店主和已支付券夹具；用户通过原模拟短信登录页面进入。已支付券初始夹具不冒充通过真实支付/真实业务系统创建，原购券/MQ链路由全量集成另行覆盖。

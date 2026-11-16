@@ -155,11 +155,15 @@ class OrderConsumptionIT {
             var live=(DefaultMQPushConsumer)Objects.requireNonNull(ReflectionTestUtils.getField(consumer,"consumer"));
             String topic=(String)Objects.requireNonNull(ReflectionTestUtils.getField(consumer,"topic"));
             // Infrastructure assignment has its own bound, as in the broker retry test.
-            // The unchanged business drain budget starts only after a target-topic queue is assigned.
+            // The business drain budget starts only after a target-topic queue is assigned.
             await().atMost(Duration.ofSeconds(45)).until(()->live.getDefaultMQPushConsumerImpl()
                 .getRebalanceImpl().getProcessQueueTable().entrySet().stream()
                 .anyMatch(entry->!entry.getValue().isDropped() && topic.equals(entry.getKey().getTopic())));
-            await().atMost(Duration.ofSeconds(30)).untilAsserted(()->{
+            // RECONSUME_LATER can wait for both broker delay and retry-topic route refresh.
+            // CI recorded delivery=0 lock conflict -> delivery=1 CREATED after 39.477s;
+            // 30s rejected a healthy recovery. Match the load harness's bounded 60s drain.
+            // Every intent must still reach CREATED/REJECTED; no direct inserts or PENDING bypass.
+            await().atMost(Duration.ofSeconds(60)).untilAsserted(()->{
                 recoverPreparingHttpIntents();
                 assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM tb_voucher_order_request WHERE voucher_id=? AND state IN ('CREATED','REJECTED')",Integer.class,voucherId)).isEqualTo(requests);
             });
