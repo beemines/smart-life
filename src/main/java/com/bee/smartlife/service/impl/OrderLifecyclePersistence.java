@@ -26,7 +26,7 @@ public class OrderLifecyclePersistence {
 
   public static final String SELECT =
       "SELECT"
-          + " o.*,l.snapshot_valid,l.shop_id,l.shop_name,l.title,l.pay_value,l.actual_value,l.pay_deadline,l.use_begin_time,l.use_end_time,l.close_reason,l.cancel_accepted,l.refund_accepted,COALESCE(r.state,'NONE')"
+          + " o.*,l.snapshot_valid,l.shop_id,l.shop_name,l.title,l.pay_value,l.actual_value,l.pay_deadline,l.use_begin_time,l.use_end_time,l.close_reason,l.cancel_accepted,l.refund_accepted,l.checkout_enabled,l.checkout_threshold,l.checkout_stack_merchant,l.checkout_stack_platform,COALESCE(r.state,'NONE')"
           + " stock_return_state FROM tb_voucher_order o LEFT JOIN tb_order_lifecycle l ON"
           + " l.order_id=o.id LEFT JOIN tb_order_stock_return r ON r.order_id=o.id ";
 
@@ -35,13 +35,13 @@ public class OrderLifecyclePersistence {
     if (paymentWindow <= 0) throw new IllegalStateException("payment window must be positive");
     jdbc.update(
         "INSERT IGNORE INTO"
-            + " tb_order_lifecycle(order_id,snapshot_valid,shop_id,shop_name,title,pay_value,actual_value,pay_deadline,use_begin_time,use_end_time)"
+            + " tb_order_lifecycle(order_id,snapshot_valid,shop_id,shop_name,title,pay_value,actual_value,pay_deadline,use_begin_time,use_end_time,checkout_enabled,checkout_threshold,checkout_stack_merchant,checkout_stack_platform)"
             + " SELECT o.id,IF(v.id IS NOT NULL AND s.id IS NOT NULL AND v.pay_value>0 AND"
             + " v.actual_value>=v.pay_value AND v.title<>'' AND ((v.use_begin_time IS NULL AND"
             + " v.use_end_time IS NULL) OR (v.use_begin_time IS NOT NULL AND"
             + " v.use_end_time>v.use_begin_time)),1,0),v.shop_id,s.name,v.title,v.pay_value,v.actual_value,DATE_ADD(o.create_time,INTERVAL"
             + " ? SECOND),COALESCE(v.use_begin_time,o.create_time),COALESCE(v.use_end_time,DATE_ADD(o.create_time,INTERVAL"
-            + " 30 DAY)) FROM tb_voucher_order o LEFT JOIN tb_voucher v ON v.id=o.voucher_id LEFT"
+            + " 30 DAY)),v.checkout_enabled,v.checkout_threshold,v.checkout_stack_merchant,v.checkout_stack_platform FROM tb_voucher_order o LEFT JOIN tb_voucher v ON v.id=o.voucher_id LEFT"
             + " JOIN tb_shop s ON s.id=v.shop_id WHERE o.id=?",
         paymentWindow,
         id);
@@ -164,6 +164,8 @@ public class OrderLifecyclePersistence {
         returnStock(row);
       }
       case "redeem" -> {
+        require(row.get("checkout_enabled") == null || number(row,"checkout_enabled") != 1,
+            "此券需通过到店买单核销，不能绕过消费门槛");
         require(
             status == 2
                 && !now.isBefore(time(row, "use_begin_time"))

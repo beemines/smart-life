@@ -65,6 +65,12 @@ public class Voucher implements Serializable {
      */
     private Long actualValue;
 
+    /** Opt-in checkout contract. NULL preserves historical direct redemption. */
+    private Boolean checkoutEnabled;
+    private Long checkoutThreshold;
+    private Boolean checkoutStackMerchant;
+    private Boolean checkoutStackPlatform;
+
     /**
      * 优惠券类型
      */

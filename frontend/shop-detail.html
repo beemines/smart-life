@@ -10,6 +10,7 @@
 
   <link href="./css/shop-detail.css?v=20261111" rel="stylesheet">
   <link href="./css/main.css?v=20261107" rel="stylesheet">
+  <link href="./css/orders.css?v=20261115" rel="stylesheet">
 
   <style type="text/css">
 
@@ -61,6 +62,7 @@
   </div>
   <div class="shop-divider"></div>
   <div class="shop-voucher">
+    <bill-create v-if="shop.id" :shop-id="util.getUrlParam('id')"></bill-create>
     <div>
       <span class="voucher-icon">券</span>
       <span style="font-weight: bold;">代金券</span>
@@ -155,12 +157,14 @@
 <script src="./js/element.js?v=2.14.8"></script>
 <script src="./js/element-locale-zh-cn.js?v=2.14.8"></script>
 <script src="./js/common.js?v=20261111-p1"></script>
+<script src="./js/checkout.js?v=20261115"></script>
 <script src="./js/bootstrap.js?v=20261107"></script>
 <script src="./js/order-request.js?v=20261111"></script>
 <script>
 
   const app = mountSmartLife({
     el: "#app",
+    components: {'bill-create': window.SmartLifeBillCreate},
     data: {
       util,
       shop: {},

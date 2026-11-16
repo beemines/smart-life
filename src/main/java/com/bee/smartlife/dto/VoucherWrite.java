@@ -16,7 +16,11 @@ public record VoucherWrite(
     LocalDateTime beginTime,
     LocalDateTime endTime,
     LocalDateTime useBeginTime,
-    LocalDateTime useEndTime) {
+    LocalDateTime useEndTime,
+    Boolean checkoutEnabled,
+    Long checkoutThreshold,
+    Boolean checkoutStackMerchant,
+    Boolean checkoutStackPlatform) {
   public Voucher toVoucher(boolean seckill) {
     if (shopId == null
         || shopId <= 0
@@ -44,6 +48,17 @@ public record VoucherWrite(
     voucher.setRules(rules);
     voucher.setPayValue(payValue);
     voucher.setActualValue(actualValue);
+    if (Boolean.TRUE.equals(checkoutEnabled)) {
+      if (checkoutThreshold == null || checkoutThreshold < 0 || checkoutThreshold > 100000000
+          || checkoutStackMerchant == null || checkoutStackPlatform == null
+          || actualValue > 100000000) throw ApiException.badRequest("到店买单适用规则不完整");
+      voucher.setCheckoutEnabled(true);
+      voucher.setCheckoutThreshold(checkoutThreshold);
+      voucher.setCheckoutStackMerchant(checkoutStackMerchant);
+      voucher.setCheckoutStackPlatform(checkoutStackPlatform);
+    } else if (checkoutThreshold != null || checkoutStackMerchant != null || checkoutStackPlatform != null) {
+      throw ApiException.badRequest("未启用到店买单，不能设置买单规则");
+    }
     voucher.setType(seckill ? 1 : 0);
     voucher.setStatus(state);
     voucher.setUseBeginTime(

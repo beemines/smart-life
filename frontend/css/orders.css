@@ -18,3 +18,14 @@
 .batch-details,.batch-row{overflow-wrap:anywhere}
 .batch-row{padding:12px 0;border-bottom:1px solid #eee}
 .batch-error{color:#b42318;white-space:pre-wrap;overflow-wrap:anywhere}
+.checkout-tabs{justify-content:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #eee}
+.checkout-entry{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:14px 0 20px;font-size:13px;color:#606266}
+.checkout-form{line-height:1.65;overflow-wrap:anywhere}.checkout-form label{display:block;margin:12px 0}
+.checkout-form input:not([type=checkbox]),.checkout-form select{display:block;width:100%;box-sizing:border-box;padding:9px 10px;margin-top:5px;border:1px solid #c8cbd0;border-radius:5px;background:#fff;color:#303133;font-size:14px;min-width:0}
+.checkout-form input[type=checkbox]{margin-right:6px}.checkout-form fieldset{border:1px solid #ddd;border-radius:6px;padding:10px;min-width:0}
+.checkout-form .el-button{margin:5px 5px 5px 0;white-space:normal;height:auto;min-height:32px}
+.checkout-breakdown{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px 12px;background:#faf8f5;padding:16px;border-radius:7px;margin:18px 0;font-size:14px}
+.checkout-breakdown dt,.checkout-breakdown dd{margin:0}.checkout-breakdown dd{text-align:right;white-space:nowrap}.checkout-total{font-size:17px;font-weight:700;color:#c44820;border-top:1px solid #e7d7cf;padding-top:10px}
+.checkout-rules{margin:18px 0;padding:10px 0;border-top:1px solid #ddd}.checkout-rules summary{font-weight:600;cursor:pointer}
+.checkout-panel h3{margin:6px 0}.checkout-panel .orders-toolbar{margin-top:8px}.checkout-panel{padding-bottom:12px}
+@media(max-width:480px){.checkout-breakdown{padding:12px;gap:8px;font-size:12px}.checkout-total{font-size:15px}.checkout-form .el-button{max-width:100%}}

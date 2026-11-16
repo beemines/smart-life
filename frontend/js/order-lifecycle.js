@@ -65,7 +65,8 @@
 })();
 
 const SmartLifeOrderPanel = {
-  data() { return {client: window.createOrderLifecycle(axios, error => this.$message.error(error))}; },
+  components: {'checkout-panel': window.SmartLifeCheckoutPanel},
+  data() { return {panelMode: 'vouchers', client: window.createOrderLifecycle(axios, error => this.$message.error(error))}; },
   created() { this.client.load(true); this.client.capabilities(); },
   methods: {
     statusName(status) { return {1:'待支付',2:'已支付',3:'已核销',4:'已取消',5:'退款中',6:'已退款'}[status] || '需核对'; },
@@ -80,6 +81,12 @@ const SmartLifeOrderPanel = {
   },
   template: `
   <section class="orders-panel">
+    <div class="orders-toolbar checkout-tabs" role="group" aria-label="订单类型">
+      <el-button :type="panelMode==='vouchers'?'primary':'default'" @click="panelMode='vouchers'">已购券订单</el-button>
+      <el-button :type="panelMode==='bills'?'primary':'default'" @click="panelMode='bills'">消费账单</el-button>
+    </div>
+    <checkout-panel v-if="panelMode==='bills'"></checkout-panel>
+    <div v-show="panelMode==='vouchers'">
     <div class="orders-toolbar">
       <label>订单状态 <select v-model="client.status" @change="client.load(true)" aria-label="订单状态">
         <option value="">全部</option><option value="1">待支付</option><option value="2">已支付</option>
@@ -110,6 +117,8 @@ const SmartLifeOrderPanel = {
         <p>应付金额：{{money(client.detail.payValue)}}　券面金额：{{money(client.detail.actualValue)}}</p>
         <p>支付截止：{{time(client.detail.payDeadline)}}</p>
         <p>使用期限：{{time(client.detail.useBeginTime)}} 至 {{time(client.detail.useEndTime)}}</p>
+        <p v-if="client.detail.checkoutEnabled">本券须通过消费账单结算核销，适用门槛及叠加条件以购券快照为准。</p>
+        <p v-else class="orders-note">此券使用原核销流程；缺少到店买单规则的历史券不可用于新消费账单。</p>
         <p v-if="client.detail.payTime">支付时间：{{time(client.detail.payTime)}}</p>
         <p v-if="client.detail.useTime">核销时间：{{time(client.detail.useTime)}}</p>
         <p v-if="client.detail.refundTime">退款时间：{{time(client.detail.refundTime)}}</p>
@@ -125,5 +134,6 @@ const SmartLifeOrderPanel = {
         <el-button :disabled="client.busy" @click="client.open(client.detail.id,client.merchantDetail)">刷新详情</el-button>
       </div>
     </el-dialog>
+    </div>
   </section>`
 };

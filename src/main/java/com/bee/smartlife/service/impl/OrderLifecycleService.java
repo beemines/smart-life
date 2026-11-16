@@ -138,6 +138,7 @@ public class OrderLifecycleService {
 
   private boolean redeemable(Map<String, Object> row, LocalDateTime now) {
     return valid(row) && number(row, "status") == 2
+        && (row.get("checkout_enabled") == null || number(row,"checkout_enabled") != 1)
         && !now.isBefore(time(row, "use_begin_time"))
         && before(row, "use_end_time", now);
   }
@@ -168,7 +169,8 @@ public class OrderLifecycleService {
             && before(row, "use_end_time", now),
         valid && owner && status == 1,
         valid && owner && status == 2 && before(row, "use_end_time", now),
-        redeemable(row, now) && canManageShop);
+        redeemable(row, now) && canManageShop,
+        row.get("checkout_enabled") != null && number(row,"checkout_enabled") == 1);
   }
 
   private String iso(Map<String, Object> row, String key) {

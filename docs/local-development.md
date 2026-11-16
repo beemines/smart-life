@@ -72,6 +72,8 @@ npm run test:frontend
 
 订单受理恢复需要执行新增表迁移，操作、截图与演示见 [受理恢复](order-recovery.md)。集成测试请关闭自动恢复调度以隔离夹具：`SMARTLIFE_ORDER_RECOVERY_ENABLED=false`。
 
+到店买单须在已有生命周期迁移后执行[结算增量迁移](../src/main/resources/db/migrations/2026-11-15-checkout.sql)，新库初始化已包含。原个人页新增消费账单，店主确认金额后顾客才能试算和模拟补付；旧券不自动套新规则。将`CheckoutIT,CheckoutRulesIT,CheckoutRacesIT`加入集成测试列表；接口、规则、实际页面和完整235项后端/60项前端结果见[到店买单说明](checkout.md)及[验收记录](validation/checkout.md)。
+
 ## P1 权限、缓存与发布回归
 
 已有开发卷执行 [P1 增量迁移](p1-boundaries.md)，不要重建已有表。新用户没有商户写权限；由部署者核实身份后显式配置 ADMIN／OWNER，不能以会员 level 代替授权。

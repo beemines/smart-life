@@ -21,4 +21,5 @@ public record OrderView(
     boolean canPay,
     boolean canCancel,
     boolean canRefund,
-    boolean canRedeem) {}
+    boolean canRedeem,
+    boolean checkoutEnabled) {}
